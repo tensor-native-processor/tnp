@@ -1,18 +1,17 @@
 `default_nettype none
 
 module MatUnit
-    #(parameter WIDTH = 128,
-                FPSIZE = 16)
+    #(parameter WIDTH = 128)
     (input logic mode,
      input logic clock,
-     input logic [WIDTH - 1 : 0][FPSIZE - 1 : 0] sin,
-     output logic [WIDTH - 1 : 0][FPSIZE - 1 : 0] sout);
+     input shortreal sin[WIDTH - 1 : 0],
+     output shortreal sout[WIDTH - 1 : 0]);
 
 
     // Sum, weight and pass register for each element
-    logic [FPSIZE - 1 : 0] sum[WIDTH : 0][WIDTH : 0];
-    logic [FPSIZE - 1 : 0] weight[WIDTH : 0][WIDTH : 0];
-    logic [FPSIZE - 1 : 0] pass[WIDTH : 0][WIDTH : 0];
+    shortreal sum[WIDTH : 0][WIDTH : 0];
+    shortreal weight[WIDTH : 0][WIDTH : 0];
+    shortreal pass[WIDTH : 0][WIDTH : 0];
 
     genvar i, j;
 
@@ -26,7 +25,6 @@ module MatUnit
                     sum[i][j] <= sum[i - 1][j] +
                             pass[i][j - 1] * weight[i][j];
                     pass[i][j] <= pass[i][j - 1];
-                    // TODO: Change to FP16 ALU
                 end
 
             end
