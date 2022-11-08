@@ -5,12 +5,14 @@ module MatUnit
                 FPSIZE = 16)
     (input logic mode,
      input logic clock,
-     input logic [WIDTH - 1 : 0][FPSIZE - 1] sin,
-     output logic [WIDTH - 1 : 0][FPSIZE - 1] sout);
+     input logic [WIDTH - 1 : 0][FPSIZE - 1 : 0] sin,
+     output logic [WIDTH - 1 : 0][FPSIZE - 1 : 0] sout);
 
 
     // Sum, weight and pass register for each element
-    logic [WIDTH : 0][WIDTH : 0][FPSIZE - 1] sum, weight, pass;
+    logic [FPSIZE - 1 : 0] sum[WIDTH : 0][WIDTH : 0];
+    logic [FPSIZE - 1 : 0] weight[WIDTH : 0][WIDTH : 0];
+    logic [FPSIZE - 1 : 0] pass[WIDTH : 0][WIDTH : 0];
 
     genvar i, j;
 
