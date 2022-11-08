@@ -2,17 +2,25 @@
 
 module MatCache
     #(parameter WIDTH = 128,
-                CACHESIZE = 256,
-                CACHEADDR = $clog2(CACHESIZE))
-    (input logic mode,
-     input logic clock,
-     input logic [CACHEADDR - 1 : 0] addr1,
-     input logic [CACHEADDR - 1 : 0] addr2,
+                DIAG_SIZE = 1 + $clog2(WIDTH),
+                CACHE_SIZE = 256,
+                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
+    (input logic clock,
+     input logic read_enable,
+     input logic write_enable,
+     input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr1,
+     input logic [DIAG_SIZE - 1 : 0] read_diag1,
+     input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr2,
+     input logic [DIAG_SIZE - 1 : 0] read_diag2,
+     input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
+     input logic [DIAG_SIZE - 1 : 0] write_diag1,
+     input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
+     input logic [DIAG_SIZE - 1 : 0] write_diag2,
      input shortreal data_in[WIDTH - 1 : 0],
      output shortreal data_out[WIDTH - 1 : 0]);
 
     // Cache memory
-    shortreal mem[CACHESIZE - 1 : 0];
+    shortreal mem[CACHE_SIZE - 1 : 0];
 
 
 endmodule: MatCache
