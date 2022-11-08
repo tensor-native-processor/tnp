@@ -10,14 +10,11 @@ module MatCache
      input logic write_enable,
      input logic transpose_enable,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr1,
-     input logic [DIAG_SIZE - 1 : 0] read_diag1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr2,
-     input logic [DIAG_SIZE - 1 : 0] read_diag2,
+     input logic [DIAG_SIZE - 1 : 0] read_diag,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
-     input logic [DIAG_SIZE - 1 : 0] write_diag1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
-     input logic [DIAG_SIZE - 1 : 0] write_diag2,
-     input logic [CACHE_ADDR_SIZE - 1 : 0] transpose_addr,
+     input logic [DIAG_SIZE - 1 : 0] write_diag,
      input shortreal data_in[WIDTH - 1 : 0],
      output shortreal data_out[WIDTH - 1 : 0]);
 
@@ -35,12 +32,25 @@ module MatCache
             always_ff @(posedge clock) begin
 
                 if (transpose_enable) begin
-                    if (transpose_addr == blk) begin
+                    if (write_addr1 == blk) begin
                         cache[blk][i][j] <= cache[blk][j][i];
                     end
                 end
             end
 
+        end
+    endgenerate
+
+    // Read diagonal memory
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                if (i <= read_diag) begin
+                    data_out[i] = cache[read_addr1][i][read_diag - i];
+                end else begin
+                    data_out[i] = cache[read_addr2][i][WIDTH + read_diag - i];
+                end
+            end
         end
     endgenerate
 
