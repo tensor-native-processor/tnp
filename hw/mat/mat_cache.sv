@@ -1,6 +1,12 @@
 `default_nettype none
 
 typedef enum {
+    MAT_CACHE_WRITE_DIAG,
+    MAT_CACHE_WRITE_ROW,
+    MAT_CACHE_WRITE_COL
+} MatCacheWriteType_t;
+
+typedef enum {
     MAT_CACHE_READ_DIAG,
     MAT_CACHE_READ_ROW,
     MAT_CACHE_READ_COL
@@ -19,6 +25,7 @@ module MatCache
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] read_param,
+     input MatCacheWriteType_t write_type,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] write_param,
