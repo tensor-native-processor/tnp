@@ -21,7 +21,7 @@ module MatCache
      input logic [WIDTH_ADDR_SIZE - 1 : 0] read_param,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
-     input logic [WIDTH_ADDR_SIZE - 1 : 0] write_diag,
+     input logic [WIDTH_ADDR_SIZE - 1 : 0] write_param,
      input shortreal data_in[WIDTH - 1 : 0],
      output shortreal data_out[WIDTH - 1 : 0]);
 
@@ -30,17 +30,37 @@ module MatCache
 
     genvar blk, i, j;
 
-    // Transpose any matrix in cache
+    logic match_wr1[CACHE_SIZE - 1 : 0], match_wr2[CACHE_SIZE - 1 : 0];
+
+    // Match two write addresses
+    generate
+        for (blk = 0;blk < CACHE_SIZE;blk++) begin
+            assign match_wr1[blk] = blk == write_addr1;
+            assign match_wr2[blk] = (blk == write_addr2) & write_enable;
+        end
+    endgenerate
+
+    // Write into matrix in cache
     generate
         for (blk = 0;blk < CACHE_SIZE;blk++)
         for (i = 0;i < WIDTH;i++)
         for (j = 0;j < WIDTH;j++) begin
 
             always_ff @(posedge clock) begin
-
-                if (transpose_enable) begin
-                    if (write_addr1 == blk) begin
+                if (match_wr1[blk]) begin
+                    if (transpose_enable) begin
+                        // Matrix transpose
                         cache[blk][i][j] <= cache[blk][j][i];
+                    end else if (write_enable) begin
+                        // Write left half
+                        if (i + j == write_param) begin
+                            cache[blk][i][j] <= data_in[i];
+                        end
+                    end
+                end else if (match_wr2[blk]) begin
+                    // Write right half
+                    if (i + j == WIDTH + write_param) begin
+                        cache[blk][i][j] <= data_in[i];
                     end
                 end
             end
