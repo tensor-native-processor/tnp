@@ -3,15 +3,16 @@
 module MatCache
     #(parameter WIDTH = 128,
                 CACHESIZE = 256,
-                CACHEADDR = $clog2(CACHESIZE),
-                FPSIZE = 16)
+                CACHEADDR = $clog2(CACHESIZE))
     (input logic mode,
      input logic clock,
-     input logic [CACHEADDR - 1 : 0] addr,
-     output logic [WIDTH - 1 : 0][FPSIZE - 1 : 0] cout);
+     input logic [CACHEADDR - 1 : 0] addr1,
+     input logic [CACHEADDR - 1 : 0] addr2,
+     input shortreal data_in[WIDTH - 1 : 0],
+     output shortreal data_out[WIDTH - 1 : 0]);
 
     // Cache memory
-    logic [FPSIZE - 1 : 0] mem[CACHESIZE - 1 : 0];
+    shortreal mem[CACHESIZE - 1 : 0];
 
 
 endmodule: MatCache
