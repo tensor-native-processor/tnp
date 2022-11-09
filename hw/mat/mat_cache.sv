@@ -4,13 +4,13 @@ typedef enum {
     MAT_CACHE_WRITE_DIAG,
     MAT_CACHE_WRITE_ROW,
     MAT_CACHE_WRITE_COL
-} MatCacheWriteType_t;
+} MatCacheWriteOp_t;
 
 typedef enum {
     MAT_CACHE_READ_DIAG,
     MAT_CACHE_READ_ROW,
     MAT_CACHE_READ_COL
-} MatCacheReadType_t;
+} MatCacheReadOp_t;
 
 module MatCache
     #(parameter WIDTH = 128,
@@ -21,11 +21,11 @@ module MatCache
      input logic read_enable,
      input logic write_enable,
      input logic transpose_enable,
-     input MatCacheReadType_t read_type,
+     input MatCacheReadOp_t read_type,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] read_param,
-     input MatCacheWriteType_t write_type,
+     input MatCacheWriteOp_t write_type,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] write_param,
