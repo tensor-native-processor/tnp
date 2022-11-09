@@ -2,12 +2,12 @@
 
 module MatUnit
     #(parameter WIDTH = 128,
-                DIAG_SIZE = 1 + $clog2(WIDTH))
+                WIDTH_ADDR_SIZE = 1 + $clog2(WIDTH))
     (input logic clock,
      input logic load_weight,
-     input logic [DIAG_SIZE - 1 : 0] weight_progress,
-     input shortreal sin[WIDTH - 1 : 0],
-     output shortreal sout[WIDTH - 1 : 0]);
+     input logic [WIDTH_ADDR_SIZE - 1 : 0] weight_progress,
+     input shortreal data_in[WIDTH - 1 : 0],
+     output shortreal data_out[WIDTH - 1 : 0]);
 
 
     // Sum, weight and pass register for each element
@@ -44,7 +44,7 @@ module MatUnit
     // Input for rows
     generate
         for (i = 1;i <= WIDTH;i++) begin
-            assign sum[i][0] = sin[i - 1];
+            assign sum[i][0] = data_in[i - 1];
         end
     endgenerate
 
@@ -52,7 +52,7 @@ module MatUnit
     generate
         for (j = 1;j <= WIDTH;j++) begin
             assign sum[0][j] = 1'b0;
-            assign sout[j - 1] = sum[WIDTH][j];
+            assign data_out[j - 1] = sum[WIDTH][j];
         end
     endgenerate
 
