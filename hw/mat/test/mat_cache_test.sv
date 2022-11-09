@@ -17,6 +17,14 @@ module MatCache_test();
         forever #5 clock = ~clock;
     end
 
+    // Validate data_out
+    function check(int idx, shortreal ans);
+        if (data_out[idx] != ans) begin
+            $display("ERROR: data_out[%d] = %f -- %f", idx, data_out[idx], ans);
+            $finish;
+        end
+    endfunction
+
     // Test series
     initial begin
         $monitor($time,, "data_in=(%f,%f,%f,%f)\t data_out=(%f,%f,%f,%f)",
@@ -39,13 +47,19 @@ module MatCache_test();
         write_op = MAT_CACHE_WRITE_ROW;write_addr1 = 0;write_param = 2'd3;
         data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
 
-        #10; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd0;
-        #10; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd1;
-        #10; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd2;
-        #10; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd3;
+        @(posedge clock);#1;
+        #1; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd0;
+        #1; check(0, 4.0);  check(1, 4.0);      check(2, 3.0);      check(3, 7.0);
+        #1; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd1;
+        #1; check(0, 6.0);  check(1, 1.0);      check(2, 3.0);      check(3, 5.0);
+        #1; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd2;
+        #1; check(0, 1.0);  check(1, 2.0);      check(2, 3.0);      check(3, 3.0);
+        #1; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd3;
+        #1; check(0, 6.0);  check(1, 3.0);      check(2, 3.0);      check(3, 9.0);
 
 
         #100;
+        $display("All test succeeded!");
         $finish;
     end
 
