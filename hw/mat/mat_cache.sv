@@ -1,6 +1,8 @@
 `default_nettype none
 
 typedef enum {
+    MAT_CACHE_WRITE_DISABLE,
+    MAT_CACHE_WRITE_TRANSPOSE,
     MAT_CACHE_WRITE_DIAG,
     MAT_CACHE_WRITE_ROW,
     MAT_CACHE_WRITE_COL
@@ -18,13 +20,11 @@ module MatCache
                 CACHE_SIZE = 4,
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
     (input logic clock,
-     input logic write_enable,
-     input logic transpose_enable,
-     input MatCacheReadOp_t read_type,
+     input MatCacheReadOp_t read_op,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] read_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] read_param,
-     input MatCacheWriteOp_t write_type,
+     input MatCacheWriteOp_t write_op,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr1,
      input logic [CACHE_ADDR_SIZE - 1 : 0] write_addr2,
      input logic [WIDTH_ADDR_SIZE - 1 : 0] write_param,
@@ -42,7 +42,7 @@ module MatCache
     generate
         for (blk = 0;blk < CACHE_SIZE;blk++) begin
             assign match_wr1[blk] = blk == write_addr1;
-            assign match_wr2[blk] = (blk == write_addr2) & write_enable;
+            assign match_wr2[blk] = blk == write_addr2;
         end
     endgenerate
 
@@ -54,20 +54,41 @@ module MatCache
 
             always_ff @(posedge clock) begin
                 if (match_wr1[blk]) begin
-                    if (transpose_enable) begin
-                        // Matrix transpose
-                        cache[blk][i][j] <= cache[blk][j][i];
-                    end else if (write_enable) begin
-                        // Write left half
-                        if (i + j == write_param) begin
-                            cache[blk][i][j] <= data_in[i];
+                    // Primary write address
+                    case (write_op)
+                        MAT_CACHE_WRITE_TRANSPOSE: begin
+                            // Matrix transpose
+                            cache[blk][i][j] <= cache[blk][j][i];
                         end
-                    end
+                        MAT_CACHE_WRITE_DIAG: begin
+                            // Write left half diagonal
+                            if (i + j == write_param) begin
+                                cache[blk][i][j] <= data_in[i];
+                            end
+                        end
+                        MAT_CACHE_WRITE_ROW: begin
+                            // Write row
+                            if (i == write_param) begin
+                                cache[blk][i][j] <= data_in[j];
+                            end
+                        end
+                        MAT_CACHE_WRITE_COL: begin
+                            // Write column
+                            if (j == write_param) begin
+                                cache[blk][i][j] <= data_in[i];
+                            end
+                        end
+                    endcase
                 end else if (match_wr2[blk]) begin
-                    // Write right half
-                    if (i + j == WIDTH + write_param) begin
-                        cache[blk][i][j] <= data_in[i];
-                    end
+                    // Secondary write address
+                    case (write_op)
+                        MAT_CACHE_WRITE_DIAG: begin
+                            // Write right half diagonal
+                            if (i + j == WIDTH + write_param) begin
+                                cache[blk][i][j] <= data_in[i];
+                            end
+                        end
+                    endcase
                 end
             end
 
@@ -93,8 +114,9 @@ module MatCache
         end
     endgenerate
 
+    // Output to data_out
     always_comb begin
-        unique case (read_type)
+        unique case (read_op)
             MAT_CACHE_READ_DIAG: data_out = diag_out;
             MAT_CACHE_READ_ROW: data_out = row_out;
             MAT_CACHE_READ_COL: data_out = col_out;
