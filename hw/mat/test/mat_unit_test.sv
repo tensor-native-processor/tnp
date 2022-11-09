@@ -76,21 +76,32 @@ module MatUnit_test();
 
         @(posedge clock); #1;
         check(0, 20.0);     check(1, 20.0);     check(2, 20.0);
-        data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 1.0;   data_in[3] = 5.0;
+        data_in[0] = 1.0;   data_in[1] = 0.0;   data_in[2] = 1.0;   data_in[3] = 5.0;
 
         @(posedge clock); #1;
         check(0, 20.0);     check(1, 20.0);     check(2, 20.0);     check(3, 20.0);
-        data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 0.0;   data_in[3] = 1.0;
+        data_in[0] = 0.0;   data_in[1] = 2.0;   data_in[2] = 0.0;   data_in[3] = 1.0;
 
         @(posedge clock); #1;
-        check(1, 20.0);     check(2, 20.0);     check(3, 20.0);
+        check(0, 4.0);      check(1, 20.0);     check(2, 20.0);     check(3, 20.0);
+        data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 3.0;   data_in[3] = 0.0;
+
+        @(posedge clock); #1;
+        check(0, 0.0);      check(1, 4.0);      check(2, 20.0);     check(3, 20.0);
+        data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 0.0;   data_in[3] = 4.0;
+
+        @(posedge clock); #1;
+        check(0, 10.0);     check(1, 0.0);      check(2, 4.0);      check(3, 20.0);
         data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 0.0;   data_in[3] = 0.0;
 
         @(posedge clock); #1;
-        check(2, 20.0);     check(3, 20.0);
-
+        check(0, 0.0);      check(1, 10.0);     check(2, 0.0);      check(3, 4.0);
         @(posedge clock); #1;
-        check(3, 20.0);
+        check(0, 0.0);      check(1, 0.0);      check(2, 10.0);     check(3, 0.0);
+        @(posedge clock); #1;
+        check(0, 0.0);      check(1, 0.0);      check(2, 0.0);      check(3, 10.0);
+        @(posedge clock); #1;
+        check(0, 0.0);      check(1, 0.0);      check(2, 0.0);      check(3, 0.0);
 
         #100;
         $display("All test succeeded!");
