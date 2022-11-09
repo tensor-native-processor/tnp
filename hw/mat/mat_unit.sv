@@ -2,10 +2,10 @@
 
 module MatUnit
     #(parameter WIDTH = 128,
-                WIDTH_ADDR_SIZE = 1 + $clog2(WIDTH))
+                WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
      input logic load_weight,
-     input logic [WIDTH_ADDR_SIZE - 1 : 0] weight_progress,
+     input logic [WIDTH_ADDR_SIZE : 0] weight_progress,
      input shortreal data_in[WIDTH - 1 : 0],
      output shortreal data_out[WIDTH - 1 : 0]);
 
@@ -31,7 +31,7 @@ module MatUnit
                     if (load_weight &&
                         weight_progress < (j - 1) + (i - 1) + WIDTH &&
                         (j - 1) + (i - 1) <= weight_progress) begin
-                        weight[i][j] <= pass[i - 1][j];
+                        weight[i][j] <= pass[i][j - 1];
                     end
                 end
 
@@ -44,7 +44,7 @@ module MatUnit
     // Input for rows
     generate
         for (i = 1;i <= WIDTH;i++) begin
-            assign sum[i][0] = data_in[i - 1];
+            assign pass[i][0] = data_in[i - 1];
         end
     endgenerate
 
