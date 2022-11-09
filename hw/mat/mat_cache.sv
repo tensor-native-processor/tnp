@@ -16,7 +16,7 @@ typedef enum {
 
 module MatCache
     #(parameter WIDTH = 128,
-                WIDTH_ADDR_SIZE = 1 + $clog2(WIDTH),
+                WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_SIZE = 4,
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
     (input logic clock,
