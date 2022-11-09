@@ -16,6 +16,14 @@ module MatUnit_test();
         forever #5 clock = ~clock;
     end
 
+    // Validate data_out
+    function check(int idx, shortreal ans);
+        if (data_out[idx] != ans) begin
+            $display("ERROR: data_out[%d] = %f -- %f", idx, data_out[idx], ans);
+            $finish;
+        end
+    endfunction
+
     // Test series
     initial begin
         $monitor($time,, "data_in=(%f,%f,%f,%f)\t data_out=(%f,%f,%f,%f)",
@@ -59,21 +67,33 @@ module MatUnit_test();
         data_in[0] = 5.0;   data_in[1] = 5.0;   data_in[2] = 5.0;   data_in[3] = 5.0;
 
         @(posedge clock); #1;
+        check(0, 20.0);
         data_in[0] = 1.0;   data_in[1] = 5.0;   data_in[2] = 5.0;   data_in[3] = 5.0;
 
         @(posedge clock); #1;
+        check(0, 20.0);     check(1, 20.0);
         data_in[0] = 0.0;   data_in[1] = 1.0;   data_in[2] = 5.0;   data_in[3] = 5.0;
 
         @(posedge clock); #1;
+        check(0, 20.0);     check(1, 20.0);     check(2, 20.0);
         data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 1.0;   data_in[3] = 5.0;
 
         @(posedge clock); #1;
+        check(0, 20.0);     check(1, 20.0);     check(2, 20.0);     check(3, 20.0);
         data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 0.0;   data_in[3] = 1.0;
 
         @(posedge clock); #1;
+        check(1, 20.0);     check(2, 20.0);     check(3, 20.0);
         data_in[0] = 0.0;   data_in[1] = 0.0;   data_in[2] = 0.0;   data_in[3] = 0.0;
 
+        @(posedge clock); #1;
+        check(2, 20.0);     check(3, 20.0);
+
+        @(posedge clock); #1;
+        check(3, 20.0);
+
         #100;
+        $display("All test succeeded!");
         $finish;
     end
 
