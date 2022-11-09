@@ -18,7 +18,6 @@ module MatCache
                 CACHE_SIZE = 4,
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
     (input logic clock,
-     input logic read_enable,
      input logic write_enable,
      input logic transpose_enable,
      input MatCacheReadOp_t read_type,
