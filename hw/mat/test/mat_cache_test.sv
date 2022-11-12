@@ -57,6 +57,22 @@ module MatCache_test();
         #1; read_op = MAT_CACHE_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd3;
         #1; check(0, 6.0);  check(1, 3.0);      check(2, 3.0);      check(3, 9.0);
 
+        @(posedge clock);#1;
+        write_op = MAT_CACHE_WRITE_COL;write_addr1 = 2;write_param = 2'd1;
+        data_in[0] = 1.0;   data_in[1] = 2.0;   data_in[2] = 3.0;   data_in[3] = 4.0;
+
+        @(posedge clock);#1;
+        write_op = MAT_CACHE_WRITE_COL;write_addr1 = 2;write_param = 2'd0;
+        data_in[0] = 3.0;   data_in[1] = 3.0;   data_in[2] = 3.0;   data_in[3] = 3.0;
+
+        @(posedge clock);#1;
+        write_op = MAT_CACHE_WRITE_COL;write_addr1 = 2;write_param = 2'd3;
+        data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
+
+        @(posedge clock);#1;
+        write_op = MAT_CACHE_WRITE_COL;write_addr1 = 2;write_param = 2'd2;
+        data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
+
 
         #100;
         $display("All test succeeded!");
