@@ -95,9 +95,9 @@ Receive from core `core_idx` into `M1` matrix row `row_idx`
 
 Receive from core `core_idx` into `M1`matrix column `col_idx`
 
-#### RECV_SCALAR core_idx M1 row_idx col_idx vec_idx
+#### RECV_SCALAR core_idx M1 row_idx col_idx elem_idx
 
-Receive from core `core_idx`'s `vec_idx`-th element into `M1` matrix element (`row_idx`, `col_idx`) 
+Receive from core `core_idx`'s `elem_idx`-th element into `M1` matrix element (`row_idx`, `col_idx`) 
 
 #### RECV_DIAG1 core_idx M1 diag_idx
 
