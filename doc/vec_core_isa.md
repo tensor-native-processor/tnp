@@ -21,13 +21,13 @@ Subtract vector `V1` and `V2` and store the output into `Vd`
 
 Multiply vector `V1` and `V2` and store the output into `Vd`
 
-#### SCALE Vd V1 K
+#### SCALE Vd V1 V2 vec_idx
 
-Multiply vector `V1` and immediate value `K` and store the output into `Vd`
+Multiply vector `V1` and scalar `V2`'s `vec_idx`-th element and store the output into `Vd`
 
-#### DELTA Vd V1 K
+#### DELTA Vd V1 V2 vec_idx
 
-Add vector `V1` and immediate value `K` and store the output into `Vd`
+Add vector `V1` and scalar `V2`'s `vec_idx`-th element and store the output into `Vd`
 
 #### ACT_SIGMOID Vd V1
 
