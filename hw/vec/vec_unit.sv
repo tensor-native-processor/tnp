@@ -14,10 +14,10 @@ typedef enum {
 module VecUnit
     #(parameter WIDTH = 128)
     (input logic clock,
-     input real data_ink,
-     input real data_in1[WIDTH - 1 : 0],
-     input real data_in2[WIDTH - 1 : 0],
-     output real data_out[WIDTH - 1 : 0],
+     input shortreal data_inK,
+     input shortreal data_in1[WIDTH - 1 : 0],
+     input shortreal data_in2[WIDTH - 1 : 0],
+     output shortreal data_out[WIDTH - 1 : 0],
      input VecUnitOp_t op);
 
     genvar i;
@@ -35,10 +35,10 @@ module VecUnit
                         data_out[i] = data_in1[i] * data_in2[i];
                     end
                     VEC_UNIT_OP_SCALE: begin
-                        data_out[i] = data_in1[i] * data_ink;
+                        data_out[i] = data_in1[i] * data_inK;
                     end
                     VEC_UNIT_OP_DELTA: begin
-                        data_out[i] = data_in1[i] + data_ink;
+                        data_out[i] = data_in1[i] + data_inK;
                     end
                     VEC_UNIT_OP_ACT_SIGMOID: begin
                         data_out[i] = 1.0 / (1.0 + $exp(-data_in1[i]));
