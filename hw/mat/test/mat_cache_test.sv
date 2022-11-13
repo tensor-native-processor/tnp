@@ -67,11 +67,23 @@ module MatCache_test();
 
         @(posedge clock);#1;
         write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd3;
-        data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
+        data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 8.0;   data_in[3] = 3.0;
 
         @(posedge clock);#1;
         write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd2;
         data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
+
+        @(posedge clock);#1;
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd0;
+        #1; check(0, 3.0);  check(1, 1.0);      check(2, 9.0);      check(3, 9.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd1;
+        #1; check(0, 3.0);  check(1, 2.0);      check(2, 7.0);      check(3, 7.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd2;
+        #1; check(0, 3.0);  check(1, 3.0);      check(2, 5.0);      check(3, 8.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd3;
+        #1; check(0, 3.0);  check(1, 4.0);      check(2, 3.0);      check(3, 3.0);
+
+
 
 
         #100;
