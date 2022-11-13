@@ -110,3 +110,11 @@ Receive from core `core_idx` into `M1` secondary diagonal at `diag_idx`
 #### RECV_DIAG core_idx M1 M2 diag_idx
 
 Receive from core `core_idx` into `M1` primary diagonal and `M2`'s secondary diagonal concatenated together (`diag_idx`-th diagonal)
+
+---
+
+## 4. Control operations
+
+#### HALT
+
+Stop processing

@@ -89,3 +89,10 @@ Receive from core `core_idx` into vector `V1`
 
 Receive from core `core_idx`'s `elem_idx`-th element into `V1` `vec_idx` element 
 
+---
+
+## 4. Control operations
+
+#### HALT
+
+Stop processing
