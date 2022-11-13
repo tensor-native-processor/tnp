@@ -1,19 +1,6 @@
 `default_nettype none
 
-typedef enum {
-    MAT_DATA_WRITE_DISABLE,
-    MAT_DATA_WRITE_TRANSPOSE,
-    MAT_DATA_WRITE_DIAG,
-    MAT_DATA_WRITE_ROW,
-    MAT_DATA_WRITE_COL
-} MatDataWriteOp_t;
-
-typedef enum {
-    MAT_DATA_READ_DIAG,
-    MAT_DATA_READ_ROW,
-    MAT_DATA_READ_COL
-} MatDataReadOp_t;
-
+// Matrix cache system
 module MatCache
     #(parameter WIDTH = 128,
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
@@ -31,96 +18,69 @@ module MatCache
      input shortreal data_in[WIDTH-1:0],
      output shortreal data_out[WIDTH-1:0]);
 
-    // Cache memory
-    shortreal cache[CACHE_SIZE-1:0][WIDTH-1:0][WIDTH-1:0];
+    MatDataWriteOp_t reg_write_op[CACHE_SIZE-1:0];
+    shortreal reg_data_out[CACHE_SIZE-1:0][WIDTH-1:0];
 
-    genvar blk, i, j;
+    MatReg #(.WIDTH(WIDTH)) mat_reg[CACHE_SIZE-1:0](
+        .clock, .read_op, .read_param,
+        .write_op(reg_write_op), .write_param,
+        .data_in, .data_out(reg_data_out)
+    );
 
-    logic match_wr1[CACHE_SIZE-1:0], match_wr2[CACHE_SIZE-1:0];
+    genvar blk, i;
 
-    // Match two write addresses
+    // Assign write operations to each matrix register
     generate
         for (blk = 0;blk < CACHE_SIZE;blk++) begin
-            assign match_wr1[blk] = blk == write_addr1;
-            assign match_wr2[blk] = blk == write_addr2;
-        end
-    endgenerate
 
-    // Write into matrix in cache
-    generate
-        for (blk = 0;blk < CACHE_SIZE;blk++)
-        for (i = 0;i < WIDTH;i++)
-        for (j = 0;j < WIDTH;j++) begin
-
-            always_ff @(posedge clock) begin
-                if (match_wr1[blk]) begin
-                    // Primary write address
-                    case (write_op)
-                        MAT_DATA_WRITE_TRANSPOSE: begin
-                            // Matrix transpose
-                            cache[blk][i][j] <= cache[blk][j][i];
-                        end
-                        MAT_DATA_WRITE_DIAG: begin
-                            // Write left half diagonal
-                            if (i + j == write_param) begin
-                                cache[blk][i][j] <= data_in[i];
-                            end
-                        end
-                        MAT_DATA_WRITE_ROW: begin
-                            // Write row
-                            if (i == write_param) begin
-                                cache[blk][i][j] <= data_in[j];
-                            end
-                        end
-                        MAT_DATA_WRITE_COL: begin
-                            // Write column
-                            if (j == write_param) begin
-                                cache[blk][i][j] <= data_in[i];
-                            end
-                        end
-                    endcase
-                end else if (match_wr2[blk]) begin
-                    // Secondary write address
-                    case (write_op)
-                        MAT_DATA_WRITE_DIAG: begin
-                            // Write right half diagonal
-                            if (i + j == WIDTH + write_param) begin
-                                cache[blk][i][j] <= data_in[i];
-                            end
-                        end
-                    endcase
+        always_comb begin
+            reg_write_op[blk] = MAT_DATA_WRITE_DISABLE;
+            unique case (write_op)
+                MAT_DATA_WRITE_DISABLE,
+                MAT_DATA_WRITE_TRANSPOSE,
+                MAT_DATA_WRITE_ROW,
+                MAT_DATA_WRITE_COL,
+                MAT_DATA_WRITE_DIAG1,
+                MAT_DATA_WRITE_DIAG2: begin
+                    reg_write_op[blk] = blk == write_addr1 ? 
+                        write_op : MAT_DATA_WRITE_DISABLE;
                 end
-            end
+                MAT_DATA_WRITE_DIAG: begin
+                    if (write_addr1 == write_addr2) begin
+                        reg_write_op[blk] = blk == write_addr1 ?
+                            MAT_DATA_WRITE_DIAG : MAT_DATA_WRITE_DISABLE;
+                    end else begin
+                        reg_write_op[blk] = blk == write_addr1 ?
+                            MAT_DATA_WRITE_DIAG1 : blk == write_addr2 ?
+                            MAT_DATA_WRITE_DIAG2 : MAT_DATA_WRITE_DISABLE;
+                    end
+                end
+            endcase
+        end
 
         end
     endgenerate
 
 
-    shortreal diag_out[WIDTH - 1 : 0], row_out[WIDTH - 1 : 0],
-        col_out[WIDTH - 1 : 0];
-
-    // Read diagonal memory
+    // Assign output to data_out
     generate
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin
-                if (i <= read_param) begin
-                    diag_out[i] = cache[read_addr1][i][read_param - i];
-                end else begin
-                    diag_out[i] = cache[read_addr2][i][WIDTH + read_param - i];
-                end
-                row_out[i] = cache[read_addr1][read_param][i];
-                col_out[i] = cache[read_addr1][i][read_param];
+                unique case (read_op)
+                    MAT_DATA_READ_ROW,
+                    MAT_DATA_READ_COL: begin
+                        data_out[i] = reg_data_out[read_addr1][i];
+                    end
+                    MAT_DATA_READ_DIAG: begin
+                        if (i <= read_param) begin
+                            data_out[i] = reg_data_out[read_addr1][i];
+                        end else begin
+                            data_out[i] = reg_data_out[read_addr2][i];
+                        end
+                    end
+                endcase
             end
         end
     endgenerate
-
-    // Output to data_out
-    always_comb begin
-        unique case (read_op)
-            MAT_DATA_READ_DIAG: data_out = diag_out;
-            MAT_DATA_READ_ROW: data_out = row_out;
-            MAT_DATA_READ_COL: data_out = col_out;
-        endcase
-    end
 
 endmodule: MatCache
