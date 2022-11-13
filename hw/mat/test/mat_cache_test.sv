@@ -6,7 +6,7 @@ module MatCache_test();
     MatDataReadOp_t read_op;
     MatDataWriteOp_t write_op;
     logic [1:0] read_addr1, read_addr2, write_addr1, write_addr2;
-    logic [1:0] read_param, write_param;
+    logic [1:0] read_param, write_param1, write_param2;
     shortreal data_in[3:0], data_out[3:0];
 
     MatCache #(.WIDTH(4), .CACHE_SIZE(4)) DUT(.*);
@@ -31,22 +31,23 @@ module MatCache_test();
             data_in[0], data_in[1], data_in[2], data_in[3],
             data_out[0], data_out[1], data_out[2], data_out[3]);
 
-        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param = 2'd0;
+        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param1 = 2'd0;
         data_in[0] = 4.0;   data_in[1] = 6.0;   data_in[2] = 1.0;   data_in[3] = 6.0;
 
         @(posedge clock);#1;
         read_op = MAT_DATA_READ_ROW;read_addr1 = 0;read_param = 2'd0;
-        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param = 2'd1;
+        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param1 = 2'd1;
         data_in[0] = 1.0;   data_in[1] = 2.0;   data_in[2] = 3.0;   data_in[3] = 4.0;
 
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param = 2'd2;
+        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param1 = 2'd2;
         data_in[0] = 3.0;   data_in[1] = 3.0;   data_in[2] = 3.0;   data_in[3] = 3.0;
 
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param = 2'd3;
+        write_op = MAT_DATA_WRITE_ROW;write_addr1 = 0;write_param1 = 2'd3;
         data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
 
+        // Diagonal read
         @(posedge clock);#1;
         #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd0;
         #1; check(0, 4.0);  check(1, 4.0);      check(2, 3.0);      check(3, 7.0);
@@ -57,22 +58,24 @@ module MatCache_test();
         #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 0;read_addr2 = 0;read_param = 2'd3;
         #1; check(0, 6.0);  check(1, 3.0);      check(2, 3.0);      check(3, 9.0);
 
+        // Column write
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd1;
+        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param1 = 2'd1;
         data_in[0] = 1.0;   data_in[1] = 2.0;   data_in[2] = 3.0;   data_in[3] = 4.0;
 
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd0;
+        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param1 = 2'd0;
         data_in[0] = 3.0;   data_in[1] = 3.0;   data_in[2] = 3.0;   data_in[3] = 3.0;
 
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd3;
+        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param1 = 2'd3;
         data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 8.0;   data_in[3] = 3.0;
 
         @(posedge clock);#1;
-        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param = 2'd2;
+        write_op = MAT_DATA_WRITE_COL;write_addr1 = 2;write_param1 = 2'd2;
         data_in[0] = 9.0;   data_in[1] = 7.0;   data_in[2] = 5.0;   data_in[3] = 3.0;
 
+        // Row read
         @(posedge clock);#1;
         #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd0;
         #1; check(0, 3.0);  check(1, 1.0);      check(2, 9.0);      check(3, 9.0);
@@ -83,8 +86,32 @@ module MatCache_test();
         #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd3;
         #1; check(0, 3.0);  check(1, 4.0);      check(2, 3.0);      check(3, 3.0);
 
+        // Scalar write
+        @(posedge clock);#1;
+        write_op = MAT_DATA_WRITE_SCALAR;write_addr1 = 2;write_param1 = 2'd2;write_param2 = 2'd3;
+        data_in[0] = 0.0;
 
+        // Row read
+        @(posedge clock);#1;
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd0;
+        #1; check(0, 3.0);  check(1, 1.0);      check(2, 9.0);      check(3, 9.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd1;
+        #1; check(0, 3.0);  check(1, 2.0);      check(2, 7.0);      check(3, 7.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd2;
+        #1; check(0, 3.0);  check(1, 3.0);      check(2, 5.0);      check(3, 0.0);
+        #1; read_op = MAT_DATA_READ_ROW;read_addr1 = 2;read_addr2 = 0;read_param = 2'd3;
+        #1; check(0, 3.0);  check(1, 4.0);      check(2, 3.0);      check(3, 3.0);
 
+        // Double diagonal read
+        @(posedge clock);#1;
+        #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 2;read_addr2 = 0;read_param = 2'd0;
+        #1; check(0, 3.0);  check(1, 4.0);      check(2, 3.0);      check(3, 7.0);
+        #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 2;read_addr2 = 0;read_param = 2'd1;
+        #1; check(0, 1.0);  check(1, 3.0);      check(2, 3.0);      check(3, 5.0);
+        #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 2;read_addr2 = 0;read_param = 2'd2;
+        #1; check(0, 9.0);  check(1, 2.0);      check(2, 3.0);      check(3, 3.0);
+        #1; read_op = MAT_DATA_READ_DIAG;read_addr1 = 2;read_addr2 = 0;read_param = 2'd3;
+        #1; check(0, 9.0);  check(1, 7.0);      check(2, 3.0);      check(3, 3.0);
 
         #100;
         $display("All test succeeded!");
