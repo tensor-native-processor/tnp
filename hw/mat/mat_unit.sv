@@ -4,8 +4,8 @@ module MatUnit
     #(parameter WIDTH = 128,
                 WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
-     input logic load_weight,
-     input logic [WIDTH_ADDR_SIZE:0] weight_progress,
+     input logic set_weight,
+     input logic [WIDTH_ADDR_SIZE-1:0] set_weight_row,
      input shortreal data_in[WIDTH-1:0],
      output shortreal data_out[WIDTH-1:0]);
 
@@ -28,9 +28,7 @@ module MatUnit
                             pass[i][j - 1] * weight[i][j];
                     pass[i][j] <= pass[i][j - 1];
 
-                    if (load_weight &&
-                        weight_progress < (j - 1) + (i - 1) + WIDTH &&
-                        (j - 1) + (i - 1) <= weight_progress) begin
+                    if (set_weight && set_weight_row + 1 == i) begin
                         weight[i][j] <= pass[i][j - 1];
                     end
                 end
