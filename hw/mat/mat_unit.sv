@@ -5,15 +5,15 @@ module MatUnit
                 WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
      input logic load_weight,
-     input logic [WIDTH_ADDR_SIZE : 0] weight_progress,
-     input shortreal data_in[WIDTH - 1 : 0],
-     output shortreal data_out[WIDTH - 1 : 0]);
+     input logic [WIDTH_ADDR_SIZE:0] weight_progress,
+     input shortreal data_in[WIDTH-1:0],
+     output shortreal data_out[WIDTH-1:0]);
 
 
     // Sum, weight and pass register for each element
-    shortreal sum[WIDTH : 0][WIDTH : 0];
-    shortreal weight[WIDTH : 0][WIDTH : 0];
-    shortreal pass[WIDTH : 0][WIDTH : 0];
+    shortreal sum[WIDTH:0][WIDTH:0];
+    shortreal weight[WIDTH:0][WIDTH:0];
+    shortreal pass[WIDTH:0][WIDTH:0];
 
     genvar i, j;
 
