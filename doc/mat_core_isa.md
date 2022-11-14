@@ -99,6 +99,10 @@ Receive from core `core_idx` into `M1`matrix column `col_idx`
 
 Receive from core `core_idx`'s `elem_idx`-th element into `M1` matrix element (`row_idx`, `col_idx`) 
 
+#### RECV_DIAG core_idx M1 M2 diag_idx
+
+Receive from core `core_idx` into `M1` primary diagonal and `M2`'s secondary diagonal concatenated together (`diag_idx`-th diagonal)
+
 #### RECV_DIAG1 core_idx M1 diag_idx
 
 Receive from core `core_idx` into `M1` primary diagonal at `diag_idx`
@@ -106,10 +110,6 @@ Receive from core `core_idx` into `M1` primary diagonal at `diag_idx`
 #### RECV_DIAG2 core_idx M1 diag_idx
 
 Receive from core `core_idx` into `M1` secondary diagonal at `diag_idx`
-
-#### RECV_DIAG core_idx M1 M2 diag_idx
-
-Receive from core `core_idx` into `M1` primary diagonal and `M2`'s secondary diagonal concatenated together (`diag_idx`-th diagonal)
 
 ---
 
