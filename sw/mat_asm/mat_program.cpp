@@ -24,17 +24,59 @@ const std::map<MatInstruction::Operator, std::set<MatInstruction::OperandTag>> M
     {RECV_DIAG1,        {T_core_idx, T_M1, T_diag_idx}},
     {RECV_DIAG2,        {T_core_idx, T_M1, T_diag_idx}},
     {HALT,              {}},
+
+    {ILLEGAL_OP,        {}},
 };
+
+// Instruction operator name
+const std::map<MatInstruction::Operator, std::string> MatInstruction::operatorName = {
+    {SET_WEIGHT,        "SET_WEIGHT"},
+    {MULTIPLY,          "MULTIPLY"},
+    {TRANSPOSE,         "TRANSPOSE"},
+    {LOAD_MAT,          "LOAD_MAT"},
+    {LOAD_ROW,          "LOAD_ROW"},
+    {LOAD_COL,          "LOAD_COL"},
+    {LOAD_SCALAR,       "LOAD_SCALAR"},
+    {STORE_MAT,         "STORE_MAT"},
+    {STORE_ROW,         "STORE_ROW"},
+    {STORE_COL,         "STORE_COL"},
+    {STORE_SCALAR,      "STORE_SCALAR"},
+    {SEND_ROW,          "SEND_ROW"},
+    {SEND_COL,          "SEND_COL"},
+    {SEND_DIAG,         "SEND_DIAG"},
+    {RECV_ROW,          "RECV_ROW"},
+    {RECV_COL,          "RECV_COL"},
+    {RECV_SCALAR,       "RECV_SCALAR"},
+    {RECV_DIAG,         "RECV_DIAG"},
+    {RECV_DIAG1,        "RECV_DIAG1"},
+    {RECV_DIAG2,        "RECV_DIAG2"},
+    {HALT,              "HALT"},
+
+    {ILLEGAL_OP,        "ILLEGAL_OP"},
+};
+
 
 std::set<MatInstruction::OperandTag> MatInstruction::operands(Operator op) {
     return operandMap.at(op);
+}
+
+std::string MatInstruction::getOperatorName(Operator op) {
+    return operatorName.at(op);
+}
+MatInstruction::Operator MatInstruction::findOperatorByName(std::string opName) {
+    for (auto const& [key, val] : operatorName) {
+        if (val == opName) {
+            return key;
+        }
+    }
+    return ILLEGAL_OP;
 }
 
 // Convert MatProgram to/from text
 std::string MatProgram::toText() const {
     std::ostringstream oss;
     for (auto const &inst : m_instructions) {
-        oss << (int)(inst.op) << " ";
+        oss << MatInstruction::getOperatorName(inst.op) << " ";
         auto operands = MatInstruction::operands(inst.op);
 
         // Mem address
@@ -61,9 +103,9 @@ void MatProgram::fromText(const std::string& str) {
     // Clear existing program
     m_instructions.clear();
     MatInstruction inst;
-    int op;
-    while (iss >> op) {
-        inst.op = (MatInstruction::Operator)(op);
+    std::string opName;
+    while (iss >> opName) {
+        inst.op = MatInstruction::findOperatorByName(opName);
         auto operands = MatInstruction::operands(inst.op);
 
         // Mem address

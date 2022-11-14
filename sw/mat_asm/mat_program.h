@@ -55,6 +55,9 @@ public:
 
         // Section 4
         HALT            = 0b10000000,
+
+        // Other
+        ILLEGAL_OP      = 0b11111111,
     } op;
     MatMemAddr_t addr;
     MatRegAddr_t Md, M1, M2;
@@ -69,9 +72,12 @@ public:
         T_row_idx, T_col_idx, T_diag_idx, T_elem_idx,
     };
     static std::set<OperandTag> operands(Operator op);
+    static std::string getOperatorName(Operator op);
+    static Operator findOperatorByName(std::string opName);
 
 private:
     static const std::map<Operator, std::set<OperandTag>> operandMap;
+    static const std::map<Operator, std::string> operatorName;
 };
 
 class MatProgram {
