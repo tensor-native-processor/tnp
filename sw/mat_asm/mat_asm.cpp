@@ -1,11 +1,15 @@
 #include "mat_format.h"
 #include <cstdio>
+#include <iostream>
 
 int main() {
-    MatInstruction instr;
-    instr.op = MatInstruction::SET_WEIGHT;
-    printf("%d\n", instr.op);
-    printf("%d\n", MatInstruction::SET_WEIGHT);
-    printf("%d\n", MatInstruction::operands(MatInstruction::RECV_COL)[0]);
+    MatInstruction inst;
+    inst.op = MatInstruction::SET_WEIGHT;
+    inst.M1 = 258;
+
+    MatProgram prog;
+    prog.append(inst);
+    std::cout << prog.toText() << std::endl;
+
     return 0;
 }

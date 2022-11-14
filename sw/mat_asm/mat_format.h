@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -63,26 +64,31 @@ public:
     // Operand definition
     enum OperandTag {
         T_addr,
+        T_core_idx,
         T_Md, T_M1, T_M2,
         T_row_idx, T_col_idx, T_diag_idx, T_elem_idx,
-        T_core_idx,
     };
-    static std::vector<OperandTag> operands(Operator op);
+    static std::set<OperandTag> operands(Operator op);
 
 private:
-    static const std::map<Operator, std::vector<OperandTag>> operandMap;
+    static const std::map<Operator, std::set<OperandTag>> operandMap;
 };
 
-class MatAssembler {
+class MatProgram {
 public:
-    MatAssembler(): m_formatConfig() {}
-    MatAssembler(const MatFormatConfig& cfg): m_formatConfig(cfg) {}
+    MatProgram(): m_formatConfig() {}
+    MatProgram(const MatFormatConfig& cfg): m_formatConfig(cfg) {}
 
-    std::vector<uint8_t> toBinary(const std::vector<MatInstruction>&);
-    std::string toText(const std::vector<MatInstruction>&);
+    std::vector<uint8_t> toBinary() const;
+    std::string toText() const;
+    void fromBinary(const std::vector<uint8_t>&);
+    void fromText(const std::string&);
+
+    void append(const MatInstruction& inst);
 
 private:
     MatFormatConfig m_formatConfig;
+    std::vector<MatInstruction> m_instructions;
 };
 
 #endif
