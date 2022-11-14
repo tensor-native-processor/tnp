@@ -129,3 +129,22 @@ void MatProgram::fromText(const std::string& str) {
 void MatProgram::append(const MatInstruction& inst) {
     m_instructions.push_back(inst);
 }
+
+std::vector<uint8_t> MatProgram::encodeBinary(MatValue_t value, size_t size) {
+	std::vector<uint8_t> binary;
+	for (size_t i = 0;i < size;i++) {
+		uint8_t byte = (uint8_t)(value & 0xFF);
+		binary.push_back(byte);
+		value >>= 8;
+	}
+	return binary;
+}
+
+MatValue_t MatProgram::decodeBinary(const std::vector<uint8_t>& binary) {
+	MatValue_t value = 0;
+	for (size_t i = 0;i < binary.size();i++) {
+		MatValue_t byte = (MatValue_t)(binary[i]);
+		value |= byte << 8 * i;
+	}
+	return value;
+}

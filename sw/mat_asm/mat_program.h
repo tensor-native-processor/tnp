@@ -9,11 +9,11 @@
 #include <vector>
 
 // Operand size definition
-typedef long MatValue_t;
-typedef long MatMemAddr_t;
-typedef long MatRegAddr_t;
-typedef long MatWidthIdx_t;
-typedef long MatCoreIdx_t;
+typedef unsigned long MatValue_t;
+typedef unsigned long MatMemAddr_t;
+typedef unsigned long MatRegAddr_t;
+typedef unsigned long MatWidthIdx_t;
+typedef unsigned long MatCoreIdx_t;
 
 // Configure MatCore format sizes (in bytes)
 struct MatFormatConfig {
@@ -98,7 +98,7 @@ private:
     MatFormatConfig m_formatConfig;
     std::vector<MatInstruction> m_instructions;
 
-	static std::vector<uint8_t> encodeBinary(MatValue_t value);
+	static std::vector<uint8_t> encodeBinary(MatValue_t value, size_t size);
 	static MatValue_t decodeBinary(const std::vector<uint8_t>& binary);
 };
 
