@@ -9,6 +9,7 @@
 #include <vector>
 
 // Operand size definition
+typedef long MatValue_t;
 typedef long MatMemAddr_t;
 typedef long MatRegAddr_t;
 typedef long MatWidthIdx_t;
@@ -85,6 +86,7 @@ public:
     MatProgram(): m_formatConfig() {}
     MatProgram(const MatFormatConfig& cfg): m_formatConfig(cfg) {}
 
+    // Binary is in little-endian
     std::vector<uint8_t> toBinary() const;
     std::string toText() const;
     void fromBinary(const std::vector<uint8_t>&);
@@ -95,6 +97,9 @@ public:
 private:
     MatFormatConfig m_formatConfig;
     std::vector<MatInstruction> m_instructions;
+
+	static std::vector<uint8_t> encodeBinary(MatValue_t value);
+	static MatValue_t decodeBinary(const std::vector<uint8_t>& binary);
 };
 
 #endif
