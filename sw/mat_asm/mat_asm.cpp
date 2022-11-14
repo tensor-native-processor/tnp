@@ -9,6 +9,9 @@ int main() {
 
     MatProgram prog;
     prog.append(inst);
+	inst.Md = 89;
+	inst.op = MatInstruction::MULTIPLY;
+    prog.append(inst);
     std::cout << prog.toText() << std::endl;
 
     return 0;

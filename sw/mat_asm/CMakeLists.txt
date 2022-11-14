@@ -9,3 +9,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Wall")
 
 add_executable(matasm ${SRC})
+add_custom_target(run
+    COMMAND matasm
+    DEPENDS matasm
+	WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)
