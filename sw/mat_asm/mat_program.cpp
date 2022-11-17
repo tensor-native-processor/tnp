@@ -1,4 +1,5 @@
 #include "mat_program.h"
+#include "error.h"
 #include <sstream>
 
 // Instruction operand map
@@ -80,7 +81,7 @@ MatInstruction::Opcode MatInstruction::findOpcodeByName(std::string opName) {
             return key;
         }
     }
-//    FatalError("No opcode with name " + opName);
+    FatalError("No opcode with name " + opName);
 }
 
 // Convert MatProgram to/from text
