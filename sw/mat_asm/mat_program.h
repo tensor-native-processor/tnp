@@ -1,6 +1,8 @@
 #ifndef __MAT_FORMAT_H__
 #define __MAT_FORMAT_H__
 
+#include "program.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -72,9 +74,9 @@ public:
         T_Md, T_M1, T_M2,
         T_row_idx, T_col_idx, T_diag_idx, T_elem_idx,
     };
-    static std::set<OperandTag> operands(Operator op);
-    static std::string getOperatorName(Operator op);
-    static Operator findOperatorByName(std::string opName);
+    static std::set<OperandTag> operands(Operator);
+    static std::string getOperatorName(Operator);
+    static Operator findOperatorByName(std::string);
 
 private:
     static const std::map<Operator, std::set<OperandTag>> operandMap;
@@ -87,19 +89,19 @@ public:
     MatProgram(const MatFormatConfig& cfg): m_formatConfig(cfg) {}
 
     // Binary is in little-endian
-    std::vector<uint8_t> toBinary() const;
+    TNPProgramBinary toBinary() const;
     std::string toText() const;
-    void fromBinary(const std::vector<uint8_t>&);
+    void fromBinary(const TNPProgramBinary&);
     void fromText(const std::string&);
 
-    void append(const MatInstruction& inst);
+    void append(const MatInstruction&);
 
 private:
     MatFormatConfig m_formatConfig;
     std::vector<MatInstruction> m_instructions;
 
-	static std::vector<uint8_t> encodeBinary(MatValue_t value, size_t size);
-	static MatValue_t decodeBinary(const std::vector<uint8_t>& binary);
+	static TNPProgramBinary encodeBinary(MatValue_t, size_t);
+	static MatValue_t decodeBinary(const TNPProgramBinary&);
 };
 
 #endif

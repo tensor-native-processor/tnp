@@ -1,16 +1,3 @@
-cmake_minimum_required(VERSION 3.0)
-project(MatAsm)
-set(CMAKE_CXX_STANDARD 17)
+add_executable(matasm mat_program.cpp mat_asm.cpp)
 
-set(SRC mat_program.cpp mat_asm.cpp)
-
-set(CMAKE_BUILD_TYPE RELEASE)
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Wall")
-
-add_executable(matasm ${SRC})
-add_custom_target(run
-    COMMAND matasm
-    DEPENDS matasm
-	WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
-)
+target_include_directories(matasm PUBLIC ${PROJECT_SOURCE_DIR}/common)
