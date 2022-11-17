@@ -52,22 +52,20 @@ const std::map<MatInstruction::Opcode, std::string> MatInstruction::opcodeName =
     {HALT,              "HALT"},
 };
 
-/*
-// Operands in different categories
-const std::vector<MatInstruction::Operand> MatInstruction::matMemAddrOperands = {
-    ADDR
+// Get type for each operand
+const std::map<MatInstruction::Operand, MatInstruction::Type> MatInstruction::operandType = {
+    {ADDR,              MEM_ADDR_TYPE},
+    {CORE_IDX,          CORE_IDX_TYPE},
+    {Md,                REG_ADDR_TYPE},
+    {M1,                REG_ADDR_TYPE},
+    {M2,                REG_ADDR_TYPE},
+    {ROW_IDX,           WIDTH_IDX_TYPE},
+    {COL_IDX,           WIDTH_IDX_TYPE},
+    {DIAG_IDX,          WIDTH_IDX_TYPE},
+    {ELEM_IDX,          WIDTH_IDX_TYPE},
 };
-const std::vector<MatInstruction::Operand> MatInstruction::matCoreIdxOperands = {
-    CORE_IDX
-};
-const std::vector<MatInstruction::Operand> MatInstruction::matRegAddrOperands = {
-    Md, M1, M2
-};
-const std::vector<MatInstruction::Operand> MatInstruction::matWidthSizeOperands = {
-    ROW_IDX, COL_IDX, DIAG_IDX, ELEM_IDX
-};
-*/
 
+// Find opcode
 std::vector<MatInstruction::Operand> MatInstruction::getOpcodeOperands(Opcode op) {
     return operandMap.at(op);
 }

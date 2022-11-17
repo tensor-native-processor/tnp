@@ -57,6 +57,15 @@ public:
     };
     std::map<Operand, MatValue_t> operands;
 
+    // Types
+    enum Type {
+        OPCODE_TYPE,
+        MEM_ADDR_TYPE,
+        CORE_IDX_TYPE,
+        REG_ADDR_TYPE,
+        WIDTH_IDX_TYPE,
+    };
+
     static std::vector<Operand> getOpcodeOperands(Opcode);
     static std::string getOpcodeName(Opcode);
     static Opcode findOpcodeByName(std::string);
@@ -64,29 +73,22 @@ public:
 private:
     static const std::map<Opcode, std::vector<Operand>> operandMap;
     static const std::map<Opcode, std::string> opcodeName;
+    static const std::map<Operand, Type> operandType;
 };
 
 // Configure MatCore instruction sizes (in bytes)
 struct MatInstructionSize {
-    // Types of sizes
-    enum Type {
-        INST_TYPE,
-        MEM_ADDR_TYPE,
-        CORE_IDX_TYPE,
-        REG_ADDR_TYPE,
-        WIDTH_IDX_TYPE,
-    };
-    std::map<Type, size_t> size;
+    // Size of each type
+    std::map<MatInstruction::Type, size_t> size;
 
     // Default sizes
     MatInstructionSize() {
-        size[INST_TYPE] = 1;
-        size[MEM_ADDR_TYPE] = 8;
-        size[CORE_IDX_TYPE] = 1;
-        size[REG_ADDR_TYPE] = 2;
-        size[WIDTH_IDX_TYPE] = 2;
+        size[MatInstruction::OPCODE_TYPE] = 1;
+        size[MatInstruction::MEM_ADDR_TYPE] = 8;
+        size[MatInstruction::CORE_IDX_TYPE] = 1;
+        size[MatInstruction::REG_ADDR_TYPE] = 2;
+        size[MatInstruction::WIDTH_IDX_TYPE] = 2;
     }
-    static const std::map<MatInstruction::Operand, Type> typeMap;
 };
 
 // MatCore program
