@@ -2,34 +2,32 @@
 #include <sstream>
 
 // Instruction operand map
-const std::map<MatInstruction::Opcode, std::set<MatInstruction::OperandTag>> MatInstruction::operandMap = {
-    {SET_WEIGHT,        {T_M1}},
-    {MULTIPLY,          {T_Md, T_M1}},
-    {TRANSPOSE,         {T_M1}},
-    {LOAD_MAT,          {T_addr, T_M1}},
-    {LOAD_ROW,          {T_addr, T_M1, T_row_idx}},
-    {LOAD_COL,          {T_addr, T_M1, T_col_idx}},
-    {LOAD_SCALAR,       {T_addr, T_M1, T_row_idx, T_col_idx}},
-    {STORE_MAT,         {T_addr, T_M1}},
-    {STORE_ROW,         {T_addr, T_M1, T_row_idx}},
-    {STORE_COL,         {T_addr, T_M1, T_col_idx}},
-    {STORE_SCALAR,      {T_addr, T_M1, T_row_idx, T_col_idx}},
-    {SEND_ROW,          {T_core_idx, T_M1, T_row_idx}},
-    {SEND_COL,          {T_core_idx, T_M1, T_col_idx}},
-    {SEND_DIAG,         {T_core_idx, T_M1, T_M2, T_diag_idx}},
-    {RECV_ROW,          {T_core_idx, T_M1, T_row_idx}},
-    {RECV_COL,          {T_core_idx, T_M1, T_col_idx}},
-    {RECV_SCALAR,       {T_core_idx, T_M1, T_row_idx, T_col_idx, T_elem_idx}},
-    {RECV_DIAG,         {T_core_idx, T_M1, T_M2, T_diag_idx}},
-    {RECV_DIAG1,        {T_core_idx, T_M1, T_diag_idx}},
-    {RECV_DIAG2,        {T_core_idx, T_M1, T_diag_idx}},
+const std::map<MatInstruction::Opcode, std::vector<MatInstruction::Operand>> MatInstruction::operandMap = {
+    {SET_WEIGHT,        {M1}},
+    {MULTIPLY,          {Md, M1}},
+    {TRANSPOSE,         {M1}},
+    {LOAD_MAT,          {ADDR, M1}},
+    {LOAD_ROW,          {ADDR, M1, ROW_IDX}},
+    {LOAD_COL,          {ADDR, M1, COL_IDX}},
+    {LOAD_SCALAR,       {ADDR, M1, ROW_IDX, COL_IDX}},
+    {STORE_MAT,         {ADDR, M1}},
+    {STORE_ROW,         {ADDR, M1, ROW_IDX}},
+    {STORE_COL,         {ADDR, M1, COL_IDX}},
+    {STORE_SCALAR,      {ADDR, M1, ROW_IDX, COL_IDX}},
+    {SEND_ROW,          {CORE_IDX, M1, ROW_IDX}},
+    {SEND_COL,          {CORE_IDX, M1, COL_IDX}},
+    {SEND_DIAG,         {CORE_IDX, M1, M2, DIAG_IDX}},
+    {RECV_ROW,          {CORE_IDX, M1, ROW_IDX}},
+    {RECV_COL,          {CORE_IDX, M1, COL_IDX}},
+    {RECV_SCALAR,       {CORE_IDX, M1, ROW_IDX, COL_IDX, ELEM_IDX}},
+    {RECV_DIAG,         {CORE_IDX, M1, M2, DIAG_IDX}},
+    {RECV_DIAG1,        {CORE_IDX, M1, DIAG_IDX}},
+    {RECV_DIAG2,        {CORE_IDX, M1, DIAG_IDX}},
     {HALT,              {}},
-
-    {ILLEGAL_OP,        {}},
 };
 
 // Instruction operator name
-const std::map<MatInstruction::Opcode, std::string> MatInstruction::operatorName = {
+const std::map<MatInstruction::Opcode, std::string> MatInstruction::opcodeName = {
     {SET_WEIGHT,        "SET_WEIGHT"},
     {MULTIPLY,          "MULTIPLY"},
     {TRANSPOSE,         "TRANSPOSE"},
@@ -51,48 +49,50 @@ const std::map<MatInstruction::Opcode, std::string> MatInstruction::operatorName
     {RECV_DIAG1,        "RECV_DIAG1"},
     {RECV_DIAG2,        "RECV_DIAG2"},
     {HALT,              "HALT"},
-
-    {ILLEGAL_OP,        "ILLEGAL_OP"},
 };
 
+/*
+// Operands in different categories
+const std::vector<MatInstruction::Operand> MatInstruction::matMemAddrOperands = {
+    ADDR
+};
+const std::vector<MatInstruction::Operand> MatInstruction::matCoreIdxOperands = {
+    CORE_IDX
+};
+const std::vector<MatInstruction::Operand> MatInstruction::matRegAddrOperands = {
+    Md, M1, M2
+};
+const std::vector<MatInstruction::Operand> MatInstruction::matWidthSizeOperands = {
+    ROW_IDX, COL_IDX, DIAG_IDX, ELEM_IDX
+};
+*/
 
-std::set<MatInstruction::OperandTag> MatInstruction::operands(Opcode op) {
+std::vector<MatInstruction::Operand> MatInstruction::getOpcodeOperands(Opcode op) {
     return operandMap.at(op);
 }
 
 std::string MatInstruction::getOpcodeName(Opcode op) {
-    return operatorName.at(op);
+    return opcodeName.at(op);
 }
 MatInstruction::Opcode MatInstruction::findOpcodeByName(std::string opName) {
-    for (auto const& [key, val] : operatorName) {
+    for (auto const& [key, val] : opcodeName) {
         if (val == opName) {
             return key;
         }
     }
-    return ILLEGAL_OP;
+//    FatalError("No opcode with name " + opName);
 }
 
 // Convert MatProgram to/from text
 std::string MatProgram::toText() const {
     std::ostringstream oss;
     for (auto const &inst : m_instructions) {
-        oss << MatInstruction::getOpcodeName(inst.op) << " ";
-        auto operands = MatInstruction::operands(inst.op);
+        oss << MatInstruction::getOpcodeName(inst.opcode) << " ";
+        auto operands = MatInstruction::getOpcodeOperands(inst.opcode);
 
-        // Mem address
-        if (operands.count(MatInstruction::T_addr)) oss << inst.addr << " ";
-        // Core index
-        if (operands.count(MatInstruction::T_core_idx)) oss << inst.core_idx << " ";
-        // Mat reg
-        if (operands.count(MatInstruction::T_Md)) oss << inst.Md << " ";
-        if (operands.count(MatInstruction::T_M1)) oss << inst.M1 << " ";
-        if (operands.count(MatInstruction::T_M2)) oss << inst.M2 << " ";
-        // Width index
-        if (operands.count(MatInstruction::T_row_idx)) oss << inst.row_idx << " ";
-        if (operands.count(MatInstruction::T_col_idx)) oss << inst.col_idx << " ";
-        if (operands.count(MatInstruction::T_diag_idx)) oss << inst.diag_idx << " ";
-        if (operands.count(MatInstruction::T_elem_idx)) oss << inst.elem_idx << " ";
-
+        for (auto const& opr : operands) {
+            oss << inst.operands.at(opr) << " ";
+        }
         oss << "\n";
     }
     return oss.str();
@@ -105,90 +105,27 @@ void MatProgram::fromText(const std::string& str) {
     MatInstruction inst;
     std::string opName;
     while (iss >> opName) {
-        inst.op = MatInstruction::findOpcodeByName(opName);
-        auto operands = MatInstruction::operands(inst.op);
+        inst.opcode = MatInstruction::findOpcodeByName(opName);
+        auto operands = MatInstruction::operands(inst.opcode);
 
-        // Mem address
-        if (operands.count(MatInstruction::T_addr)) iss >> inst.addr;
-        // Core index
-        if (operands.count(MatInstruction::T_core_idx)) iss >> inst.core_idx;
-        // Mat reg
-        if (operands.count(MatInstruction::T_Md)) iss >> inst.Md;
-        if (operands.count(MatInstruction::T_M1)) iss >> inst.M1;
-        if (operands.count(MatInstruction::T_M2)) iss >> inst.M2;
-        // Width index
-        if (operands.count(MatInstruction::T_row_idx)) iss >> inst.row_idx;
-        if (operands.count(MatInstruction::T_col_idx)) iss >> inst.col_idx;
-        if (operands.count(MatInstruction::T_diag_idx)) iss >> inst.diag_idx;
-        if (operands.count(MatInstruction::T_elem_idx)) iss >> inst.elem_idx;
-
+        for (auto const& opr : operands) {
+            iss >> inst.operands.at(opr);
+        }
         m_instructions.push_back(inst);
     }
 }
 
-// Convert MatProgram to/from binary
-TNPProgramBinary MatProgram::toBinary() const {
-    TNPProgramBinary output;
-    for (auto const &inst : m_instructions) {
-        auto opcodeBin = encodeBinary(inst.op, m_formatConfig.MatInstSize);
-        output.insert(output.end(), opcodeBin.begin(), opcodeBin.end());
-
-        auto operands = MatInstruction::operands(inst.op);
-
-        // Mem address
-        if (operands.count(MatInstruction::T_addr)) {
-            auto opBin = encodeBinary(inst.addr, m_formatConfig.MatMemAddrSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        // Core index
-        if (operands.count(MatInstruction::T_core_idx)) {
-            auto opBin = encodeBinary(inst.core_idx, m_formatConfig.MatCoreIdxSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        // Mat reg
-        if (operands.count(MatInstruction::T_Md)) {
-            auto opBin = encodeBinary(inst.Md, m_formatConfig.MatRegAddrSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        if (operands.count(MatInstruction::T_M1)) {
-            auto opBin = encodeBinary(inst.M1, m_formatConfig.MatRegAddrSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        if (operands.count(MatInstruction::T_M2)) {
-            auto opBin = encodeBinary(inst.M2, m_formatConfig.MatRegAddrSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        // Width index
-        if (operands.count(MatInstruction::T_row_idx)) {
-            auto opBin = encodeBinary(inst.row_idx, m_formatConfig.MatWidthIdxSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        if (operands.count(MatInstruction::T_col_idx)) {
-            auto opBin = encodeBinary(inst.col_idx, m_formatConfig.MatWidthIdxSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        if (operands.count(MatInstruction::T_diag_idx)) {
-            auto opBin = encodeBinary(inst.diag_idx, m_formatConfig.MatWidthIdxSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-        if (operands.count(MatInstruction::T_elem_idx)) {
-            auto opBin = encodeBinary(inst.elem_idx, m_formatConfig.MatWidthIdxSize);
-            output.insert(output.end(), opBin.begin(), opBin.end());
-        }
-    }
-    return output;
-}
-
-
+// Append one instruction to mat program
 void MatProgram::append(const MatInstruction& inst) {
     m_instructions.push_back(inst);
 }
 
+// Encode and decode binary content
 TNPProgramBinary MatProgram::encodeBinary(MatValue_t value, size_t size) {
 	TNPProgramBinary binary;
 	for (size_t i = 0;i < size;i++) {
-		uint8_t byte = (uint8_t)(value & 0xFF);
-		binary.push_back(std::byte(byte));
+        std::byte b = std::byte(value & 0xFF);
+		binary.push_back(b);
 		value >>= 8;
 	}
 	return binary;

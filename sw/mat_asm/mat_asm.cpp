@@ -3,15 +3,17 @@
 #include <iostream>
 
 int main() {
-    MatInstruction inst;
-    inst.op = MatInstruction::SET_WEIGHT;
-    inst.M1 = 258;
-
     MatProgram prog;
+
+    MatInstruction inst;
+    inst.opcode = MatInstruction::SET_WEIGHT;
+    inst.operands[MatInstruction::M1] = 258;
     prog.append(inst);
-	inst.Md = 89;
-	inst.op = MatInstruction::MULTIPLY;
+
+	inst.opcode = MatInstruction::MULTIPLY;
+    inst.operands[MatInstruction::Md] = 258;
     prog.append(inst);
+
     std::cout << prog.toText() << std::endl;
 
     return 0;

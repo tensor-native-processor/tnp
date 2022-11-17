@@ -12,18 +12,14 @@
 
 // Operand size definition
 typedef unsigned long MatValue_t;
-typedef unsigned long MatMemAddr_t;
-typedef unsigned long MatRegAddr_t;
-typedef unsigned long MatWidthIdx_t;
-typedef unsigned long MatCoreIdx_t;
 
 // Configure MatCore format sizes (in bytes)
 struct MatFormatConfig {
     size_t MatInstSize = 1;
     size_t MatMemAddrSize = 8;
+    size_t MatCoreIdxSize = 1;
     size_t MatRegAddrSize = 2;
     size_t MatWidthIdxSize = 2;
-    size_t MatCoreIdxSize = 1;
 };
 
 class MatInstruction {
@@ -58,29 +54,24 @@ public:
 
         // Section 4
         HALT            = 0b10000000,
-
-        // Other
-        ILLEGAL_OP      = 0b11111111,
-    } op;
-    MatMemAddr_t addr;
-    MatRegAddr_t Md, M1, M2;
-    MatWidthIdx_t row_idx, col_idx, diag_idx, elem_idx;
-    MatCoreIdx_t core_idx;
+    } opcode;
 
     // Operand definition
-    enum OperandTag {
-        T_addr,
-        T_core_idx,
-        T_Md, T_M1, T_M2,
-        T_row_idx, T_col_idx, T_diag_idx, T_elem_idx,
+    enum Operand {
+        ADDR,
+        CORE_IDX,
+        Md, M1, M2,
+        ROW_IDX, COL_IDX, DIAG_IDX, ELEM_IDX,
     };
-    static std::set<OperandTag> operands(Opcode);
+    std::map<Operand, MatValue_t> operands;
+
+    static std::vector<Operand> getOpcodeOperands(Opcode);
     static std::string getOpcodeName(Opcode);
     static Opcode findOpcodeByName(std::string);
 
 private:
-    static const std::map<Opcode, std::set<OperandTag>> operandMap;
-    static const std::map<Opcode, std::string> operatorName;
+    static const std::map<Opcode, std::vector<Operand>> operandMap;
+    static const std::map<Opcode, std::string> opcodeName;
 };
 
 class MatProgram {
