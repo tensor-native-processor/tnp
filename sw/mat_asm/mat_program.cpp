@@ -141,6 +141,31 @@ TNPProgramBinary MatProgram::toBinary() const {
     return bin;
 }
 
+void MatProgram::fromBinary(const TNPProgramBinary& bin) {
+    // Clear existing program
+    m_instructions.clear();
+    MatInstruction inst;
+
+    auto iter = bin.begin();
+    while (iter != bin.end()) {
+        size_t size;
+
+        // Fetch opcode
+        size = m_isizes[MatInstruction::OPCODE_TYPE];
+        inst.opcode = (MatInstruction::Opcode)decodeBinary(TNPProgramBinary(iter, iter + size));
+        iter += size;
+
+        // Fetch operands
+        auto operands = MatInstruction::getOpcodeOperands(inst.opcode);
+        for (auto const& opr : operands) {
+            size = m_isizes[MatInstruction::getOperandType(opr)];
+            inst.operands[opr] = decodeBinary(TNPProgramBinary(iter, iter + size));
+            iter += size;
+        }
+        m_instructions.push_back(inst);
+    }
+}
+
 // Append one instruction to mat program
 void MatProgram::append(const MatInstruction& inst) {
     m_instructions.push_back(inst);
