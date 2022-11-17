@@ -29,7 +29,7 @@ struct MatFormatConfig {
 class MatInstruction {
 public:
     // Instruction type
-    enum Operator {
+    enum Opcode {
         // Section 1
         SET_WEIGHT      = 0b00100000,
         MULTIPLY        = 0b00100001,
@@ -74,13 +74,13 @@ public:
         T_Md, T_M1, T_M2,
         T_row_idx, T_col_idx, T_diag_idx, T_elem_idx,
     };
-    static std::set<OperandTag> operands(Operator);
-    static std::string getOperatorName(Operator);
-    static Operator findOperatorByName(std::string);
+    static std::set<OperandTag> operands(Opcode);
+    static std::string getOpcodeName(Opcode);
+    static Opcode findOpcodeByName(std::string);
 
 private:
-    static const std::map<Operator, std::set<OperandTag>> operandMap;
-    static const std::map<Operator, std::string> operatorName;
+    static const std::map<Opcode, std::set<OperandTag>> operandMap;
+    static const std::map<Opcode, std::string> operatorName;
 };
 
 class MatProgram {

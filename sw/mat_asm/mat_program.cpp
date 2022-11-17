@@ -2,7 +2,7 @@
 #include <sstream>
 
 // Instruction operand map
-const std::map<MatInstruction::Operator, std::set<MatInstruction::OperandTag>> MatInstruction::operandMap = {
+const std::map<MatInstruction::Opcode, std::set<MatInstruction::OperandTag>> MatInstruction::operandMap = {
     {SET_WEIGHT,        {T_M1}},
     {MULTIPLY,          {T_Md, T_M1}},
     {TRANSPOSE,         {T_M1}},
@@ -29,7 +29,7 @@ const std::map<MatInstruction::Operator, std::set<MatInstruction::OperandTag>> M
 };
 
 // Instruction operator name
-const std::map<MatInstruction::Operator, std::string> MatInstruction::operatorName = {
+const std::map<MatInstruction::Opcode, std::string> MatInstruction::operatorName = {
     {SET_WEIGHT,        "SET_WEIGHT"},
     {MULTIPLY,          "MULTIPLY"},
     {TRANSPOSE,         "TRANSPOSE"},
@@ -56,14 +56,14 @@ const std::map<MatInstruction::Operator, std::string> MatInstruction::operatorNa
 };
 
 
-std::set<MatInstruction::OperandTag> MatInstruction::operands(Operator op) {
+std::set<MatInstruction::OperandTag> MatInstruction::operands(Opcode op) {
     return operandMap.at(op);
 }
 
-std::string MatInstruction::getOperatorName(Operator op) {
+std::string MatInstruction::getOpcodeName(Opcode op) {
     return operatorName.at(op);
 }
-MatInstruction::Operator MatInstruction::findOperatorByName(std::string opName) {
+MatInstruction::Opcode MatInstruction::findOpcodeByName(std::string opName) {
     for (auto const& [key, val] : operatorName) {
         if (val == opName) {
             return key;
@@ -76,7 +76,7 @@ MatInstruction::Operator MatInstruction::findOperatorByName(std::string opName) 
 std::string MatProgram::toText() const {
     std::ostringstream oss;
     for (auto const &inst : m_instructions) {
-        oss << MatInstruction::getOperatorName(inst.op) << " ";
+        oss << MatInstruction::getOpcodeName(inst.op) << " ";
         auto operands = MatInstruction::operands(inst.op);
 
         // Mem address
@@ -105,7 +105,7 @@ void MatProgram::fromText(const std::string& str) {
     MatInstruction inst;
     std::string opName;
     while (iss >> opName) {
-        inst.op = MatInstruction::findOperatorByName(opName);
+        inst.op = MatInstruction::findOpcodeByName(opName);
         auto operands = MatInstruction::operands(inst.op);
 
         // Mem address
