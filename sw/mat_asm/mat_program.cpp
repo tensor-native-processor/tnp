@@ -134,7 +134,7 @@ TNPProgramBinary MatProgram::toBinary() const {
 
         auto operands = MatInstruction::getOpcodeOperands(inst.opcode);
         for (auto const& opr : operands) {
-            auto oprBin = encodeBinary(opr, m_isizes[MatInstruction::getOperandType(opr)]);
+            auto oprBin = encodeBinary(inst.operands.at(opr), m_isizes[MatInstruction::getOperandType(opr)]);
             bin.insert(bin.end(), oprBin.begin(), oprBin.end());
         }
     }

@@ -11,10 +11,18 @@ int main() {
     prog.append(inst);
 
 	inst.opcode = MatInstruction::MULTIPLY;
-    inst.operands[MatInstruction::Md] = 258;
+    inst.operands[MatInstruction::Md] = 259;
+    prog.append(inst);
+
+	inst.opcode = MatInstruction::HALT;
     prog.append(inst);
 
     std::cout << prog.toText() << std::endl;
+
+    TNPProgramBinary bin = prog.toBinary();
+    MatProgram prog2;
+    prog2.fromBinary(bin);
+    std::cout << "Next: " << prog2.toText() << std::endl;
 
     return 0;
 }
