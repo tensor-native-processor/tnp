@@ -106,7 +106,7 @@ void MatProgram::fromText(const std::string& str) {
     std::string opName;
     while (iss >> opName) {
         inst.opcode = MatInstruction::findOpcodeByName(opName);
-        auto operands = MatInstruction::operands(inst.opcode);
+        auto operands = MatInstruction::getOpcodeOperands(inst.opcode);
 
         for (auto const& opr : operands) {
             iss >> inst.operands.at(opr);

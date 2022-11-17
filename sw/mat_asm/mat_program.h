@@ -13,15 +13,7 @@
 // Operand size definition
 typedef unsigned long MatValue_t;
 
-// Configure MatCore format sizes (in bytes)
-struct MatFormatConfig {
-    size_t MatInstSize = 1;
-    size_t MatMemAddrSize = 8;
-    size_t MatCoreIdxSize = 1;
-    size_t MatRegAddrSize = 2;
-    size_t MatWidthIdxSize = 2;
-};
-
+// Single mat instruction
 class MatInstruction {
 public:
     // Instruction type
@@ -74,10 +66,34 @@ private:
     static const std::map<Opcode, std::string> opcodeName;
 };
 
+// Configure MatCore instruction sizes (in bytes)
+struct MatInstructionSize {
+    // Types of sizes
+    enum Type {
+        INST_TYPE,
+        MEM_ADDR_TYPE,
+        CORE_IDX_TYPE,
+        REG_ADDR_TYPE,
+        WIDTH_IDX_TYPE,
+    };
+    std::map<Type, size_t> size;
+
+    // Default sizes
+    MatInstructionSize() {
+        size[INST_TYPE] = 1;
+        size[MEM_ADDR_TYPE] = 8;
+        size[CORE_IDX_TYPE] = 1;
+        size[REG_ADDR_TYPE] = 2;
+        size[WIDTH_IDX_TYPE] = 2;
+    }
+    static const std::map<MatInstruction::Operand, Type> typeMap;
+};
+
+// MatCore program
 class MatProgram {
 public:
-    MatProgram(): m_formatConfig() {}
-    MatProgram(const MatFormatConfig& cfg): m_formatConfig(cfg) {}
+    MatProgram(): m_instructionSize() {}
+    MatProgram(const MatInstructionSize& cfg): m_instructionSize(cfg) {}
 
     // Binary is in little-endian
     TNPProgramBinary toBinary() const;
@@ -88,7 +104,7 @@ public:
     void append(const MatInstruction&);
 
 private:
-    MatFormatConfig m_formatConfig;
+    MatInstructionSize m_instructionSize;
     std::vector<MatInstruction> m_instructions;
 
 	static TNPProgramBinary encodeBinary(MatValue_t, size_t);
