@@ -10,11 +10,11 @@
 #include <string>
 #include <vector>
 
-// Operand size definition
-typedef unsigned long MatValue_t;
+// Core size definition
+typedef unsigned long CoreValue_t;
 
-// Single mat instruction
-class MatInstruction {
+// Matrix Core instruction definition
+class MatCoreInstDefn {
 public:
     // Instruction type
     enum Opcode {
@@ -46,7 +46,7 @@ public:
 
         // Section 4
         HALT            = 0b10000000,
-    } opcode;
+    };
 
     // Operand definition
     enum Operand {
@@ -55,7 +55,6 @@ public:
         Md, M1, M2,
         ROW_IDX, COL_IDX, DIAG_IDX, ELEM_IDX,
     };
-    std::map<Operand, MatValue_t> operands;
 
     // Types
     enum Type {
@@ -77,29 +76,40 @@ private:
     static const std::map<Operand, Type> operandType;
 };
 
-// Configure MatCore instruction sizes (in bytes)
-struct MatInstructionSize {
-    // Size of each type
-    std::map<MatInstruction::Type, size_t> size;
-
-    // Default sizes
-    MatInstructionSize() {
-        size[MatInstruction::OPCODE_TYPE] = 1;
-        size[MatInstruction::MEM_ADDR_TYPE] = 8;
-        size[MatInstruction::CORE_IDX_TYPE] = 1;
-        size[MatInstruction::REG_ADDR_TYPE] = 2;
-        size[MatInstruction::WIDTH_IDX_TYPE] = 2;
-    }
-
-    size_t& operator[](MatInstruction::Type);
-    const size_t& operator[] (MatInstruction::Type) const;
+// Single generic core instruction data
+template<class CoreInstDefn>
+class BaseCoreInst {
+public:
+    typename CoreInstDefn::Opcode opcode;
+    std::map<typename CoreInstDefn::Operand, CoreValue_t> operands;
 };
 
-// MatCore program
-class MatProgram {
+// Configure MatCore instruction sizes (in bytes)
+struct MatCoreInstSize {
+    // Size of each type
+    std::map<MatCoreInstDefn::Type, size_t> size;
+
+    // Default sizes
+    MatCoreInstSize() {
+        size[MatCoreInstDefn::OPCODE_TYPE] = 1;
+        size[MatCoreInstDefn::MEM_ADDR_TYPE] = 8;
+        size[MatCoreInstDefn::CORE_IDX_TYPE] = 1;
+        size[MatCoreInstDefn::REG_ADDR_TYPE] = 2;
+        size[MatCoreInstDefn::WIDTH_IDX_TYPE] = 2;
+    }
+
+    size_t& operator[](MatCoreInstDefn::Type);
+    const size_t& operator[] (MatCoreInstDefn::Type) const;
+};
+
+// Generic core program
+template<class CoreInstDefn, class CoreInstSize>
+class BaseCoreProgram {
 public:
-    MatProgram(): m_isizes() {}
-    MatProgram(const MatInstructionSize& c): m_isizes(c) {}
+    typedef BaseCoreInst<CoreInstDefn> CoreInst;
+
+    BaseCoreProgram(): m_isizes() {}
+    BaseCoreProgram(const CoreInstSize& c): m_isizes(c) {}
 
     // Binary is in little-endian
     TNPProgramBinary toBinary() const;
@@ -107,14 +117,19 @@ public:
     void fromBinary(const TNPProgramBinary&);
     void fromText(const std::string&);
 
-    void append(const MatInstruction&);
+    void append(const CoreInst&);
 
 private:
-    MatInstructionSize m_isizes;
-    std::vector<MatInstruction> m_instructions;
+    CoreInstSize m_isizes;
+    std::vector<CoreInst> m_insts;
 
-	static TNPProgramBinary encodeBinary(MatValue_t, size_t);
-	static MatValue_t decodeBinary(const TNPProgramBinary&);
+	static TNPProgramBinary encodeBinary(CoreValue_t, size_t);
+	static CoreValue_t decodeBinary(const TNPProgramBinary&);
 };
+
+typedef BaseCoreInst<MatCoreInstDefn> MatCoreInst;
+typedef BaseCoreProgram<MatCoreInstDefn, MatCoreInstSize> MatCoreProgram;
+
+#include "mat_program.inl"
 
 #endif

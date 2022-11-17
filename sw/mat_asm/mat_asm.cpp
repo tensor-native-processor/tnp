@@ -3,24 +3,24 @@
 #include <iostream>
 
 int main() {
-    MatProgram prog;
+    MatCoreProgram prog;
 
-    MatInstruction inst;
-    inst.opcode = MatInstruction::SET_WEIGHT;
-    inst.operands[MatInstruction::M1] = 258;
+    MatCoreInst inst;
+    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
+    inst.operands[MatCoreInstDefn::M1] = 258;
     prog.append(inst);
 
-	inst.opcode = MatInstruction::MULTIPLY;
-    inst.operands[MatInstruction::Md] = 259;
+	inst.opcode = MatCoreInstDefn::MULTIPLY;
+    inst.operands[MatCoreInstDefn::Md] = 259;
     prog.append(inst);
 
-	inst.opcode = MatInstruction::HALT;
+	inst.opcode = MatCoreInstDefn::HALT;
     prog.append(inst);
 
     std::cout << prog.toText() << std::endl;
 
     TNPProgramBinary bin = prog.toBinary();
-    MatProgram prog2;
+    MatCoreProgram prog2;
     prog2.fromBinary(bin);
     std::cout << "Next: " << prog2.toText() << std::endl;
 
