@@ -65,6 +65,14 @@ const std::map<MatInstruction::Operand, MatInstruction::Type> MatInstruction::op
     {ELEM_IDX,          WIDTH_IDX_TYPE},
 };
 
+// MatInstructionSize []
+size_t& MatInstructionSize::operator[](MatInstruction::Type type) {
+    return size[type];
+}
+const size_t& MatInstructionSize::operator[] (MatInstruction::Type type) const {
+    return size.at(type);
+}
+
 // Find opcode
 std::vector<MatInstruction::Operand> MatInstruction::getOpcodeOperands(Opcode op) {
     return operandMap.at(op);
@@ -80,6 +88,9 @@ MatInstruction::Opcode MatInstruction::findOpcodeByName(std::string opName) {
         }
     }
     FatalError("No opcode with name " + opName);
+}
+MatInstruction::Type MatInstruction::getOperandType(Operand opr) {
+    return operandType.at(opr);
 }
 
 // Convert MatProgram to/from text
@@ -112,6 +123,22 @@ void MatProgram::fromText(const std::string& str) {
         }
         m_instructions.push_back(inst);
     }
+}
+
+// Convert MatProgram to/from binary
+TNPProgramBinary MatProgram::toBinary() const {
+    TNPProgramBinary bin;
+    for (auto const &inst : m_instructions) {
+        auto opcBin = encodeBinary(inst.opcode, m_isizes[MatInstruction::OPCODE_TYPE]);
+        bin.insert(bin.end(), opcBin.begin(), opcBin.end());
+
+        auto operands = MatInstruction::getOpcodeOperands(inst.opcode);
+        for (auto const& opr : operands) {
+            auto oprBin = encodeBinary(opr, m_isizes[MatInstruction::getOperandType(opr)]);
+            bin.insert(bin.end(), oprBin.begin(), oprBin.end());
+        }
+    }
+    return bin;
 }
 
 // Append one instruction to mat program

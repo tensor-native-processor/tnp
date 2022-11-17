@@ -69,6 +69,7 @@ public:
     static std::vector<Operand> getOpcodeOperands(Opcode);
     static std::string getOpcodeName(Opcode);
     static Opcode findOpcodeByName(std::string);
+    static Type getOperandType(Operand);
 
 private:
     static const std::map<Opcode, std::vector<Operand>> operandMap;
@@ -89,13 +90,16 @@ struct MatInstructionSize {
         size[MatInstruction::REG_ADDR_TYPE] = 2;
         size[MatInstruction::WIDTH_IDX_TYPE] = 2;
     }
+
+    size_t& operator[](MatInstruction::Type);
+    const size_t& operator[] (MatInstruction::Type) const;
 };
 
 // MatCore program
 class MatProgram {
 public:
-    MatProgram(): m_instructionSize() {}
-    MatProgram(const MatInstructionSize& cfg): m_instructionSize(cfg) {}
+    MatProgram(): m_isizes() {}
+    MatProgram(const MatInstructionSize& c): m_isizes(c) {}
 
     // Binary is in little-endian
     TNPProgramBinary toBinary() const;
@@ -106,7 +110,7 @@ public:
     void append(const MatInstruction&);
 
 private:
-    MatInstructionSize m_instructionSize;
+    MatInstructionSize m_isizes;
     std::vector<MatInstruction> m_instructions;
 
 	static TNPProgramBinary encodeBinary(MatValue_t, size_t);
