@@ -126,6 +126,60 @@ void MatProgram::fromText(const std::string& str) {
     }
 }
 
+// Convert MatProgram to/from binary
+std::vector<uint8_t> MatProgram::toBinary() const {
+    std::vector<uint8_t> output;
+    for (auto const &inst : m_instructions) {
+        auto opcodeBin = encodeBinary(inst.op, m_formatConfig.MatInstSize);
+        output.insert(output.end(), opcodeBin.begin(), opcodeBin.end());
+
+        auto operands = MatInstruction::operands(inst.op);
+
+        // Mem address
+        if (operands.count(MatInstruction::T_addr)) {
+            auto opBin = encodeBinary(inst.addr, m_formatConfig.MatMemAddrSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        // Core index
+        if (operands.count(MatInstruction::T_core_idx)) {
+            auto opBin = encodeBinary(inst.core_idx, m_formatConfig.MatCoreIdxSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        // Mat reg
+        if (operands.count(MatInstruction::T_Md)) {
+            auto opBin = encodeBinary(inst.Md, m_formatConfig.MatRegAddrSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        if (operands.count(MatInstruction::T_M1)) {
+            auto opBin = encodeBinary(inst.M1, m_formatConfig.MatRegAddrSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        if (operands.count(MatInstruction::T_M2)) {
+            auto opBin = encodeBinary(inst.M2, m_formatConfig.MatRegAddrSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        // Width index
+        if (operands.count(MatInstruction::T_row_idx)) {
+            auto opBin = encodeBinary(inst.row_idx, m_formatConfig.MatWidthIdxSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        if (operands.count(MatInstruction::T_col_idx)) {
+            auto opBin = encodeBinary(inst.col_idx, m_formatConfig.MatWidthIdxSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        if (operands.count(MatInstruction::T_diag_idx)) {
+            auto opBin = encodeBinary(inst.diag_idx, m_formatConfig.MatWidthIdxSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+        if (operands.count(MatInstruction::T_elem_idx)) {
+            auto opBin = encodeBinary(inst.elem_idx, m_formatConfig.MatWidthIdxSize);
+            output.insert(output.end(), opBin.begin(), opBin.end());
+        }
+    }
+    return output;
+}
+
+
 void MatProgram::append(const MatInstruction& inst) {
     m_instructions.push_back(inst);
 }
