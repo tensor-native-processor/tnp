@@ -2,6 +2,8 @@
 
 module MatUnit
     #(parameter WIDTH = 128,
+
+                // Auto-generated sizes
                 WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
      input logic set_weight,

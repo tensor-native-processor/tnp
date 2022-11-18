@@ -43,6 +43,8 @@ module MatControl
                 WIDTH_IDX_TYPE_BYTES = 2,
                 MAX_INST_TOTAL_BYTES = 16,
 
+                WIDTH = 128,
+
                 // Auto-generated sizes
                 OPCODE_TYPE_SIZE = 8 * OPCODE_TYPE_BYTES,
                 MEM_ADDR_TYPE_SIZE = 8 * MEM_ADDR_TYPE_BYTES,
@@ -50,7 +52,10 @@ module MatControl
                 REG_ADDR_TYPE_SIZE = 8 * REG_ADDR_TYPE_BYTES,
                 WIDTH_IDX_TYPE_SIZE = 8 * WIDTH_IDX_TYPE_BYTES,
                 MAX_INST_TOTAL_SIZE = 8 * MAX_INST_TOTAL_BYTES)
-    (input logic clock, reset);
+    (input logic clock, reset,
+     input shortreal
+     output logic 
+     output logic );
 
     // Data memory and instruction memory (initialized by testbench)
     logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
@@ -174,11 +179,25 @@ module MatControl
             READY: begin
                 next_state = NEXT;
 
-                case (opcode)
-                    HALT: begin
-                        next_state = STOP;
-                    end
-                endcase
+// Case on opcode
+case (opcode)
+    // Section 1
+    // TODO
+
+    // Section 2
+    LOAD_ROW: begin
+        ??? = 
+    end
+    LOAD_COL: begin
+    end
+
+    // Section 3
+
+    // Section 4
+    HALT: begin
+        next_state = STOP;
+    end
+endcase
             end
             NEXT: begin
                 program_counter_proceed = 1;

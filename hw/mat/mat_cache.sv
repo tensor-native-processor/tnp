@@ -3,8 +3,10 @@
 // Matrix cache system
 module MatCache
     #(parameter WIDTH = 128,
-                WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_SIZE = 4,
+
+                // Auto-generated sizes
+                WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
     (input logic clock,
      input MatDataReadOp_t read_op,
