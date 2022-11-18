@@ -172,10 +172,19 @@ module MatControl
             end
             READY: begin
                 next_state = NEXT;
+
+                case (opcode)
+                    HALT: begin
+                        next_state = STOP;
+                    end
+                endcase
             end
             NEXT: begin
                 program_counter_proceed = 1;
                 next_state = READY;
+            end
+            STOP: begin
+                next_state = STOP;
             end
         endcase
     end
