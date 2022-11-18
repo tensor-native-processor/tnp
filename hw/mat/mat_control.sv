@@ -53,12 +53,12 @@ module MatControl
     (input logic clock, reset);
 
     // Data memory and instruction memory (initialized by testbench)
-    logic [INST_MEM_SIZE-1:0][7:0] inst_mem;
+    logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
     shortreal data_mem[DATA_MEM_SIZE-1:0];
 
     // State machine
     enum {
-        INIT, READY, NEXT, HALT
+        INIT, READY, NEXT, STOP
     } state, next_state;
 
     // Program counter register
@@ -92,7 +92,7 @@ module MatControl
         {op_row_idx, op_col_idx, op_diag_idx, op_elem_idx} = 0;
 
         opcode = cur_inst[OPCODE_TYPE_SIZE-1:0];
-        next_inst_offset = OPCODE_TYPE_BYTES;;
+        next_inst_offset = OPCODE_TYPE_BYTES;
 
         case (opcode)
             SET_WEIGHT,
@@ -109,6 +109,7 @@ module MatControl
                 next_inst_offset = 2*REG_ADDR_TYPE_BYTES+OPCODE_TYPE_BYTES;
             end
             HALT: begin
+                next_inst_offset = 0;
             end
         endcase
     end
@@ -140,6 +141,7 @@ module MatControl
                 next_state = NEXT;
             end
             NEXT: begin
+                program_counter_proceed = 1;
                 next_state = READY;
             end
         endcase
