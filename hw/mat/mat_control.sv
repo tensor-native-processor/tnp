@@ -41,7 +41,7 @@ module MatControl
                 CORE_IDX_TYPE_BYTES = 1,
                 REG_ADDR_TYPE_BYTES = 2,
                 WIDTH_IDX_TYPE_BYTES = 2,
-                MAX_INST_TOTAL_BYTES = 8,
+                MAX_INST_TOTAL_BYTES = 16,
 
                 // Auto-generated sizes
                 OPCODE_TYPE_SIZE = 8 * OPCODE_TYPE_BYTES,
@@ -95,19 +95,52 @@ module MatControl
         next_inst_offset = OPCODE_TYPE_BYTES;
 
         case (opcode)
+            // Section 1
             SET_WEIGHT,
             TRANSPOSE: begin
-                op_M1 = cur_inst[REG_ADDR_TYPE_SIZE+OPCODE_TYPE_SIZE-1:
-                                 OPCODE_TYPE_SIZE];
-                next_inst_offset = REG_ADDR_TYPE_BYTES+OPCODE_TYPE_BYTES;
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
             MULTIPLY: begin
-                op_Md = cur_inst[REG_ADDR_TYPE_SIZE+OPCODE_TYPE_SIZE-1:
-                                 OPCODE_TYPE_SIZE];
-                op_M1 = cur_inst[2*REG_ADDR_TYPE_SIZE+OPCODE_TYPE_SIZE-1:
-                                 REG_ADDR_TYPE_SIZE+OPCODE_TYPE_SIZE];
-                next_inst_offset = 2*REG_ADDR_TYPE_BYTES+OPCODE_TYPE_BYTES;
+                op_Md       = cur_inst[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
             end
+
+            // Section 2
+            LOAD_MAT,
+            STORE_MAT: begin
+                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
+            end
+            LOAD_ROW,
+            STORE_ROW: begin
+                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
+            end
+            LOAD_COL,
+            STORE_COL: begin
+                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_col_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
+            end
+            LOAD_SCALAR,
+            STORE_SCALAR: begin
+                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_col_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+2*WIDTH_IDX_TYPE_BYTES;
+            end
+
+            // Section 3
+            // TODO: after interconnect
+
+            // Section 4
             HALT: begin
                 next_inst_offset = 0;
             end
