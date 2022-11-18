@@ -7,6 +7,7 @@
 
 // Program binary definition
 typedef std::vector<std::byte> TNPProgramBinary;
+void SaveProgram(const TNPProgramBinary&, const std::string&);
 
 // Core size definition
 typedef unsigned long CoreValue_t;
