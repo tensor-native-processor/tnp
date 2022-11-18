@@ -58,7 +58,8 @@ module MatControl
 
     // State machine
     enum {
-        INIT, READY, NEXT, STOP
+        INIT, READY, NEXT, STOP,
+        TOP_HALF, BOTTOM_HALF, HYBRID
     } state, next_state;
 
     // Program counter register
