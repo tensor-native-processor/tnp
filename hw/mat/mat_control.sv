@@ -79,8 +79,8 @@ module MatControl
      input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr,
      input shortreal data_mem_data_out[WIDTH-1:0],
+     output MatDataMemWriteOp_t data_mem_write_op,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr,
-     output logic [WIDTH_ADDR_SIZE-1:0] data_mem_write_size,
      output shortreal data_mem_data_in[WIDTH-1:0]
     );
 
@@ -232,8 +232,8 @@ module MatControl
         done = 0;
         // DataMem
         data_mem_read_addr = 0;
+        data_mem_write_op = MAT_DATA_MEM_WRITE_DISABLE;
         data_mem_write_addr = 0;
-        data_mem_write_size = 0;
         data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
         // Cache
         cache_read_op = MAT_DATA_READ_DISABLE;
@@ -291,6 +291,17 @@ case (opcode)
         cache_write_param2 = op_col_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
+    STORE_ROW: begin
+        // Read from cache
+        cache_read_op = MAT_DATA_READ_ROW;
+        cache_read_addr1 = op_M1;
+        cache_read_param = op_row_idx;
+
+        // Write into DataMem
+        data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
+        data_mem_write_addr = op_addr;
+    end
+
 
     // Section 3
 

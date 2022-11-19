@@ -23,6 +23,12 @@ module MatInstMem
 
 endmodule: MatInstMem
 
+typedef enum {
+    MAT_DATA_MEM_WRITE_DISABLE,
+    MAT_DATA_MEM_WRITE_SINGLE,
+    MAT_DATA_MEM_WRITE_ALL
+} MatDataMemWriteOp_t;
+
 // MatCore Data Memory
 module MatDataMem
     #(parameter DATA_MEM_SIZE = 100,
@@ -37,8 +43,8 @@ module MatDataMem
      output shortreal data_out[DATA_MEM_WIDTH_SIZE-1:0],
 
      // Write
+     input MatDataMemWriteOp_t write_op,
      input logic [DATA_MEM_ADDR_SIZE-1:0] write_addr,
-     input logic [DATA_MEM_WIDTH_ADDR_SIZE-1:0] write_size,
      input shortreal data_in[DATA_MEM_WIDTH_SIZE-1:0]
     );
 
@@ -56,7 +62,11 @@ module MatDataMem
     generate
         for (i = 0;i < DATA_MEM_SIZE;i++)
             always_ff @(posedge clock) begin
-               if (i >= write_addr && i < write_addr + write_size)
+               if (write_op == MAT_DATA_MEM_WRITE_SINGLE &&
+                       i == write_addr ||
+                   write_op == MAT_DATA_MEM_WRITE_ALL &&
+                       i >= write_addr &&
+                       i < write_addr + DATA_MEM_WIDTH_SIZE)
                    data_mem[i] <= data_in[i - write_addr];
             end
     endgenerate

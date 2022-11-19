@@ -38,8 +38,8 @@ module MatControl_test
     logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out;
     logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr;
     shortreal data_mem_data_out[WIDTH-1:0];
+    MatDataMemWriteOp_t data_mem_write_op;
     logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr;
-    logic [WIDTH_ADDR_SIZE-1:0] data_mem_write_size;
     shortreal data_mem_data_in[WIDTH-1:0];
 
 
@@ -70,8 +70,8 @@ module MatControl_test
         .DATA_MEM_WIDTH_SIZE(WIDTH)
     ) DataMemDUT(.clock(clock),
         .read_addr(data_mem_read_addr), .data_out(data_mem_data_out),
+        .write_op(data_mem_write_op),
         .write_addr(data_mem_write_addr),
-        .write_size(data_mem_write_size),
         .data_in(data_mem_data_in)
     );
 
