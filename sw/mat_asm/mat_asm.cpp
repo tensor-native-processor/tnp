@@ -47,6 +47,20 @@ int main() {
     inst.operands[MatCoreInstDefn::COL_IDX] = 69;
     prog.append(inst);
 
+    // store row 100 5 3
+    inst.opcode = MatCoreInstDefn::STORE_ROW;
+    inst.operands[MatCoreInstDefn::ADDR] = 100;
+    inst.operands[MatCoreInstDefn::M1] = 5;
+    inst.operands[MatCoreInstDefn::ROW_IDX] = 3;
+    prog.append(inst);
+
+    // store col 150 4 2
+    inst.opcode = MatCoreInstDefn::STORE_COL;
+    inst.operands[MatCoreInstDefn::ADDR] = 150;
+    inst.operands[MatCoreInstDefn::M1] = 4;
+    inst.operands[MatCoreInstDefn::COL_IDX] = 2;
+    prog.append(inst);
+
     // halt
     inst.opcode = MatCoreInstDefn::HALT;
     prog.append(inst);
