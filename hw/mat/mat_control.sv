@@ -131,7 +131,8 @@ module MatControl
     // Multiplex input into cache_data_in
     enum {
         CACHE_DATA_FROM_ZERO,
-        CACHE_DATA_FROM_DATA_MEM_DATA_OUT
+        CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
+        CACHE_DATA_FROM_UNIT_DATA_OUT
     } cache_data_in_sel;
 
     genvar i;
@@ -144,6 +145,9 @@ module MatControl
                     end
                     CACHE_DATA_FROM_DATA_MEM_DATA_OUT: begin
                         cache_data_in[i] = data_mem_data_out[i];
+                    end
+                    CACHE_DATA_FROM_UNIT_DATA_OUT: begin
+                        cache_data_in[i] = unit_data_out[i];
                     end
                 endcase
             end
