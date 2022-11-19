@@ -4,8 +4,18 @@ module MatControl_test
     #(parameter WIDTH = 16,
                 CACHE_SIZE = 8,
 
+                INST_MEM_SIZE = 1024,
+                DATA_MEM_SIZE = 1024,
+
+                INST_MEM_ADDR_SIZE = 32,
+                DATA_MEM_ADDR_SIZE = 32,
+                INST_MEM_WIDTH_BYTES = 16,
+
+                // Auto-gen
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
-                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE)
+                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE),
+
+                INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES
     ) ();
 
     logic clock, reset, done;
@@ -24,7 +34,17 @@ module MatControl_test
     shortreal cache_data_in[WIDTH-1:0];
     shortreal cache_data_out[WIDTH-1:0];
 
-    MatControl #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE)) DUT(.*);
+    logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_addr;
+    logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_value;
+    logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_addr;
+    shortreal data_mem_value[WIDTH-1:0];
+
+
+    MatControl #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE),
+        .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
+        .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
+        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE)
+    ) DUT(.*);
     MatUnit #(.WIDTH(WIDTH)) UnitDUT(.clock, .set_weight(unit_set_weight),
         .set_weight_row(unit_set_weight_row), .data_in(unit_data_in),
         .data_out(unit_data_out)
@@ -38,6 +58,14 @@ module MatControl_test
         .write_param1(cache_write_param1), .write_param2(cache_write_param2),
         .data_in(cache_data_in), .data_out(cache_data_out)
     );
+    MatInstMem #(.INST_MEM_SIZE(INST_MEM_SIZE),
+        .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
+        .INST_MEM_WIDTH_BYTES(INST_MEM_WIDTH_BYTES)
+    ) InstMemDUT(.addr(inst_mem_addr), .value(inst_mem_value));
+    MatDataMem #(.DATA_MEM_SIZE(DATA_MEM_SIZE),
+        .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
+        .DATA_MEM_WIDTH_SIZE(WIDTH)
+    ) DataMemDUT(.addr(data_mem_addr), .value(data_mem_value));
 
 
     // Clock signal
@@ -47,7 +75,7 @@ module MatControl_test
     end
     
     initial begin
-        $readmemb("inst_mem.txt", DUT.inst_mem);
+        $readmemb("inst_mem.txt", InstMemDUT.inst_mem);
         reset = 1;
         #10 reset = 0;
 

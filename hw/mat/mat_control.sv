@@ -33,15 +33,15 @@ typedef enum logic [7:0] {
 
 // Main control unit for MatCore
 module MatControl
-    #(parameter INST_MEM_SIZE = 100,
-                DATA_MEM_SIZE = 100,
-                INST_MEM_ADDR_SIZE = 32,
-                OPCODE_TYPE_BYTES = 1,
+    #(parameter OPCODE_TYPE_BYTES = 1,
                 MEM_ADDR_TYPE_BYTES = 8,
                 CORE_IDX_TYPE_BYTES = 1,
                 REG_ADDR_TYPE_BYTES = 2,
                 WIDTH_IDX_TYPE_BYTES = 2,
-                MAX_INST_TOTAL_BYTES = 16,
+
+                INST_MEM_ADDR_SIZE = 32,
+                DATA_MEM_ADDR_SIZE = 32,
+                INST_MEM_WIDTH_SIZE = 16,
 
                 WIDTH = 128,
                 CACHE_SIZE = 4,
@@ -52,7 +52,6 @@ module MatControl
                 CORE_IDX_TYPE_SIZE = 8 * CORE_IDX_TYPE_BYTES,
                 REG_ADDR_TYPE_SIZE = 8 * REG_ADDR_TYPE_BYTES,
                 WIDTH_IDX_TYPE_SIZE = 8 * WIDTH_IDX_TYPE_BYTES,
-                MAX_INST_TOTAL_SIZE = 8 * MAX_INST_TOTAL_BYTES,
 
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
@@ -73,12 +72,14 @@ module MatControl
      output logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2,
      output logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2,
      output shortreal cache_data_in[WIDTH-1:0],
-     input shortreal cache_data_out[WIDTH-1:0]
-    );
+     input shortreal cache_data_out[WIDTH-1:0],
 
-    // Data memory and instruction memory (initialized by testbench)
-    logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
-    shortreal data_mem[DATA_MEM_SIZE-1:0];
+     // Interface with memory
+     output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_addr,
+     input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_value,
+     output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_addr,
+     input shortreal data_mem_value[WIDTH-1:0]
+    );
 
     // State machine
     enum {
@@ -86,20 +87,10 @@ module MatControl
         TOP_HALF, BOTTOM_HALF, HYBRID
     } state, next_state;
 
-    // Program counter register
-    logic [INST_MEM_ADDR_SIZE-1:0] program_counter;
-    logic program_counter_proceed;
+    // Proceed to next_inst
+    logic next_inst_proceed;
     // Offset to next instruction (size of current instruction)
     logic [INST_MEM_ADDR_SIZE-1:0] next_inst_offset;
-    // Content of current instruction
-    logic [MAX_INST_TOTAL_SIZE-1:0] cur_inst;
-
-    // Assign from inst_mem
-    genvar i;
-    generate
-        for (i = 0;i < MAX_INST_TOTAL_BYTES;i++)
-            assign cur_inst[i*8+7:i*8] = inst_mem[program_counter+i][7:0];
-    endgenerate;
 
     // Opcode/operand register
     logic [OPCODE_TYPE_SIZE-1:0] opcode;
@@ -116,49 +107,49 @@ module MatControl
         {op_Md, op_M1, op_M2} = 0;
         {op_row_idx, op_col_idx, op_diag_idx, op_elem_idx} = 0;
 
-        opcode = cur_inst[OPCODE_TYPE_SIZE-1:0];
+        opcode = inst_mem_value[OPCODE_TYPE_SIZE-1:0];
         next_inst_offset = OPCODE_TYPE_BYTES;
 
         case (opcode)
             // Section 1
             SET_WEIGHT,
             TRANSPOSE: begin
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
             MULTIPLY: begin
-                op_Md       = cur_inst[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_Md       = inst_mem_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
             end
 
             // Section 2
             LOAD_MAT,
             STORE_MAT: begin
-                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
             LOAD_ROW,
             STORE_ROW: begin
-                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_row_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
             LOAD_COL,
             STORE_COL: begin
-                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_col_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_col_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
             LOAD_SCALAR,
             STORE_SCALAR: begin
-                op_addr     = cur_inst[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_row_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
-                op_col_idx  = cur_inst[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_col_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+2*WIDTH_IDX_TYPE_BYTES;
             end
 
@@ -183,15 +174,15 @@ module MatControl
     // Remember program counter
     always_ff @(posedge clock) begin
         if (reset)
-            program_counter <= 0;
-        else if (program_counter_proceed)
-            program_counter <= program_counter + next_inst_offset;
+            inst_mem_addr <= 0;
+        else if (next_inst_proceed)
+            inst_mem_addr <= inst_mem_addr + next_inst_offset;
     end
 
     // Assign next state and output
     always_comb begin
         // Set default values
-        program_counter_proceed = 0;
+        next_inst_proceed = 0;
         done = 0;
 
         case (state)
@@ -224,7 +215,7 @@ endcase
 */
             end
             NEXT: begin
-                program_counter_proceed = 1;
+                next_inst_proceed = 1;
                 next_state = READY;
             end
             STOP: begin
