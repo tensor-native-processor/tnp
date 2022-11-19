@@ -12,19 +12,26 @@ int main() {
     inst.operands[MatCoreInstDefn::M1] = 258;
     prog.append(inst);
 
-    // load row 3 5
+    // load row 3 5 3
     inst.opcode = MatCoreInstDefn::LOAD_ROW;
     inst.operands[MatCoreInstDefn::ADDR] = 3;
     inst.operands[MatCoreInstDefn::M1] = 5;
     inst.operands[MatCoreInstDefn::ROW_IDX] = 3;
     prog.append(inst);
 
-    // load scalar 998244353 2048 512 536
+    // load col 45 4 2
+    inst.opcode = MatCoreInstDefn::LOAD_COL;
+    inst.operands[MatCoreInstDefn::ADDR] = 45;
+    inst.operands[MatCoreInstDefn::M1] = 4;
+    inst.operands[MatCoreInstDefn::COL_IDX] = 2;
+    prog.append(inst);
+
+    // load scalar 67 2 8 9
     inst.opcode = MatCoreInstDefn::LOAD_SCALAR;
-    inst.operands[MatCoreInstDefn::ADDR] = 998244353;
-    inst.operands[MatCoreInstDefn::M1] = 2048;
-    inst.operands[MatCoreInstDefn::ROW_IDX] = 512;
-    inst.operands[MatCoreInstDefn::COL_IDX] = 536;
+    inst.operands[MatCoreInstDefn::ADDR] = 67;
+    inst.operands[MatCoreInstDefn::M1] = 2;
+    inst.operands[MatCoreInstDefn::ROW_IDX] = 8;
+    inst.operands[MatCoreInstDefn::COL_IDX] = 9;
     prog.append(inst);
 
     // multiply 23 259
