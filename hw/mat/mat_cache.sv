@@ -11,7 +11,7 @@ module MatCache
     (input logic clock,
      input MatDataReadOp_t read_op,
      input logic [CACHE_ADDR_SIZE-1:0] read_addr1, read_addr2,
-     input logic [WIDTH_ADDR_SIZE-1:0] read_param,
+     input logic [WIDTH_ADDR_SIZE-1:0] read_param1, read_param2,
      input MatDataWriteOp_t write_op,
      input logic [CACHE_ADDR_SIZE-1:0] write_addr1, write_addr2,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param1, write_param2,
@@ -22,7 +22,7 @@ module MatCache
     shortreal reg_data_out[CACHE_SIZE-1:0][WIDTH-1:0];
 
     MatReg #(.WIDTH(WIDTH)) mat_reg[CACHE_SIZE-1:0](
-        .clock, .read_op, .read_param,
+        .clock, .read_op, .read_param1, .read_param2,
         .write_op(reg_write_op), .write_param1, .write_param2,
         .data_in, .data_out(reg_data_out)
     );
@@ -72,11 +72,12 @@ module MatCache
                         data_out[i] = 0;
                     end
                     MAT_DATA_READ_ROW,
-                    MAT_DATA_READ_COL: begin
+                    MAT_DATA_READ_COL,
+                    MAT_DATA_READ_SCALAR: begin
                         data_out[i] = reg_data_out[read_addr1][i];
                     end
                     MAT_DATA_READ_DIAG: begin
-                        if (i <= read_param) begin
+                        if (i <= read_param1) begin
                             data_out[i] = reg_data_out[read_addr1][i];
                         end else begin
                             data_out[i] = reg_data_out[read_addr2][i];

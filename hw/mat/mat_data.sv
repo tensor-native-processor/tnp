@@ -15,5 +15,6 @@ typedef enum {
     MAT_DATA_READ_DISABLE,
     MAT_DATA_READ_ROW,
     MAT_DATA_READ_COL,
+    MAT_DATA_READ_SCALAR,
     MAT_DATA_READ_DIAG
 } MatDataReadOp_t;

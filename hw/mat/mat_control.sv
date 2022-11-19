@@ -67,7 +67,7 @@ module MatControl
      // Interface with MatCache
      output MatDataReadOp_t cache_read_op,
      output logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2,
-     output logic [WIDTH_ADDR_SIZE-1:0] cache_read_param,
+     output logic [WIDTH_ADDR_SIZE-1:0] cache_read_param1, cache_read_param2,
      output MatDataWriteOp_t cache_write_op,
      output logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2,
      output logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2,
@@ -239,7 +239,8 @@ module MatControl
         cache_read_op = MAT_DATA_READ_DISABLE;
         cache_read_addr1 = 0;
         cache_read_addr2 = 0;
-        cache_read_param = 0;
+        cache_read_param1 = 0;
+        cache_read_param2 = 0;
         cache_write_op = MAT_DATA_WRITE_DISABLE;
         cache_write_addr1 = 0;
         cache_write_addr2 = 0;
@@ -295,7 +296,7 @@ case (opcode)
         // Read from cache
         cache_read_op = MAT_DATA_READ_ROW;
         cache_read_addr1 = op_M1;
-        cache_read_param = op_row_idx;
+        cache_read_param1 = op_row_idx;
 
         // Write into DataMem
         data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
@@ -305,7 +306,7 @@ case (opcode)
         // Read from cache
         cache_read_op = MAT_DATA_READ_COL;
         cache_read_addr1 = op_M1;
-        cache_read_param = op_col_idx;
+        cache_read_param1 = op_col_idx;
 
         // Write into DataMem
         data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;

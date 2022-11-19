@@ -6,7 +6,7 @@ module MatReg
                 WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
      input MatDataReadOp_t read_op,
-     input logic [WIDTH_ADDR_SIZE-1:0] read_param,
+     input logic [WIDTH_ADDR_SIZE-1:0] read_param1, read_param2,
      input MatDataWriteOp_t write_op,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param1, write_param2,
      input shortreal data_in[WIDTH-1:0],
@@ -83,17 +83,20 @@ module MatReg
                         data_out[i] = 0;
                     end
                     MAT_DATA_READ_ROW: begin
-                        data_out[i] = mem[read_param][i];
+                        data_out[i] = mem[read_param1][i];
                     end
                     MAT_DATA_READ_COL: begin
-                        data_out[i] = mem[i][read_param];
+                        data_out[i] = mem[i][read_param1];
+                    end
+                    MAT_DATA_READ_SCALAR: begin
+                        data_out[i] = i == 0 ? mem[read_param1][read_param2] : 0;
                     end
                     MAT_DATA_READ_DIAG: begin
                         // Test primary/secondary diagonal
-                        if (i <= read_param) begin
-                            data_out[i] = mem[i][read_param - i];
+                        if (i <= read_param1) begin
+                            data_out[i] = mem[i][read_param1 - i];
                         end else begin
-                            data_out[i] = mem[i][WIDTH + read_param - i];
+                            data_out[i] = mem[i][WIDTH + read_param1 - i];
                         end
                     end
                 endcase

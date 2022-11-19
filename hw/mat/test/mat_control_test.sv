@@ -27,7 +27,7 @@ module MatControl_test
 
     MatDataReadOp_t cache_read_op;
     logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2;
-    logic [WIDTH_ADDR_SIZE-1:0] cache_read_param;
+    logic [WIDTH_ADDR_SIZE-1:0] cache_read_param1, cache_read_param2;
     MatDataWriteOp_t cache_write_op;
     logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2;
     logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2;
@@ -55,7 +55,7 @@ module MatControl_test
     MatCache #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE)) CacheDUT(.clock,
         .read_op(cache_read_op),
         .read_addr1(cache_read_addr1), .read_addr2(cache_read_addr2),
-        .read_param(cache_read_param),
+        .read_param1(cache_read_param1), .read_param2(cache_read_param2),
         .write_op(cache_write_op),
         .write_addr1(cache_write_addr1), .write_addr2(cache_write_addr2),
         .write_param1(cache_write_param1), .write_param2(cache_write_param2),
