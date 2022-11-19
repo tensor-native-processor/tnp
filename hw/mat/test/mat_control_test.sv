@@ -97,7 +97,14 @@ module MatControl_test
         reset = 1;
         #10 reset = 0;
 
-        #1000 $finish;
+        #1000;
+        data_mem_file = $fopen("output.txt", "w");
+        for (i = 0;i < DATA_MEM_SIZE;i++) begin
+            $fwrite(data_mem_file, "%f\n", DataMemDUT.data_mem[i]);
+        end
+        $fclose(data_mem_file);
+
+        $finish;
     end
 
 endmodule: MatControl_test

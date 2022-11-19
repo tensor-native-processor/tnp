@@ -62,11 +62,11 @@ module MatDataMem
     generate
         for (i = 0;i < DATA_MEM_SIZE;i++)
             always_ff @(posedge clock) begin
-               if (write_op == MAT_DATA_MEM_WRITE_SINGLE &&
-                       i == write_addr ||
-                   write_op == MAT_DATA_MEM_WRITE_ALL &&
+               if ((write_op == MAT_DATA_MEM_WRITE_SINGLE &&
+                       i == write_addr) ||
+                   (write_op == MAT_DATA_MEM_WRITE_ALL &&
                        i >= write_addr &&
-                       i < write_addr + DATA_MEM_WIDTH_SIZE)
+                       i < write_addr + DATA_MEM_WIDTH_SIZE))
                    data_mem[i] <= data_in[i - write_addr];
             end
     endgenerate
