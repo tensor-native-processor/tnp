@@ -1,1 +1,1 @@
-add_library(common program.cpp error.cpp)
+add_library(common STATIC program.cpp error.cpp)

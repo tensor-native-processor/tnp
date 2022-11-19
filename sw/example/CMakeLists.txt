@@ -1,0 +1,9 @@
+# mat_mult
+add_executable(mat_mult mat_mult.cpp)
+target_include_directories(mat_mult PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_link_libraries(mat_mult mat_core)
+
+# mat_asm
+add_executable(mat_asm mat_asm.cpp)
+target_include_directories(mat_asm PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_link_libraries(mat_asm mat_core)

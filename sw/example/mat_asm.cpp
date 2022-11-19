@@ -84,7 +84,7 @@ int main() {
     std::cout << prog.toText() << std::endl;
 
     TNPProgramBinary bin = prog.toBinary();
-    SaveProgram(bin, "test.txt");
+    SaveProgram(bin, "inst_mem.txt");
 
     MatCoreProgram prog2;
     prog2.fromBinary(bin);
