@@ -87,7 +87,7 @@ module MatControl
     // State machine
     enum {
         INIT, READY, NEXT, STOP,
-        TOP_HALF, BOTTOM_HALF, HYBRID
+        P1, P2, P3
     } state, next_state;
 
     // Proceed to next_inst
@@ -296,16 +296,7 @@ case (opcode)
     // Section 1
     SET_WEIGHT: begin
         // Change next state
-        next_state = TOP_HALF;
-
-        // Read from cache
-        cache_read_op = MAT_DATA_READ_DIAG;
-        cache_read_addr1 = op_M1;
-        cache_read_addr2 = op_M1;
-        cache_read_param1 = 0;
-
-        // Set unit data in
-        unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+        next_state = P1;
 
         // Init counter
         diag_progress_counter_clr = 1;
@@ -392,6 +383,76 @@ endcase
             STOP: begin
                 next_state = STOP;
                 done = 1;
+            end
+
+            P1: begin
+                // Stage 1
+                if (diag_progress_counter == WIDTH - 1) begin
+                    next_state = P2;
+                    diag_progress_counter_clr = 1;
+                end else begin
+                    next_state = P1;
+                    diag_progress_counter_inc = 1;
+                end
+
+                // Read from cache
+                cache_read_op = MAT_DATA_READ_DIAG;
+                cache_read_addr1 = op_M1;
+                cache_read_addr2 = op_M1;
+                cache_read_param1 = diag_progress_counter;
+
+                // Set unit data in
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+
+                // Write weight at the end
+                if (diag_progress_counter == WIDTH - 1) begin
+                    unit_set_weight = 1;
+                    unit_set_weight_row = 0;
+                end
+            end
+            P2: begin
+                // Stage 2
+                if (diag_progress_counter == WIDTH - 1) begin
+                    next_state = P3;
+                    diag_progress_counter_clr = 1;
+                end else begin
+                    next_state = P2;
+                    diag_progress_counter_inc = 1;
+                end
+
+                // Read from cache
+                cache_read_op = MAT_DATA_READ_DIAG;
+                cache_read_addr1 = op_M1;
+                cache_read_addr2 = op_M1;
+                cache_read_param1 = diag_progress_counter;
+
+                // Set unit data in
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+
+                // Write weight before the end
+                if (diag_progress_counter < WIDTH - 1) begin
+                    unit_set_weight = 1;
+                    unit_set_weight_row = diag_progress_counter + 1;
+                end
+            end
+            P3: begin
+                // Stage 3
+                if (diag_progress_counter == WIDTH - 1) begin
+                    next_state = NEXT;
+                end else begin
+                    next_state = P2;
+                    diag_progress_counter_inc = 1;
+                end
+                diag_progress_counter_inc = 1;
+
+                // Read from cache
+                cache_read_op = MAT_DATA_READ_DIAG;
+                cache_read_addr1 = op_M1;
+                cache_read_addr2 = op_M1;
+                cache_read_param1 = diag_progress_counter;
+
+                // Set unit data in
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
             end
         endcase
     end
