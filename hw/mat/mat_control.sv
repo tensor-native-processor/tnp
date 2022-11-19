@@ -56,7 +56,9 @@ module MatControl
     // State machine
     enum {
         INIT, READY, NEXT, STOP,
-        P1, P2, P3
+        P0XX, P01X, P012,
+        PX0X, PX01,
+        PXX0
     } state, next_state;
 
     // Proceed to next_inst
