@@ -219,6 +219,27 @@ module MatControl
         end
     endgenerate
 
+    // Multiplex input into unit_data_in
+    enum {
+        UNIT_DATA_FROM_ZERO,
+        UNIT_DATA_FROM_CACHE_DATA_OUT
+    } unit_data_in_sel;
+
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unique case (unit_data_in_sel)
+                    UNIT_DATA_FROM_ZERO: begin
+                        unit_data_in[i] = 0;
+                    end
+                    UNIT_DATA_FROM_CACHE_DATA_OUT: begin
+                        unit_data_in[i] = cache_data_out[i];
+                    end
+                endcase
+            end
+        end
+    endgenerate
+
     // Assign next state and output
     always_comb begin
         // Set default values
@@ -241,6 +262,10 @@ module MatControl
         cache_write_param1 = 0;
         cache_write_param2 = 0;
         cache_data_in_sel = CACHE_DATA_FROM_ZERO;
+        // Unit
+        unit_set_weight = 0;
+        unit_set_weight_row = 0;
+        unit_data_in_sel = UNIT_DATA_FROM_ZERO;
 
         case (state)
             INIT: begin
@@ -252,6 +277,8 @@ module MatControl
 // Case on opcode
 case (opcode)
     // Section 1
+    SET_WEIGHT: begin
+    end
     // TODO
 
     // Section 2
