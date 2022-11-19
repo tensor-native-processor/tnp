@@ -74,8 +74,18 @@ module MatControl_test
         forever #5 clock = ~clock;
     end
     
+    integer i, data_mem_file;
     initial begin
+        // Load instruction/data memory
         $readmemb("inst_mem.txt", InstMemDUT.inst_mem);
+        data_mem_file = $fopen("data_mem.txt", "r");
+        i = 0;
+        while ($fscanf(data_mem_file, "%f", DataMemDUT.data_mem[i]) == 1) begin
+            i++;
+        end
+        $fclose(data_mem_file);
+
+        // Reset control
         reset = 1;
         #10 reset = 0;
 

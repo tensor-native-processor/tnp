@@ -32,7 +32,7 @@ module MatDataMem
      output shortreal value[DATA_MEM_WIDTH_SIZE-1:0]);
 
     // Data memory (initialized by testbench)
-    logic data_mem[DATA_MEM_SIZE-1:0];
+    shortreal data_mem[DATA_MEM_SIZE-1:0];
 
     // Output to value
     genvar i;
