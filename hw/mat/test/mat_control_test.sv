@@ -34,10 +34,10 @@ module MatControl_test
     shortreal cache_data_in[WIDTH-1:0];
     shortreal cache_data_out[WIDTH-1:0];
 
-    logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_addr;
-    logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_value;
-    logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_addr;
-    shortreal data_mem_value[WIDTH-1:0];
+    logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr;
+    logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out;
+    logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr;
+    shortreal data_mem_data_out[WIDTH-1:0];
 
 
     MatControl #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE),
@@ -61,11 +61,11 @@ module MatControl_test
     MatInstMem #(.INST_MEM_SIZE(INST_MEM_SIZE),
         .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
         .INST_MEM_WIDTH_BYTES(INST_MEM_WIDTH_BYTES)
-    ) InstMemDUT(.addr(inst_mem_addr), .value(inst_mem_value));
+    ) InstMemDUT(.read_addr(inst_mem_read_addr), .data_out(inst_mem_data_out));
     MatDataMem #(.DATA_MEM_SIZE(DATA_MEM_SIZE),
         .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
         .DATA_MEM_WIDTH_SIZE(WIDTH)
-    ) DataMemDUT(.addr(data_mem_addr), .value(data_mem_value));
+    ) DataMemDUT(.read_addr(data_mem_read_addr), .data_out(data_mem_data_out));
 
 
     // Clock signal

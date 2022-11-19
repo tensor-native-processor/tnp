@@ -75,10 +75,10 @@ module MatControl
      input shortreal cache_data_out[WIDTH-1:0],
 
      // Interface with memory
-     output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_addr,
-     input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_value,
-     output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_addr,
-     input shortreal data_mem_value[WIDTH-1:0]
+     output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr,
+     input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out,
+     output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr,
+     input shortreal data_mem_data_out[WIDTH-1:0]
     );
 
     // State machine
@@ -107,49 +107,49 @@ module MatControl
         {op_Md, op_M1, op_M2} = 0;
         {op_row_idx, op_col_idx, op_diag_idx, op_elem_idx} = 0;
 
-        opcode = inst_mem_value[OPCODE_TYPE_SIZE-1:0];
+        opcode = inst_mem_data_out[OPCODE_TYPE_SIZE-1:0];
         next_inst_offset = OPCODE_TYPE_BYTES;
 
         case (opcode)
             // Section 1
             SET_WEIGHT,
             TRANSPOSE: begin
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
             MULTIPLY: begin
-                op_Md       = inst_mem_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_Md       = inst_mem_data_out[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
             end
 
             // Section 2
             LOAD_MAT,
             STORE_MAT: begin
-                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
             LOAD_ROW,
             STORE_ROW: begin
-                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_row_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
             LOAD_COL,
             STORE_COL: begin
-                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_col_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_col_idx  = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
             LOAD_SCALAR,
             STORE_SCALAR: begin
-                op_addr     = inst_mem_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                op_row_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
-                op_col_idx  = inst_mem_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_col_idx  = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+2*WIDTH_IDX_TYPE_BYTES;
             end
 
@@ -174,15 +174,15 @@ module MatControl
     // Remember program counter
     always_ff @(posedge clock) begin
         if (reset)
-            inst_mem_addr <= 0;
+            inst_mem_read_addr <= 0;
         else if (next_inst_proceed)
-            inst_mem_addr <= inst_mem_addr + next_inst_offset;
+            inst_mem_read_addr <= inst_mem_read_addr + next_inst_offset;
     end
 
     // Multiplex input into cache_data_in
     enum {
         CACHE_DATA_FROM_ZERO,
-        CACHE_DATA_FROM_DATA_MEM_VALUE
+        CACHE_DATA_FROM_DATA_MEM_DATA_OUT
     } cache_data_in_sel;
 
     genvar i;
@@ -193,8 +193,8 @@ module MatControl
                     CACHE_DATA_FROM_ZERO: begin
                         cache_data_in[i] = 0;
                     end
-                    CACHE_DATA_FROM_DATA_MEM_VALUE: begin
-                        cache_data_in[i] = data_mem_value[i];
+                    CACHE_DATA_FROM_DATA_MEM_DATA_OUT: begin
+                        cache_data_in[i] = data_mem_data_out[i];
                     end
                 endcase
             end
@@ -207,7 +207,7 @@ module MatControl
         next_inst_proceed = 0;
         done = 0;
         // DataMem
-        data_mem_addr = 0;
+        data_mem_read_addr = 0;
         // Cache
         cache_read_op = MAT_DATA_READ_DISABLE;
         cache_read_addr1 = 0;
@@ -235,34 +235,34 @@ case (opcode)
     // Section 2
     LOAD_ROW: begin
         // Read from DataMem
-        data_mem_addr = op_addr;
+        data_mem_read_addr = op_addr;
 
         // Write into cache
         cache_write_op = MAT_DATA_WRITE_ROW;
         cache_write_addr1 = op_M1;
         cache_write_param1 = op_row_idx;
-        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
     LOAD_COL: begin
         // Read from DataMem
-        data_mem_addr = op_addr;
+        data_mem_read_addr = op_addr;
 
         // Write into cache
         cache_write_op = MAT_DATA_WRITE_COL;
         cache_write_addr1 = op_M1;
         cache_write_param1 = op_col_idx;
-        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
     LOAD_SCALAR: begin
         // Read from DataMem
-        data_mem_addr = op_addr; // data_mem_value[0] now contains scalar
+        data_mem_read_addr = op_addr; // data_mem_data_out[0] now contains scalar
 
         // Write into cache
         cache_write_op = MAT_DATA_WRITE_SCALAR;
         cache_write_addr1 = op_M1;
         cache_write_param1 = op_row_idx;
         cache_write_param2 = op_col_idx;
-        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
 
     // Section 3

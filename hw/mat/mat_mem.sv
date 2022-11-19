@@ -8,8 +8,8 @@ module MatInstMem
 
                 // Auto-generated sizes
                 INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES)
-    (input logic [INST_MEM_ADDR_SIZE-1:0] addr,
-     output logic [INST_MEM_WIDTH_SIZE-1:0] value);
+    (input logic [INST_MEM_ADDR_SIZE-1:0] read_addr,
+     output logic [INST_MEM_WIDTH_SIZE-1:0] data_out);
 
     // Instruction memory (initialized by testbench)
     logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
@@ -18,7 +18,7 @@ module MatInstMem
     genvar i;
     generate
         for (i = 0;i < INST_MEM_WIDTH_BYTES;i++)
-            assign value[i*8+7:i*8] = inst_mem[addr + i][7:0];
+            assign data_out[i*8+7:i*8] = inst_mem[read_addr + i][7:0];
     endgenerate
 
 endmodule: MatInstMem
@@ -27,9 +27,19 @@ endmodule: MatInstMem
 module MatDataMem
     #(parameter DATA_MEM_SIZE = 100,
                 DATA_MEM_ADDR_SIZE = 32,
-                DATA_MEM_WIDTH_SIZE = 16)
-    (input logic [DATA_MEM_ADDR_SIZE-1:0] addr,
-     output shortreal value[DATA_MEM_WIDTH_SIZE-1:0]);
+                DATA_MEM_WIDTH_SIZE = 16,
+
+                // Auto-generated sizes
+                DATA_MEM_WIDTH_ADDR_SIZE = $clog2(DATA_MEM_WIDTH_SIZE)
+    )
+    (input logic [DATA_MEM_ADDR_SIZE-1:0] read_addr,
+     output shortreal data_out[DATA_MEM_WIDTH_SIZE-1:0],
+
+     // Write
+     input logic [DATA_MEM_ADDR_SIZE-1:0] write_addr,
+     input logic [DATA_MEM_WIDTH_ADDR_SIZE-1:0] write_size,
+     input shortreal data_in[DATA_MEM_WIDTH_SIZE-1:0]
+    );
 
     // Data memory (initialized by testbench)
     shortreal data_mem[DATA_MEM_SIZE-1:0];
@@ -38,7 +48,7 @@ module MatDataMem
     genvar i;
     generate
         for (i = 0;i < DATA_MEM_WIDTH_SIZE;i++)
-            assign value[i] = data_mem[addr + i];
+            assign data_out[i] = data_mem[read_addr + i];
     endgenerate
 
 endmodule: MatDataMem
