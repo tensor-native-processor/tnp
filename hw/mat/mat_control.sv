@@ -44,8 +44,8 @@ module MatControl
      input shortreal cache_data_out[WIDTH-1:0],
 
      // Interface with memory
-     output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr,
-     input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out,
+     output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr, inst_mem_read_addr2,
+     input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out, inst_mem_data_out2,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr,
      input shortreal data_mem_data_out[WIDTH-1:0],
      output MatDataMemWriteOp_t data_mem_write_op,
@@ -71,6 +71,10 @@ module MatControl
     logic [REG_ADDR_TYPE_SIZE-1:0] op_Md, op_M1, op_M2;
     logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx;
 
+    // View next instruction (to pipeline)
+    logic [OPCODE_TYPE_SIZE-1:0] next_opcode;
+    logic [REG_ADDR_TYPE_SIZE-1:0] next_op_Md, next_op_M1, next_op_M2;
+
     // Diagnoal progress counter
     logic [WIDTH_ADDR_SIZE-1:0] diag_progress_counter;
     // Increase/Clear diagnoal progress counter
@@ -89,6 +93,21 @@ module MatControl
         .op_Md, .op_M1, .op_M2,
         .op_row_idx, .op_col_idx, .op_diag_idx
     );
+    // Decode next instruction
+    MatInstDecoder #(.OPCODE_TYPE_BYTES(OPCODE_TYPE_BYTES),
+        .MEM_ADDR_TYPE_BYTES(MEM_ADDR_TYPE_BYTES),
+        .CORE_IDX_TYPE_BYTES(CORE_IDX_TYPE_BYTES),
+        .REG_ADDR_TYPE_BYTES(REG_ADDR_TYPE_BYTES),
+        .WIDTH_IDX_TYPE_BYTES(WIDTH_IDX_TYPE_BYTES),
+        .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
+        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE)
+    ) next_decoder(.inst_value(inst_mem_data_out2),
+        .inst_size(),
+        .opcode(next_opcode),
+        .op_addr(), .op_core_idx(),
+        .op_Md(next_op_Md), .op_M1(next_op_M1), .op_M2(next_op_M2),
+        .op_row_idx(), .op_col_idx(), .op_diag_idx()
+    );
 
 
     // State machine
@@ -106,6 +125,8 @@ module MatControl
         else if (next_inst_proceed)
             inst_mem_read_addr <= inst_mem_read_addr + next_inst_offset;
     end
+    // Next instruction address
+    assign inst_mem_read_addr2 = inst_mem_read_addr + next_inst_offset;
 
     // Multiplex input into cache_data_in
     enum {

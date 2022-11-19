@@ -8,8 +8,8 @@ module MatInstMem
 
                 // Auto-generated sizes
                 INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES)
-    (input logic [INST_MEM_ADDR_SIZE-1:0] read_addr,
-     output logic [INST_MEM_WIDTH_SIZE-1:0] data_out);
+    (input logic [INST_MEM_ADDR_SIZE-1:0] read_addr, read_addr2,
+     output logic [INST_MEM_WIDTH_SIZE-1:0] data_out, data_out2);
 
     // Instruction memory (initialized by testbench)
     logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
@@ -19,6 +19,12 @@ module MatInstMem
     generate
         for (i = 0;i < INST_MEM_WIDTH_BYTES;i++)
             assign data_out[i*8+7:i*8] = inst_mem[read_addr + i][7:0];
+    endgenerate
+
+    // Output second output
+    generate
+        for (i = 0;i < INST_MEM_WIDTH_BYTES;i++)
+            assign data_out2[i*8+7:i*8] = inst_mem[read_addr2 + i][7:0];
     endgenerate
 
 endmodule: MatInstMem

@@ -34,8 +34,8 @@ module MatControl_test
     shortreal cache_data_in[WIDTH-1:0];
     shortreal cache_data_out[WIDTH-1:0];
 
-    logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr;
-    logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out;
+    logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr, inst_mem_read_addr2;
+    logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out, inst_mem_data_out2;
     logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr;
     shortreal data_mem_data_out[WIDTH-1:0];
     MatDataMemWriteOp_t data_mem_write_op;
@@ -64,7 +64,9 @@ module MatControl_test
     MatInstMem #(.INST_MEM_SIZE(INST_MEM_SIZE),
         .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
         .INST_MEM_WIDTH_BYTES(INST_MEM_WIDTH_BYTES)
-    ) InstMemDUT(.read_addr(inst_mem_read_addr), .data_out(inst_mem_data_out));
+    ) InstMemDUT(.read_addr(inst_mem_read_addr), .data_out(inst_mem_data_out),
+        .read_addr2(inst_mem_read_addr2), .data_out2(inst_mem_data_out2)
+    );
     MatDataMem #(.DATA_MEM_SIZE(DATA_MEM_SIZE),
         .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
         .DATA_MEM_WIDTH_SIZE(WIDTH)
