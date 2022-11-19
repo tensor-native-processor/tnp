@@ -68,6 +68,9 @@ module MatCache
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin
                 unique case (read_op)
+                    MAT_DATA_READ_DISABLE: begin
+                        data_out[i] = 0;
+                    end
                     MAT_DATA_READ_ROW,
                     MAT_DATA_READ_COL: begin
                         data_out[i] = reg_data_out[read_addr1][i];

@@ -12,6 +12,7 @@ typedef enum {
 } MatDataWriteOp_t;
 
 typedef enum {
+    MAT_DATA_READ_DISABLE,
     MAT_DATA_READ_ROW,
     MAT_DATA_READ_COL,
     MAT_DATA_READ_DIAG
