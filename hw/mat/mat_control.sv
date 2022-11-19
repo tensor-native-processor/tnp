@@ -78,7 +78,10 @@ module MatControl
      output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr,
      input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr,
-     input shortreal data_mem_data_out[WIDTH-1:0]
+     input shortreal data_mem_data_out[WIDTH-1:0],
+     output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr,
+     output logic [WIDTH_ADDR_SIZE-1:0] data_mem_write_size,
+     output shortreal data_mem_data_in[WIDTH-1:0]
     );
 
     // State machine
@@ -208,6 +211,8 @@ module MatControl
         done = 0;
         // DataMem
         data_mem_read_addr = 0;
+        data_mem_write_addr = 0;
+        data_mem_write_size = 0;
         // Cache
         cache_read_op = MAT_DATA_READ_DISABLE;
         cache_read_addr1 = 0;
