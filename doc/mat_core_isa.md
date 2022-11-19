@@ -29,10 +29,6 @@ Transpose matrix `M1`
 
 ### Loading from memory
 
-#### LOAD_MAT addr M1
-
-Load matrix into matrix `M1`, from DRAM address `addr`
-
 #### LOAD_ROW addr M1 row_idx
 
 Load matrix row `row_idx` into matrix `M1`, from DRAM address `addr`
@@ -48,10 +44,6 @@ Load matrix element (`row_idx`, `col_idx`) into matrix `M1`, from DRAM address `
 
 
 ### Storing to memory
-
-#### STORE_MAT addr M1
-
-Store matrix `M1` into DRAM address `addr`
 
 #### STORE_ROW addr M1 row_idx
 
@@ -79,6 +71,10 @@ Send matrix `M1` row `row_idx` to core `core_idx`
 
 Send matrix `M1` column `col_idx` to core `core_idx`
 
+#### SEND_SCALAR core_idx M1 row_idx col_idx
+
+Send scalar in matrix `M1` row `row_idx` column `col_idx` to core `core_idx`
+
 #### SEND_DIAG core_idx M1 M2 diag_idx
 
 Send matrix `M1`'s primary diagonal and `M2`'s secondary diagonal concatenated together (`diag_idx`-th diagonal) to core `core_idx`
@@ -95,9 +91,9 @@ Receive from core `core_idx` into `M1` matrix row `row_idx`
 
 Receive from core `core_idx` into `M1`matrix column `col_idx`
 
-#### RECV_SCALAR core_idx M1 row_idx col_idx elem_idx
+#### RECV_SCALAR core_idx M1 row_idx col_idx
 
-Receive from core `core_idx`'s `elem_idx`-th element into `M1` matrix element (`row_idx`, `col_idx`) 
+Receive scalar from core `core_idx` into `M1` matrix element (`row_idx`, `col_idx`)
 
 #### RECV_DIAG core_idx M1 M2 diag_idx
 
