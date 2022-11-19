@@ -61,12 +61,20 @@ int main() {
     inst.operands[MatCoreInstDefn::COL_IDX] = 2;
     prog.append(inst);
 
-    // store scalar 160 5 1 2
+    // store scalar 160 5 3 2
     inst.opcode = MatCoreInstDefn::STORE_SCALAR;
     inst.operands[MatCoreInstDefn::ADDR] = 160;
     inst.operands[MatCoreInstDefn::M1] = 5;
-    inst.operands[MatCoreInstDefn::ROW_IDX] = 1;
+    inst.operands[MatCoreInstDefn::ROW_IDX] = 3;
     inst.operands[MatCoreInstDefn::COL_IDX] = 2;
+    prog.append(inst);
+
+    // store scalar 162 2 8 9
+    inst.opcode = MatCoreInstDefn::STORE_SCALAR;
+    inst.operands[MatCoreInstDefn::ADDR] = 162;
+    inst.operands[MatCoreInstDefn::M1] = 2;
+    inst.operands[MatCoreInstDefn::ROW_IDX] = 8;
+    inst.operands[MatCoreInstDefn::COL_IDX] = 9;
     prog.append(inst);
 
     // halt
