@@ -32,7 +32,8 @@ module MatDataMem
                 // Auto-generated sizes
                 DATA_MEM_WIDTH_ADDR_SIZE = $clog2(DATA_MEM_WIDTH_SIZE)
     )
-    (input logic [DATA_MEM_ADDR_SIZE-1:0] read_addr,
+    (input logic clock,
+     input logic [DATA_MEM_ADDR_SIZE-1:0] read_addr,
      output shortreal data_out[DATA_MEM_WIDTH_SIZE-1:0],
 
      // Write
@@ -53,10 +54,10 @@ module MatDataMem
 
     // Write memory
     generate
-        for (i = 0;i < DATA_MEM_WIDTH_SIZE;i++)
+        for (i = 0;i < DATA_MEM_SIZE;i++)
             always_ff @(posedge clock) begin
-                if (i < write_size)
-                    data_mem[write_addr + i] <= data_in[i];
+               if (i >= write_addr && i < write_addr + write_size)
+                   data_mem[i] <= data_in[i - write_addr];
             end
     endgenerate
 
