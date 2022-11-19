@@ -204,6 +204,27 @@ module MatControl
         end
     endgenerate
 
+    // Multiplex input into data_mem_data_in
+    enum {
+        DATA_MEM_DATA_FROM_ZERO,
+        DATA_MEM_DATA_FROM_CACHE_DATA_OUT
+    } data_mem_data_in_sel;
+
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unique case (data_mem_data_in_sel)
+                    DATA_MEM_DATA_FROM_ZERO: begin
+                        data_mem_data_in[i] = 0;
+                    end
+                    DATA_MEM_DATA_FROM_CACHE_DATA_OUT: begin
+                        data_mem_data_in[i] = cache_data_out[i];
+                    end
+                endcase
+            end
+        end
+    endgenerate
+
     // Assign next state and output
     always_comb begin
         // Set default values
@@ -213,6 +234,7 @@ module MatControl
         data_mem_read_addr = 0;
         data_mem_write_addr = 0;
         data_mem_write_size = 0;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
         // Cache
         cache_read_op = MAT_DATA_READ_DISABLE;
         cache_read_addr1 = 0;
