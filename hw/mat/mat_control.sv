@@ -44,6 +44,7 @@ module MatControl
                 MAX_INST_TOTAL_BYTES = 16,
 
                 WIDTH = 128,
+                CACHE_SIZE = 4,
 
                 // Auto-generated sizes
                 OPCODE_TYPE_SIZE = 8 * OPCODE_TYPE_BYTES,
@@ -51,11 +52,29 @@ module MatControl
                 CORE_IDX_TYPE_SIZE = 8 * CORE_IDX_TYPE_BYTES,
                 REG_ADDR_TYPE_SIZE = 8 * REG_ADDR_TYPE_BYTES,
                 WIDTH_IDX_TYPE_SIZE = 8 * WIDTH_IDX_TYPE_BYTES,
-                MAX_INST_TOTAL_SIZE = 8 * MAX_INST_TOTAL_BYTES)
+                MAX_INST_TOTAL_SIZE = 8 * MAX_INST_TOTAL_BYTES,
+
+                WIDTH_ADDR_SIZE = $clog2(WIDTH),
+                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
     (input logic clock, reset,
-     input shortreal
-     output logic 
-     output logic );
+     output logic done,
+
+     // Interface with MatUnit
+     output logic unit_set_weight,
+     output logic [WIDTH_ADDR_SIZE-1:0] unit_set_weight_row,
+     output shortreal unit_data_in[WIDTH-1:0],
+     input shortreal unit_data_out[WIDTH-1:0],
+
+     // Interface with MatCache
+     output MatDataReadOp_t cache_read_op,
+     output logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2,
+     output logic [WIDTH_ADDR_SIZE-1:0] cache_read_param,
+     output MatDataWriteOp_t cache_write_op,
+     output logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2,
+     output logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2,
+     output shortreal cache_data_in[WIDTH-1:0],
+     input shortreal cache_data_out[WIDTH-1:0]
+    );
 
     // Data memory and instruction memory (initialized by testbench)
     logic [7:0] inst_mem[INST_MEM_SIZE-1:0];
@@ -171,7 +190,10 @@ module MatControl
 
     // Assign next state and output
     always_comb begin
+        // Set default values
         program_counter_proceed = 0;
+        done = 0;
+
         case (state)
             INIT: begin
                 next_state = READY;
@@ -179,6 +201,7 @@ module MatControl
             READY: begin
                 next_state = NEXT;
 
+/*
 // Case on opcode
 case (opcode)
     // Section 1
@@ -198,6 +221,7 @@ case (opcode)
         next_state = STOP;
     end
 endcase
+*/
             end
             NEXT: begin
                 program_counter_proceed = 1;
@@ -205,6 +229,7 @@ endcase
             end
             STOP: begin
                 next_state = STOP;
+                done = 1;
             end
         endcase
     end
