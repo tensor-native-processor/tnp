@@ -74,33 +74,31 @@ module MatReg
         end
     endgenerate
     
-    shortreal row_out[WIDTH-1:0], col_out[WIDTH-1:0],
-        diag_out[WIDTH-1:0];
-
     // Read row/col/diag from register
     generate
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin
-                row_out[i] = mem[read_param][i];
-                col_out[i] = mem[i][read_param];
-                
-                // Test primary/secondary diagonal
-                if (i <= read_param) begin
-                    diag_out[i] = mem[i][read_param - i];
-                end else begin
-                    diag_out[i] = mem[i][WIDTH + read_param - i];
-                end
+                unique case (read_op)
+                    MAT_DATA_READ_DISABLE: begin
+                        data_out[i] = 0;
+                    end
+                    MAT_DATA_READ_ROW: begin
+                        data_out[i] = mem[read_param][i];
+                    end
+                    MAT_DATA_READ_COL: begin
+                        data_out[i] = mem[i][read_param];
+                    end
+                    MAT_DATA_READ_DIAG: begin
+                        // Test primary/secondary diagonal
+                        if (i <= read_param) begin
+                            data_out[i] = mem[i][read_param - i];
+                        end else begin
+                            data_out[i] = mem[i][WIDTH + read_param - i];
+                        end
+                    end
+                endcase
             end
         end
     endgenerate
-
-    // Output to data_out
-    always_comb begin
-        unique case (read_op)
-            MAT_DATA_READ_ROW: data_out = row_out;
-            MAT_DATA_READ_COL: data_out = col_out;
-            MAT_DATA_READ_DIAG: data_out = diag_out;
-        endcase
-    end
 
 endmodule: MatReg
