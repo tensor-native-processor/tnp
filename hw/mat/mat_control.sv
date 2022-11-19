@@ -244,6 +244,25 @@ case (opcode)
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
     end
     LOAD_COL: begin
+        // Read from DataMem
+        data_mem_addr = op_addr;
+
+        // Write into cache
+        cache_write_op = MAT_DATA_WRITE_COL;
+        cache_write_addr1 = op_M1;
+        cache_write_param1 = op_col_idx;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
+    end
+    LOAD_SCALAR: begin
+        // Read from DataMem
+        data_mem_addr = op_addr; // data_mem_value[0] now contains scalar
+
+        // Write into cache
+        cache_write_op = MAT_DATA_WRITE_SCALAR;
+        cache_write_addr1 = op_M1;
+        cache_write_param1 = op_row_idx;
+        cache_write_param2 = op_col_idx;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
     end
 
     // Section 3
