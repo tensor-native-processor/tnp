@@ -312,6 +312,17 @@ case (opcode)
         data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
         data_mem_write_addr = op_addr;
     end
+    STORE_SCALAR: begin
+        // Read from cache
+        cache_read_op = MAT_DATA_READ_SCALAR;
+        cache_read_addr1 = op_M1;
+        cache_read_param1 = op_row_idx;
+        cache_read_param2 = op_col_idx;
+
+        // Write into DataMem
+        data_mem_write_op = MAT_DATA_MEM_WRITE_SINGLE;
+        data_mem_write_addr = op_addr;
+    end
 
     // Section 3
 
