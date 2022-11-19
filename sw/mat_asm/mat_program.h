@@ -21,11 +21,9 @@ public:
         TRANSPOSE       = 0b00100010,
 
         // Section 2
-        LOAD_MAT        = 0b01000000,
         LOAD_ROW        = 0b01000001,
         LOAD_COL        = 0b01000010,
         LOAD_SCALAR     = 0b01000011,
-        STORE_MAT       = 0b01010000,
         STORE_ROW       = 0b01010001,
         STORE_COL       = 0b01010010,
         STORE_SCALAR    = 0b01010011,
@@ -33,7 +31,9 @@ public:
         // Section 3
         SEND_ROW        = 0b01100000,
         SEND_COL        = 0b01100001,
-        SEND_DIAG       = 0b01100010,
+        SEND_SCALAR     = 0b01100010,
+        SEND_DIAG       = 0b01101000,
+
         RECV_ROW        = 0b01110000,
         RECV_COL        = 0b01110001,
         RECV_SCALAR     = 0b01110010,
@@ -50,7 +50,7 @@ public:
         ADDR,
         CORE_IDX,
         Md, M1, M2,
-        ROW_IDX, COL_IDX, DIAG_IDX, ELEM_IDX,
+        ROW_IDX, COL_IDX, DIAG_IDX,
     };
 
     // Types

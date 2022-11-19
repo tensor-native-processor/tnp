@@ -7,11 +7,9 @@ typedef enum logic [7:0] {
 	TRANSPOSE       = 8'b00100010,
 
 	// Section 2
-	LOAD_MAT        = 8'b01000000,
 	LOAD_ROW        = 8'b01000001,
 	LOAD_COL        = 8'b01000010,
 	LOAD_SCALAR     = 8'b01000011,
-	STORE_MAT       = 8'b01010000,
 	STORE_ROW       = 8'b01010001,
 	STORE_COL       = 8'b01010010,
 	STORE_SCALAR    = 8'b01010011,
@@ -19,7 +17,9 @@ typedef enum logic [7:0] {
 	// Section 3
 	SEND_ROW        = 8'b01100000,
 	SEND_COL        = 8'b01100001,
-	SEND_DIAG       = 8'b01100010,
+	SEND_SCALAR     = 8'b01100010,
+	SEND_DIAG       = 8'b01101000,
+
 	RECV_ROW        = 8'b01110000,
 	RECV_COL        = 8'b01110001,
 	RECV_SCALAR     = 8'b01110010,
@@ -127,12 +127,6 @@ module MatControl
             end
 
             // Section 2
-            LOAD_MAT,
-            STORE_MAT: begin
-                op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
-                op_M1       = inst_mem_data_out[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
-                next_inst_offset = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
-            end
             LOAD_ROW,
             STORE_ROW: begin
                 op_addr     = inst_mem_data_out[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
