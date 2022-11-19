@@ -179,11 +179,46 @@ module MatControl
             inst_mem_addr <= inst_mem_addr + next_inst_offset;
     end
 
+    // Multiplex input into cache_data_in
+    enum {
+        CACHE_DATA_FROM_ZERO,
+        CACHE_DATA_FROM_DATA_MEM_VALUE
+    } cache_data_in_sel;
+
+    genvar i;
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unique case (cache_data_in_sel)
+                    CACHE_DATA_FROM_ZERO: begin
+                        cache_data_in[i] = 0;
+                    end
+                    CACHE_DATA_FROM_DATA_MEM_VALUE: begin
+                        cache_data_in[i] = data_mem_value[i];
+                    end
+                endcase
+            end
+        end
+    endgenerate
+
     // Assign next state and output
     always_comb begin
         // Set default values
         next_inst_proceed = 0;
         done = 0;
+        // DataMem
+        data_mem_addr = 0;
+        // Cache
+        cache_read_op = MAT_DATA_READ_DISABLE;
+        cache_read_addr1 = 0;
+        cache_read_addr2 = 0;
+        cache_read_param = 0;
+        cache_write_op = MAT_DATA_WRITE_DISABLE;
+        cache_write_addr1 = 0;
+        cache_write_addr2 = 0;
+        cache_write_param1 = 0;
+        cache_write_param2 = 0;
+        cache_data_in_sel = CACHE_DATA_FROM_ZERO;
 
         case (state)
             INIT: begin
@@ -192,7 +227,6 @@ module MatControl
             READY: begin
                 next_state = NEXT;
 
-/*
 // Case on opcode
 case (opcode)
     // Section 1
@@ -200,7 +234,14 @@ case (opcode)
 
     // Section 2
     LOAD_ROW: begin
-        ??? = 
+        // Read from DataMem
+        data_mem_addr = op_addr;
+
+        // Write into cache
+        cache_write_op = MAT_DATA_WRITE_ROW;
+        cache_write_addr1 = op_M1;
+        cache_write_param1 = op_row_idx;
+        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_VALUE;
     end
     LOAD_COL: begin
     end
@@ -212,7 +253,7 @@ case (opcode)
         next_state = STOP;
     end
 endcase
-*/
+
             end
             NEXT: begin
                 next_inst_proceed = 1;

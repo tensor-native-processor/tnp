@@ -12,10 +12,11 @@ int main() {
     inst.operands[MatCoreInstDefn::M1] = 258;
     prog.append(inst);
 
-    // load mat 12345678 5
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 12345678;
+    // load row 3 5
+    inst.opcode = MatCoreInstDefn::LOAD_ROW;
+    inst.operands[MatCoreInstDefn::ADDR] = 3;
     inst.operands[MatCoreInstDefn::M1] = 5;
+    inst.operands[MatCoreInstDefn::ROW_IDX] = 3;
     prog.append(inst);
 
     // load scalar 998244353 2048 512 536
