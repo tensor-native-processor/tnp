@@ -44,11 +44,20 @@ module MatDataMem
     // Data memory (initialized by testbench)
     shortreal data_mem[DATA_MEM_SIZE-1:0];
 
-    // Output to value
+    // Read memory
     genvar i;
     generate
         for (i = 0;i < DATA_MEM_WIDTH_SIZE;i++)
             assign data_out[i] = data_mem[read_addr + i];
+    endgenerate
+
+    // Write memory
+    generate
+        for (i = 0;i < DATA_MEM_WIDTH_SIZE;i++)
+            always_ff @(posedge clock) begin
+                if (i < write_size)
+                    data_mem[write_addr + i] <= data_in[i];
+            end
     endgenerate
 
 endmodule: MatDataMem
