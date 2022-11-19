@@ -102,6 +102,11 @@ module MatControl
     logic [REG_ADDR_TYPE_SIZE-1:0] op_Md, op_M1, op_M2;
     logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx, op_elem_idx;
 
+    // Diagnoal progress counter
+    logic [WIDTH_ADDR_SIZE-1:0] diag_progress_counter;
+    // Increase/Clear diagnoal progress counter
+    logic diag_progress_counter_inc, diag_progress_counter_clr;
+
     // Assign instruction to opcode/operands
     always_comb begin
         opcode = 0;
@@ -240,6 +245,14 @@ module MatControl
         end
     endgenerate
 
+    // Unit diagonal progress counter
+    always_ff @(posedge clock) begin
+        if (diag_progress_counter_clr)
+            diag_progress_counter <= 0;
+        else if (diag_progress_counter_inc)
+            diag_progress_counter <= diag_progress_counter + 1;
+    end
+
     // Assign next state and output
     always_comb begin
         // Set default values
@@ -267,6 +280,10 @@ module MatControl
         unit_set_weight_row = 0;
         unit_data_in_sel = UNIT_DATA_FROM_ZERO;
 
+        // Diagonal progress counter
+        diag_progress_counter_inc = 0;
+        diag_progress_counter_clr = 0;
+
         case (state)
             INIT: begin
                 next_state = READY;
@@ -278,6 +295,20 @@ module MatControl
 case (opcode)
     // Section 1
     SET_WEIGHT: begin
+        // Change next state
+        next_state = TOP_HALF;
+
+        // Read from cache
+        cache_read_op = MAT_DATA_READ_DIAG;
+        cache_read_addr1 = op_M1;
+        cache_read_addr2 = op_M1;
+        cache_read_param1 = 0;
+
+        // Set unit data in
+        unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+
+        // Init counter
+        diag_progress_counter_clr = 1;
     end
     // TODO
 
