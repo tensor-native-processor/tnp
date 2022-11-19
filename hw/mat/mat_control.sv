@@ -440,7 +440,7 @@ endcase
                 if (diag_progress_counter == WIDTH - 1) begin
                     next_state = NEXT;
                 end else begin
-                    next_state = P2;
+                    next_state = P3;
                     diag_progress_counter_inc = 1;
                 end
                 diag_progress_counter_inc = 1;
