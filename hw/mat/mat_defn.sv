@@ -5,6 +5,8 @@ typedef enum logic [7:0] {
     SET_WEIGHT      = 8'b00100000,
     MULTIPLY        = 8'b00100001,
     TRANSPOSE       = 8'b00100010,
+    XFLIP           = 8'b00100100,
+    YFLIP           = 8'b00100101,
 
     // Section 2
     LOAD_ROW        = 8'b01000001,

@@ -291,7 +291,21 @@ case (opcode)
         // Insert into L0
         unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_CUR;
     end
-    // TODO
+    TRANSPOSE: begin
+        // Transpose cache matrix
+        cache_write_op = MAT_DATA_WRITE_TRANSPOSE;
+        cache_write_addr1 = op_M1;
+    end
+    XFLIP: begin
+        // XFLIP cache matrix
+        cache_write_op = MAT_DATA_WRITE_XFLIP;
+        cache_write_addr1 = op_M1;
+    end
+    YFLIP: begin
+        // XFLIP cache matrix
+        cache_write_op = MAT_DATA_WRITE_YFLIP;
+        cache_write_addr1 = op_M1;
+    end
 
     // Section 2
     LOAD_ROW: begin

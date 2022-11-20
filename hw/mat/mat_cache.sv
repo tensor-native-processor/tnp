@@ -38,6 +38,8 @@ module MatCache
             unique case (write_op)
                 MAT_DATA_WRITE_DISABLE,
                 MAT_DATA_WRITE_TRANSPOSE,
+                MAT_DATA_WRITE_XFLIP,
+                MAT_DATA_WRITE_YFLIP,
                 MAT_DATA_WRITE_ROW,
                 MAT_DATA_WRITE_COL,
                 MAT_DATA_WRITE_SCALAR,

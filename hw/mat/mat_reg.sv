@@ -30,6 +30,14 @@ module MatReg
                         // Matrix transpose
                         mem[i][j] <= mem[j][i];
                     end
+                    MAT_DATA_WRITE_XFLIP: begin
+                        // Flip matrix
+                        mem[i][j] <= mem[WIDTH-1 - i][j];
+                    end
+                    MAT_DATA_WRITE_YFLIP: begin
+                        // Flip matrix
+                        mem[i][j] <= mem[i][WIDTH-1 - j];
+                    end
                     MAT_DATA_WRITE_ROW: begin
                         // Write row
                         if (i == write_param1) begin
