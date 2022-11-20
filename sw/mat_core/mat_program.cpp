@@ -113,4 +113,56 @@ bool MatCoreSimEngine::isDone() const {
 // Simulate one step
 void MatCoreSimEngine::simulateStep() {
     auto const& inst = m_prog[m_pc];
+
+    switch (m_state) {
+        case State::INIT: {
+            m_state = State::READY;
+            break;
+        }
+        case State::READY: {
+            switch (inst.opcode) {
+                case MatCoreInstDefn::SET_WEIGHT:
+                case MatCoreInstDefn::MULTIPLY: {
+                    m_state = State::P0XX;
+                    break;
+                }
+                case MatCoreInstDefn::HALT: {
+                    m_state = State::STOP;
+                    break;
+                }
+                default: {
+                    // All other opcodes lead to NEXT
+                    m_state = State::NEXT;
+                    break;
+                }
+            }
+            break;
+        }
+        case State::NEXT: {
+            m_state = State::READY;
+            break;
+        }
+        case State::STOP: {
+            m_state = State::READY;
+            break;
+        }
+        case State::P0XX: {
+            break;
+        }
+        case State::P01X: {
+            break;
+        }
+        case State::PX0X: {
+            break;
+        }
+        case State::PXX0: {
+            break;
+        }
+        case State::PX01: {
+            break;
+        }
+        case State::P012: {
+            break;
+        }
+    }
 }
