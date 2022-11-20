@@ -99,4 +99,25 @@ typedef BaseCoreInst<MatCoreInstDefn> MatCoreInst;
 typedef BaseCoreProgram<MatCoreInstDefn, MatCoreInstSize> MatCoreProgram;
 
 
+// MatCore simulation engine
+class MatCoreSimEngine {
+public:
+    MatCoreSimEngine(const MatCoreProgram&);
+
+    void simulateStep();
+    bool isDone() const;
+
+private:
+    enum class State {
+        INIT, READY, NEXT, STOP,
+        P0XX, P01X, P012,
+        PX0X, PX01,
+        PXX0
+    };
+    MatCoreProgram m_prog;
+    State m_state;
+    size_t m_pc;
+};
+
+
 #endif

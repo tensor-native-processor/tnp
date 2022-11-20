@@ -100,3 +100,17 @@ MatCoreInstDefn::Opcode MatCoreInstDefn::findOpcodeByName(std::string opName) {
 MatCoreInstDefn::Type MatCoreInstDefn::getOperandType(Operand opr) {
     return operandType.at(opr);
 }
+
+// Init simulation engine
+MatCoreSimEngine::MatCoreSimEngine(const MatCoreProgram& prog)
+: m_prog(prog), m_state(State::INIT), m_pc(0) {}
+
+// Test if completed
+bool MatCoreSimEngine::isDone() const {
+    return m_state == State::STOP;
+}
+
+// Simulate one step
+void MatCoreSimEngine::simulateStep() {
+    auto const& inst = m_prog[m_pc];
+}

@@ -38,6 +38,8 @@ public:
     void fromText(const std::string&);
 
     void append(const CoreInst&);
+    size_t size() const;
+    const CoreInst& operator[](size_t) const;
 
 private:
     CoreInstSize m_isizes;

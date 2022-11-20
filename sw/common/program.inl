@@ -104,3 +104,15 @@ CoreValue_t BaseCoreProgram<CoreInstDefn, CoreInstSize>::decodeBinary(const TNPP
 	}
 	return value;
 }
+
+// Fetch instruction from program
+template<class CoreInstDefn, class CoreInstSize>
+size_t BaseCoreProgram<CoreInstDefn, CoreInstSize>::size() const {
+    return m_insts.size();
+}
+
+template<class CoreInstDefn, class CoreInstSize>
+const typename BaseCoreProgram<CoreInstDefn, CoreInstSize>::CoreInst&
+BaseCoreProgram<CoreInstDefn, CoreInstSize>::operator[](size_t index) const {
+    return m_insts[index];
+}
