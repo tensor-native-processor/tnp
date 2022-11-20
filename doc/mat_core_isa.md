@@ -19,6 +19,8 @@ Load weight matrix `M1` into systolic array (to be multiplied by `MULTIPLY` inst
 
 Multiply matrix `M1` by loaded weights, and store output matrix to `Md`
 
+__Warning__: `MULTIPLY` equivalents to $Md_{i, j} = \sum W_{k, WIDTH-i} \cdot M1_{k, j}$. To use normal matrix multiplication, `XFLIP` and `TRANSPOSE` the weight matrix before `SET_WEIGHT`.
+
 #### TRANSPOSE M1
 
 Transpose matrix `M1`
