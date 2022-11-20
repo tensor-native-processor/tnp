@@ -5,7 +5,7 @@ module MatControl_test
                 CACHE_SIZE = 8,
 
                 INST_MEM_SIZE = 2048,
-                DATA_MEM_SIZE = 1024,
+                DATA_MEM_SIZE = 2048,
 
                 INST_MEM_ADDR_SIZE = 32,
                 DATA_MEM_ADDR_SIZE = 32,
