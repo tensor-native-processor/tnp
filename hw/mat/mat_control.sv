@@ -270,7 +270,7 @@ module MatControl
         // Unit shift register
         unit_shift_reg_flip_sel = UNIT_SHIFT_REG_DISABLE;
 
-        case (state)
+        unique case (state)
             INIT: begin
                 next_state = READY;
             end
@@ -420,12 +420,11 @@ endcase
             P01X: begin
                 // Next state
                 if (diag_progress_counter == WIDTH - 1) begin
-                /*
                     if (next_opcode_is_unit) begin
                         next_state = P012;
                         unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_NEXT;
                         next_inst_proceed = 1;
-                    end else*/ begin
+                    end else begin
                         next_state = PX01;
                     end
                     diag_progress_counter_clr = 1;
@@ -548,7 +547,59 @@ endcase
                 end
             end
             P012: begin
-                // TODO
+                // Next state
+                if (diag_progress_counter == WIDTH - 1) begin
+                    if (next_opcode_is_unit) begin
+                        next_state = P012;
+                        unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_NEXT;
+                        next_inst_proceed = 1;
+                    end else begin
+                        next_state = PX01;
+                    end
+                    diag_progress_counter_clr = 1;
+                end else begin
+                    next_state = P012;
+                    diag_progress_counter_inc = 1;
+                end
+
+                // Read from cache
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+                cache_read_op = MAT_DATA_READ_DIAG;
+                cache_read_addr1 = l0_M1;
+                cache_read_addr2 = l1_M1;
+                cache_read_param1 = diag_progress_counter;
+
+                // Write weight before the end
+                if (diag_progress_counter == WIDTH - 1 &&
+                        l0_opcode == SET_WEIGHT) begin
+                    unit_set_weight = 1;
+                    unit_set_weight_row = 0;
+                end
+
+                // Write weight before the end
+                if (diag_progress_counter != WIDTH - 1 &&
+                        l1_opcode == SET_WEIGHT) begin
+                    unit_set_weight = 1;
+                    unit_set_weight_row = diag_progress_counter + 1;
+                end
+                // Write into cache
+                if (l1_opcode == MULTIPLY && l2_opcode == MULTIPLY) begin
+                    cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                    cache_write_op = MAT_DATA_WRITE_DIAG;
+                    cache_write_addr1 = l1_Md;
+                    cache_write_addr2 = l2_Md;
+                    cache_write_param1 = diag_progress_counter;
+                end else if (l1_opcode == MULTIPLY) begin
+                    cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                    cache_write_op = MAT_DATA_WRITE_DIAG1;
+                    cache_write_addr1 = l1_Md;
+                    cache_write_param1 = diag_progress_counter;
+                end else if (l2_opcode == MULTIPLY) begin
+                    cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                    cache_write_op = MAT_DATA_WRITE_DIAG2;
+                    cache_write_addr1 = l2_Md;
+                    cache_write_param1 = diag_progress_counter;
+                end
             end
         endcase
     end
