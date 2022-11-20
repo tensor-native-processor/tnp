@@ -10,3 +10,14 @@ void SaveProgram(const TNPProgramBinary& prog, const std::string& filename) {
     }
     ofs.close();
 }
+
+TNPProgramBinary LoadProgram(const std::string& filename) {
+    TNPProgramBinary prog;
+    std::ifstream ifs(filename);
+    std::bitset<8> bs;
+    while (ifs >> bs) {
+        prog.push_back(std::byte(bs.to_ulong()));
+    }
+    ifs.close();
+    return prog;
+}

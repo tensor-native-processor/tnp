@@ -22,3 +22,8 @@ target_link_libraries(mat_mult_pipeline4 mat_core)
 add_executable(mat_asm mat_asm.cpp)
 target_include_directories(mat_asm PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_asm mat_core)
+
+# mat_sim
+add_executable(mat_sim mat_sim.cpp)
+target_include_directories(mat_sim PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_link_libraries(mat_sim mat_core)

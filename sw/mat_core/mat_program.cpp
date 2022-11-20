@@ -234,5 +234,8 @@ void MatCoreSimEngine::simulateStep() {
     m_state = next_state;
     if (next_inst_proceed) {
         m_pc++;
+        if (m_pc >= m_prog.size()) {
+            FatalError("MatCore instruction memory out of bound");
+        }
     }
 }
