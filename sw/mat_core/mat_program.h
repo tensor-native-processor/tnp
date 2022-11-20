@@ -98,11 +98,16 @@ struct MatCoreInstSize {
 typedef BaseCoreInst<MatCoreInstDefn> MatCoreInst;
 typedef BaseCoreProgram<MatCoreInstDefn, MatCoreInstSize> MatCoreProgram;
 
+// MatCore parameters
+struct MatCoreParam {
+    size_t width = 16;
+};
+
 
 // MatCore simulation engine
 class MatCoreSimEngine {
 public:
-    MatCoreSimEngine(const MatCoreProgram&);
+    MatCoreSimEngine(const MatCoreProgram&, const MatCoreParam&);
 
     void simulateStep();
     bool isDone() const;
@@ -115,8 +120,12 @@ private:
         PXX0
     };
     MatCoreProgram m_prog;
+    MatCoreParam m_param;
+
+    // Internal state
     State m_state;
     size_t m_pc;
+    size_t m_diag_progress_counter;
 };
 
 
