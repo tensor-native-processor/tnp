@@ -10,7 +10,7 @@ int main() {
     for (int i = 0;i < 16;i++) for (int j = 0;j < 16;j++) B[i][j] = rand() % 256;
     for (int i = 0;i < 16;i++) for (int j = 0;j < 16;j++) C[i][j] = 0;
     for (int i = 0;i < 16;i++) for (int j = 0;j < 16;j++) for (int k = 0;k < 16;k++) {
-        C[i][j] += A[i][k] * B[k][j];
+        C[i][j] += A[k][15 - i] * B[k][j];
     }
 
     std::ofstream dm("data_mem.txt");
