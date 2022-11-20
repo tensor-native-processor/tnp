@@ -41,7 +41,9 @@ module MatInstDecoder
         case (opcode)
             // Section 1
             SET_WEIGHT,
-            TRANSPOSE: begin
+            TRANSPOSE,
+            XFLIP,
+            YFLIP: begin
                 op_M1       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end

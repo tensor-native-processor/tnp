@@ -4,7 +4,7 @@ module MatControl_test
     #(parameter WIDTH = 16,
                 CACHE_SIZE = 8,
 
-                INST_MEM_SIZE = 1024,
+                INST_MEM_SIZE = 2048,
                 DATA_MEM_SIZE = 1024,
 
                 INST_MEM_ADDR_SIZE = 32,
