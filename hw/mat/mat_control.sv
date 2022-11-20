@@ -111,6 +111,10 @@ module MatControl
         .op_row_idx(), .op_col_idx(), .op_diag_idx()
     );
 
+    // Next opcode is MatUnit op
+    logic next_opcode_is_unit;
+    assign next_opcode_is_unit = next_opcode == SET_WEIGHT || next_opcode == MULTIPLY;
+
 
     // State machine
     always_ff @(posedge clock) begin
@@ -206,6 +210,32 @@ module MatControl
             diag_progress_counter <= diag_progress_counter + 1;
     end
 
+    // L0, L1, L2 shift registers to pipeline
+    logic [OPCODE_TYPE_SIZE-1:0] l0_opcode, l1_opcode, l2_opcode;
+    logic [REG_ADDR_TYPE_SIZE-1:0] l0_Md, l0_M1, l1_Md, l1_M1, l2_Md, l2_M1;
+    enum {
+        UNIT_SHIFT_REG_DISABLE,
+        UNIT_SHIFT_REG_FLIP_CUR,
+        UNIT_SHIFT_REG_FLIP_NEXT
+    } unit_shift_reg_flip_sel;
+    always_ff @(posedge clock) begin
+        unique case (unit_shift_reg_flip_sel)
+            UNIT_SHIFT_REG_DISABLE: begin
+                // Do nothing
+            end
+            UNIT_SHIFT_REG_FLIP_CUR: begin
+                {l0_opcode, l0_Md, l0_M1} <= {opcode, op_Md, op_M1};
+                {l1_opcode, l1_Md, l1_M1} <= {l0_opcode, l0_Md, l0_M1};
+                {l2_opcode, l2_Md, l2_M1} <= {l1_opcode, l1_Md, l1_M1};
+            end
+            UNIT_SHIFT_REG_FLIP_NEXT: begin
+                {l0_opcode, l0_Md, l0_M1} <= {next_opcode, next_op_Md, next_op_M1};
+                {l1_opcode, l1_Md, l1_M1} <= {l0_opcode, l0_Md, l0_M1};
+                {l2_opcode, l2_Md, l2_M1} <= {l1_opcode, l1_Md, l1_M1};
+            end
+        endcase
+    end
+
     // Assign next state and output
     always_comb begin
         // Set default values
@@ -237,6 +267,9 @@ module MatControl
         diag_progress_counter_inc = 0;
         diag_progress_counter_clr = 0;
 
+        // Unit shift register
+        unit_shift_reg_flip_sel = UNIT_SHIFT_REG_DISABLE;
+
         case (state)
             INIT: begin
                 next_state = READY;
@@ -247,12 +280,16 @@ module MatControl
 // Case on opcode
 case (opcode)
     // Section 1
-    SET_WEIGHT: begin
+    SET_WEIGHT,
+    MULTIPLY: begin
         // Change next state
-        next_state = P1;
+        next_state = P0XX;
 
         // Init counter
         diag_progress_counter_clr = 1;
+
+        // Insert into L0
+        unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_CUR;
     end
     // TODO
 
@@ -338,74 +375,81 @@ endcase
                 done = 1;
             end
 
-            P1: begin
-                // Stage 1
+            P0XX: begin
+                // Next state
                 if (diag_progress_counter == WIDTH - 1) begin
-                    next_state = P2;
+                    /*
+                    if (next_opcode_is_unit) begin
+                        next_state = P01X;
+                        unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_NEXT;
+                        next_inst_proceed = 1;
+                    end else */ begin
+                        next_state = PX0X;
+                    end
                     diag_progress_counter_clr = 1;
                 end else begin
-                    next_state = P1;
+                    next_state = P0XX;
                     diag_progress_counter_inc = 1;
                 end
-
                 // Read from cache
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
                 cache_read_op = MAT_DATA_READ_DIAG;
-                cache_read_addr1 = op_M1;
-                cache_read_addr2 = op_M1;
+                cache_read_addr1 = l0_M1;
                 cache_read_param1 = diag_progress_counter;
 
-                // Set unit data in
-                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
-
                 // Write weight at the end
-                if (diag_progress_counter == WIDTH - 1) begin
+                if (diag_progress_counter == WIDTH - 1 &&
+                        l0_opcode == SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = 0;
                 end
             end
-            P2: begin
-                // Stage 2
+            PX0X: begin
                 if (diag_progress_counter == WIDTH - 1) begin
-                    next_state = P3;
+                    // Cannot pipeline
+                    next_state = PXX0;
                     diag_progress_counter_clr = 1;
                 end else begin
-                    next_state = P2;
+                    next_state = PX0X;
                     diag_progress_counter_inc = 1;
                 end
 
                 // Read from cache
+                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
                 cache_read_op = MAT_DATA_READ_DIAG;
-                cache_read_addr1 = op_M1;
-                cache_read_addr2 = op_M1;
+                cache_read_addr2 = l0_M1;
                 cache_read_param1 = diag_progress_counter;
 
-                // Set unit data in
-                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
-
                 // Write weight before the end
-                if (diag_progress_counter < WIDTH - 1) begin
+                if (diag_progress_counter != WIDTH - 1 &
+                        l0_opcode == SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = diag_progress_counter + 1;
                 end
+                // Write into cache
+                if (l0_opcode == MULTIPLY) begin
+                    cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                    cache_write_op = MAT_DATA_WRITE_DIAG1;
+                    cache_write_addr1 = l0_Md;
+                    cache_write_param1 = diag_progress_counter;
+                end
             end
-            P3: begin
+            PXX0: begin
                 // Stage 3
                 if (diag_progress_counter == WIDTH - 1) begin
                     next_state = NEXT;
                 end else begin
-                    next_state = P3;
+                    next_state = PXX0;
                     diag_progress_counter_inc = 1;
                 end
-                diag_progress_counter_inc = 1;
 
-                // Read from cache
-                cache_read_op = MAT_DATA_READ_DIAG;
-                cache_read_addr1 = op_M1;
-                cache_read_addr2 = op_M1;
-                cache_read_param1 = diag_progress_counter;
-
-                // Set unit data in
-                unit_data_in_sel = UNIT_DATA_FROM_CACHE_DATA_OUT;
+                // Write into cache
+                if (l0_opcode == MULTIPLY) begin
+                    cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                    cache_write_op = MAT_DATA_WRITE_DIAG2;
+                    cache_write_addr1 = l0_Md;
+                    cache_write_param1 = diag_progress_counter;
+                end
             end
         endcase
     end
