@@ -25,6 +25,14 @@ __Warning__: `MULTIPLY` equivalents to $Md_{i, j} = \sum W_{k, WIDTH-i} \cdot M1
 
 Transpose matrix `M1`
 
+#### XFLIP M1
+
+Flip matrix `M1` on X axis (vertically).
+
+#### YFLIP M1
+
+Flip matrix `M1` on Y axis (horizontally).
+
 ---
 
 ## 2. Main memory operations
