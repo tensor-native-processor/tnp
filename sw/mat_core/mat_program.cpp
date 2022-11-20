@@ -7,6 +7,8 @@ const std::map<MatCoreInstDefn::Opcode, std::vector<MatCoreInstDefn::Operand>> M
     {SET_WEIGHT,        {M1}},
     {MULTIPLY,          {Md, M1}},
     {TRANSPOSE,         {M1}},
+    {XFLIP,             {M1}},
+    {YFLIP,             {M1}},
 
     {LOAD_ROW,          {ADDR, M1, ROW_IDX}},
     {LOAD_COL,          {ADDR, M1, COL_IDX}},
@@ -34,6 +36,8 @@ const std::map<MatCoreInstDefn::Opcode, std::string> MatCoreInstDefn::opcodeName
     {SET_WEIGHT,        "SET_WEIGHT"},
     {MULTIPLY,          "MULTIPLY"},
     {TRANSPOSE,         "TRANSPOSE"},
+    {XFLIP,             "XFLIP"},
+    {YFLIP,             "YFLIP"},
 
     {LOAD_ROW,          "LOAD_ROW"},
     {LOAD_COL,          "LOAD_COL"},

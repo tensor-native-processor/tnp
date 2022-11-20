@@ -19,6 +19,8 @@ public:
         SET_WEIGHT      = 0b00100000,
         MULTIPLY        = 0b00100001,
         TRANSPOSE       = 0b00100010,
+        XFLIP           = 0b00100100,
+        YFLIP           = 0b00100101,
 
         // Section 2
         LOAD_ROW        = 0b01000001,
