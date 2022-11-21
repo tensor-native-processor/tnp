@@ -245,7 +245,7 @@ module MatControl
         data_mem_read_addr = 0;
         data_mem_write_op = MAT_DATA_MEM_WRITE_DISABLE;
         data_mem_write_addr = 0;
-        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_ZERO;
         // Cache
         cache_read_op = MAT_DATA_READ_DISABLE;
         cache_read_addr1 = 0;
@@ -348,6 +348,7 @@ case (opcode)
         // Write into DataMem
         data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
         data_mem_write_addr = op_addr;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
     STORE_COL: begin
         // Read from cache
@@ -358,6 +359,7 @@ case (opcode)
         // Write into DataMem
         data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
         data_mem_write_addr = op_addr;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
     STORE_SCALAR: begin
         // Read from cache
@@ -369,6 +371,7 @@ case (opcode)
         // Write into DataMem
         data_mem_write_op = MAT_DATA_MEM_WRITE_SINGLE;
         data_mem_write_addr = op_addr;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
 
     // Section 3
