@@ -12,6 +12,8 @@ const std::map<VecCoreInstDefn::Opcode, std::vector<VecCoreInstDefn::Operand>> V
     {ACT_SIGMOID,       {Vd, V1}},
     {ACT_TANH,          {Vd, V1}},
     {ACT_RELU,          {Vd, V1}},
+    {CLEAR,             {V1}},
+    {COPY,              {Vd, V1}},
 
     {LOAD_VEC,          {ADDR, V1}},
     {LOAD_SCALAR,       {ADDR, V1, VEC_IDX}},
@@ -36,6 +38,9 @@ const std::map<VecCoreInstDefn::Opcode, std::string> VecCoreInstDefn::opcodeName
     {ACT_SIGMOID,       "ACT_SIGMOID"},
     {ACT_TANH,          "ACT_TANH"},
     {ACT_RELU,          "ACT_RELU"},
+
+    {CLEAR,             "CLEAR"},
+    {COPY,              "COPY"},
 
     {LOAD_VEC,          "LOAD_VEC"},
     {LOAD_SCALAR,       "LOAD_SCALAR"},

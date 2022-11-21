@@ -33,7 +33,12 @@ add_executable(vec_add vec_add.cpp)
 target_include_directories(vec_add PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(vec_add vec_core)
 
-# vec_add
+# vec_scale
 add_executable(vec_scale vec_scale.cpp)
 target_include_directories(vec_scale PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(vec_scale vec_core)
+
+# vec_copy
+add_executable(vec_copy vec_copy.cpp)
+target_include_directories(vec_copy PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(vec_copy vec_core)

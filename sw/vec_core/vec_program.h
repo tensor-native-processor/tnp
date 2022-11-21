@@ -25,6 +25,9 @@ public:
         ACT_TANH        = 0b00110001,
         ACT_RELU        = 0b00110010,
 
+        CLEAR           = 0b00111000,
+        COPY            = 0b00111001,
+
         // Section 2
         LOAD_VEC        = 0b01000000,
         LOAD_SCALAR     = 0b01000001,

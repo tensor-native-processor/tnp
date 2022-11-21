@@ -41,6 +41,14 @@ Apply tanh function on `V1`and store the output into `Vd`
 
 Apply relu function on `V1`and store the output into `Vd`
 
+#### CLEAR V1
+
+Set vector `V1` to zero
+
+#### COPY Vd V1
+
+Copy vector `V1` into `Vd`
+
 ---
 
 ## 2. Main memory operations
