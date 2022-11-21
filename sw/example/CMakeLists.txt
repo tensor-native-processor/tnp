@@ -27,3 +27,8 @@ target_link_libraries(mat_asm mat_core)
 add_executable(mat_sim mat_sim.cpp)
 target_include_directories(mat_sim PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_sim mat_core)
+
+# vec_add
+add_executable(vec_add vec_add.cpp)
+target_include_directories(vec_add PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(vec_add vec_core)
