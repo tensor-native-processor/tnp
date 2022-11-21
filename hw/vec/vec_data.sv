@@ -7,5 +7,7 @@ typedef enum {
 } VecDataWriteOp_t;
 
 typedef enum {
-    VEC_DATA_READ_VEC
+    VEC_DATA_READ_DISABLE,
+    VEC_DATA_READ_VEC,
+    VEC_DATA_READ_SCALAR
 } VecDataReadOp_t;

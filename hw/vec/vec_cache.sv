@@ -9,6 +9,7 @@ module VecCache
     (input logic clock,
      input VecDataReadOp_t read_op,
      input logic [CACHE_ADDR_SIZE-1:0] read_addr,
+     input logic [WIDTH_ADDR_SIZE-1:0] read_param,
      input VecDataWriteOp_t write_op,
      input logic [CACHE_ADDR_SIZE-1:0] write_addr,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param,
@@ -19,13 +20,14 @@ module VecCache
     shortreal reg_data_out[CACHE_SIZE-1:0][WIDTH-1:0];
 
     VecReg #(.WIDTH(WIDTH)) vec_reg[CACHE_SIZE-1:0](
-        .clock, .read_op,
+        .clock,
+        .read_op, .read_param,
         .write_op(reg_write_op),
         .write_param, .data_in,
         .data_out(reg_data_out)
     );
 
-    genvar blk;
+    genvar blk, i;
 
     // Write operations
     generate
@@ -38,8 +40,20 @@ module VecCache
     endgenerate
 
     // Read operations
-    always_comb begin
-        data_out = reg_data_out[read_addr];
-    end
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unique case (read_op)
+                    VEC_DATA_READ_DISABLE: begin
+                        data_out[i] = 0;
+                    end
+                    VEC_DATA_READ_SCALAR,
+                    VEC_DATA_READ_VEC: begin
+                        data_out[i] = reg_data_out[read_addr][i];
+                    end
+                endcase
+            end
+        end
+    endgenerate
 
 endmodule: VecCache

@@ -6,6 +6,7 @@ module VecReg
                 WIDTH_ADDR_SIZE = $clog2(WIDTH))
     (input logic clock,
      input VecDataReadOp_t read_op,
+     input logic [WIDTH_ADDR_SIZE-1:0] read_param,
      input VecDataWriteOp_t write_op,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param,
      input shortreal data_in[WIDTH-1:0],
@@ -37,10 +38,22 @@ module VecReg
     endgenerate
 
     // Read operation
-    always_comb begin
-        unique case (read_op)
-            VEC_DATA_READ_VEC: data_out = mem;
-        endcase
-    end
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unique case (read_op)
+                    VEC_DATA_READ_DISABLE: begin
+                        data_out[i] = 0;
+                    end
+                    VEC_DATA_READ_VEC: begin
+                        data_out[i] = mem[i];
+                    end
+                    VEC_DATA_READ_SCALAR: begin
+                        data_out[i] = i == 0 ? mem[read_param] : 0;
+                    end
+                endcase
+            end
+        end
+    endgenerate
 
 endmodule: VecReg

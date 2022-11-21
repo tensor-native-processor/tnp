@@ -6,7 +6,7 @@ module VecCache_test();
     VecDataReadOp_t read_op;
     VecDataWriteOp_t write_op;
     logic [1:0] read_addr, write_addr;
-    logic [1:0] write_param;
+    logic [1:0] read_param, write_param;
     shortreal data_in[3:0], data_out[3:0], ans[3:0];
 
     VecCache #(.WIDTH(4)) DUT(.*);
