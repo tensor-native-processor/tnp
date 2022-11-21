@@ -8,4 +8,5 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Wall")
 
 add_subdirectory(common)
 add_subdirectory(mat_core)
+add_subdirectory(vec_core)
 add_subdirectory(example)

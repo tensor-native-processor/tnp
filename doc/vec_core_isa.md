@@ -77,17 +77,21 @@ Store vector element `vec_idx` into vector `V1` into DRAM address `addr`
 
 Send vector `V1` to core `core_idx`
 
+#### SEND_SCALAR core_idx V1 vec_idx
+
+Send vector `V1`'s `vec_idx`-th element to core `core_idx`
+
 
 
 ### Receiving data from another core
 
 #### RECV_VEC core_idx V1
 
-Receive from core `core_idx` into vector `V1` 
+Receive vector from core `core_idx` into vector `V1` 
 
-#### RECV_SCALAR core_idx V1 vec_idx elem_idx
+#### RECV_SCALAR core_idx V1 vec_idx
 
-Receive from core `core_idx`'s `elem_idx`-th element into `V1` `vec_idx` element 
+Receive scalar from core `core_idx` into `V1`'s `vec_idx`-th element 
 
 ---
 
