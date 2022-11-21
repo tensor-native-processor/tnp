@@ -56,7 +56,9 @@ module VecControl
 
     // State machine
     enum {
-        INIT, READY, LOAD1, LOAD2, NEXT, STOP
+        INIT, READY, NEXT, STOP,
+        LOAD11,
+        LOAD21, LOAD22
     } state, next_state;
 
     // Proceed to next_inst
@@ -221,7 +223,7 @@ case (opcode)
     SUB,
     DOT: begin
         // Change next state
-        next_state = LOAD1;
+        next_state = LOAD11;
         // Read from cache
         cache_read_op = VEC_DATA_READ_VEC;
         cache_read_addr = op_V2;
@@ -302,32 +304,25 @@ case (opcode)
 endcase
 
             end
-            LOAD1: begin
+            LOAD11: begin
                 next_state = NEXT;
-// Case on opcode
-case (opcode)
-    ADD,
-    SUB,
-    DOT: begin
-        // Change next state
-        next_state = NEXT;
-        // Read from cache
-        cache_read_op = VEC_DATA_READ_VEC;
-        cache_read_addr = op_V1;
-        // Read from reg_unit2
-        reg_unit2_read_op = VEC_DATA_READ_VEC;
-        // Set unit op
-        unique case (opcode)
-            ADD: unit_op = VEC_UNIT_OP_ADD;
-            SUB: unit_op = VEC_UNIT_OP_SUB;
-            DOT: unit_op = VEC_UNIT_OP_DOT;
-        endcase
-        // Write into cache
-        cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
-        cache_write_op = VEC_DATA_WRITE_VEC;
-        cache_write_addr = op_Vd;
-    end
-endcase
+                // Change next state
+                next_state = NEXT;
+                // Read from cache
+                cache_read_op = VEC_DATA_READ_VEC;
+                cache_read_addr = op_V1;
+                // Read from reg_unit2
+                reg_unit2_read_op = VEC_DATA_READ_VEC;
+                // Set unit op
+                unique case (opcode)
+                    ADD: unit_op = VEC_UNIT_OP_ADD;
+                    SUB: unit_op = VEC_UNIT_OP_SUB;
+                    DOT: unit_op = VEC_UNIT_OP_DOT;
+                endcase
+                // Write into cache
+                cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+                cache_write_op = VEC_DATA_WRITE_VEC;
+                cache_write_addr = op_Vd;
             end
             NEXT: begin
                 next_inst_proceed = 1;
