@@ -32,3 +32,8 @@ target_link_libraries(mat_sim mat_core)
 add_executable(vec_add vec_add.cpp)
 target_include_directories(vec_add PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(vec_add vec_core)
+
+# vec_add
+add_executable(vec_scale vec_scale.cpp)
+target_include_directories(vec_scale PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(vec_scale vec_core)
