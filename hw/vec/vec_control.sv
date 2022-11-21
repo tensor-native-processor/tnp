@@ -240,99 +240,48 @@ module VecControl
 
 // Case on opcode
 case (opcode)
-/*
     // Section 1
-    SET_WEIGHT,
-    MULTIPLY: begin
-        // Change next state
-        next_state = P0XX;
-
-        // Init counter
-        diag_progress_counter_clr = 1;
-
-        // Insert into L0
-        unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_CUR;
-    end
-    TRANSPOSE: begin
-        // Transpose cache matrix
-        cache_write_op = MAT_DATA_WRITE_TRANSPOSE;
-        cache_write_addr1 = op_M1;
-    end
-    XFLIP: begin
-        // XFLIP cache matrix
-        cache_write_op = MAT_DATA_WRITE_XFLIP;
-        cache_write_addr1 = op_M1;
-    end
-    YFLIP: begin
-        // XFLIP cache matrix
-        cache_write_op = MAT_DATA_WRITE_YFLIP;
-        cache_write_addr1 = op_M1;
-    end
+    // TODO
 
     // Section 2
-    LOAD_ROW: begin
+    LOAD_VEC: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
 
         // Write into cache
-        cache_write_op = MAT_DATA_WRITE_ROW;
-        cache_write_addr1 = op_M1;
-        cache_write_param1 = op_row_idx;
-        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
-    end
-    LOAD_COL: begin
-        // Read from DataMem
-        data_mem_read_addr = op_addr;
-
-        // Write into cache
-        cache_write_op = MAT_DATA_WRITE_COL;
-        cache_write_addr1 = op_M1;
-        cache_write_param1 = op_col_idx;
+        cache_write_op = VEC_DATA_WRITE_VEC;
+        cache_write_addr = op_V1;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
     LOAD_SCALAR: begin
         // Read from DataMem
-        data_mem_read_addr = op_addr; // data_mem_data_out[0] now contains scalar
+        data_mem_read_addr = op_addr;
 
         // Write into cache
-        cache_write_op = MAT_DATA_WRITE_SCALAR;
-        cache_write_addr1 = op_M1;
-        cache_write_param1 = op_row_idx;
-        cache_write_param2 = op_col_idx;
+        cache_write_op = VEC_DATA_WRITE_SCALAR;
+        cache_write_addr = op_V1;
+        cache_write_param = op_vec_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    STORE_ROW: begin
+    STORE_VEC: begin
         // Read from cache
-        cache_read_op = MAT_DATA_READ_ROW;
-        cache_read_addr1 = op_M1;
-        cache_read_param1 = op_row_idx;
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V1;
 
         // Write into DataMem
-        data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
-        data_mem_write_addr = op_addr;
-    end
-    STORE_COL: begin
-        // Read from cache
-        cache_read_op = MAT_DATA_READ_COL;
-        cache_read_addr1 = op_M1;
-        cache_read_param1 = op_col_idx;
-
-        // Write into DataMem
-        data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
+        data_mem_write_op = VEC_DATA_MEM_WRITE_ALL;
         data_mem_write_addr = op_addr;
     end
     STORE_SCALAR: begin
         // Read from cache
-        cache_read_op = MAT_DATA_READ_SCALAR;
-        cache_read_addr1 = op_M1;
-        cache_read_param1 = op_row_idx;
-        cache_read_param2 = op_col_idx;
+        cache_read_op = VEC_DATA_READ_SCALAR;
+        cache_read_addr = op_V1;
+        cache_read_param = op_vec_idx;
 
         // Write into DataMem
-        data_mem_write_op = MAT_DATA_MEM_WRITE_SINGLE;
+        data_mem_write_op = VEC_DATA_MEM_WRITE_SINGLE;
         data_mem_write_addr = op_addr;
     end
-    */
 
     // Section 3
     // TODO
