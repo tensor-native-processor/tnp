@@ -230,6 +230,26 @@ case (opcode)
     end
     // TODO
 
+    ACT_SIGMOID,
+    ACT_TANH,
+    ACT_RELU: begin
+        // Change next state
+        next_state = NEXT;
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V1;
+        // Set unit op
+        unique case (opcode)
+            ACT_SIGMOID: unit_op = VEC_UNIT_OP_ACT_SIGMOID;
+            ACT_TANH: unit_op = VEC_UNIT_OP_ACT_TANH;
+            ACT_RELU: unit_op = VEC_UNIT_OP_ACT_RELU;
+        endcase
+        // Write into cache
+        cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+        cache_write_op = VEC_DATA_WRITE_VEC;
+        cache_write_addr = op_Vd;
+    end
+
     // Section 2
     LOAD_VEC: begin
         // Read from DataMem
