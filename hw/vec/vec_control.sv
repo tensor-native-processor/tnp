@@ -217,7 +217,9 @@ module VecControl
 // Case on opcode
 case (opcode)
     // Section 1
-    ADD: begin
+    ADD,
+    SUB,
+    DOT: begin
         // Change next state
         next_state = LOAD1;
         // Read from cache
@@ -284,7 +286,9 @@ endcase
                 next_state = NEXT;
 // Case on opcode
 case (opcode)
-    ADD: begin
+    ADD,
+    SUB,
+    DOT: begin
         // Change next state
         next_state = NEXT;
         // Read from cache
@@ -293,7 +297,11 @@ case (opcode)
         // Read from reg_unit2
         reg_unit2_read_op = VEC_DATA_READ_VEC;
         // Set unit op
-        unit_op = VEC_UNIT_OP_ADD;
+        unique case (opcode)
+            ADD: unit_op = VEC_UNIT_OP_ADD;
+            SUB: unit_op = VEC_UNIT_OP_SUB;
+            DOT: unit_op = VEC_UNIT_OP_DOT;
+        endcase
         // Write into cache
         cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
         cache_write_op = VEC_DATA_WRITE_VEC;
