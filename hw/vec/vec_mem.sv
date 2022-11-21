@@ -24,9 +24,9 @@ module VecInstMem
 endmodule: VecInstMem
 
 typedef enum {
-    MAT_DATA_MEM_WRITE_DISABLE,
-    MAT_DATA_MEM_WRITE_SINGLE,
-    MAT_DATA_MEM_WRITE_ALL
+    VEC_DATA_MEM_WRITE_DISABLE,
+    VEC_DATA_MEM_WRITE_SINGLE,
+    VEC_DATA_MEM_WRITE_ALL
 } VecDataMemWriteOp_t;
 
 // VecCore Data Memory
@@ -62,9 +62,9 @@ module VecDataMem
     generate
         for (i = 0;i < DATA_MEM_SIZE;i++)
             always_ff @(posedge clock) begin
-               if ((write_op == MAT_DATA_MEM_WRITE_SINGLE &&
+               if ((write_op == VEC_DATA_MEM_WRITE_SINGLE &&
                        i == write_addr) ||
-                   (write_op == MAT_DATA_MEM_WRITE_ALL &&
+                   (write_op == VEC_DATA_MEM_WRITE_ALL &&
                        i >= write_addr &&
                        i < write_addr + DATA_MEM_WIDTH_SIZE))
                    data_mem[i] <= data_in[i - write_addr];
