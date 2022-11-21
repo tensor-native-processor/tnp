@@ -85,6 +85,35 @@ module VecControl
         .op_vec_idx
     );
 
+    // Input to VecUnit
+    // Input 1
+    assign unit_data_in1 = cache_data_out;
+    // Control points
+    VecDataReadOp_t reg_unit2_read_op, reg_unitK_read_op;
+    VecDataWriteOp_t reg_unit2_write_op, reg_unitK_write_op;
+    logic [WIDTH_ADDR_SIZE-1:0] reg_unit2_read_param, reg_unit2_write_param,
+                                reg_unitK_read_param, reg_unitK_write_param;
+    // Input 2
+    VecReg #(.WIDTH(WIDTH)) reg_unit2(.clock,
+        .read_op(reg_unit2_read_op),
+        .read_param(reg_unit2_read_param),
+        .write_op(reg_unit2_write_op),
+        .write_param(reg_unit2_write_param),
+        .data_in(cache_data_out),
+        .data_out(unit_data_in2)
+    );
+    // Input K
+    shortreal reg_unitK_data_out[WIDTH-1:0];
+    assign unit_data_inK = reg_unitK_data_out[0];
+    VecReg #(.WIDTH(WIDTH)) reg_unitK(.clock,
+        .read_op(reg_unitK_read_op),
+        .read_param(reg_unitK_read_param),
+        .write_op(reg_unitK_write_op),
+        .write_param(reg_unitK_write_param),
+        .data_in(cache_data_out),
+        .data_out(reg_unitK_data_out)
+    );
+
     // State machine
     always_ff @(posedge clock) begin
         if (reset)
@@ -148,66 +177,6 @@ module VecControl
         end
     endgenerate
 
-    // Multiplex input into unit_data_in1
-    enum {
-        UNIT_DATA1_FROM_ZERO,
-        UNIT_DATA1_FROM_CACHE_DATA_OUT
-    } unit_data_in1_sel;
-
-    generate
-        for (i = 0;i < WIDTH;i++) begin
-            always_comb begin
-                unique case (unit_data_in1_sel)
-                    UNIT_DATA1_FROM_ZERO: begin
-                        unit_data_in1[i] = 0;
-                    end
-                    UNIT_DATA1_FROM_CACHE_DATA_OUT: begin
-                        unit_data_in1[i] = cache_data_out[i];
-                    end
-                endcase
-            end
-        end
-    endgenerate
-
-    // Multiplex input into unit_data_in2
-    enum {
-        UNIT_DATA2_FROM_ZERO,
-        UNIT_DATA2_FROM_CACHE_DATA_OUT
-    } unit_data_in2_sel;
-
-    generate
-        for (i = 0;i < WIDTH;i++) begin
-            always_comb begin
-                unique case (unit_data_in2_sel)
-                    UNIT_DATA2_FROM_ZERO: begin
-                        unit_data_in2[i] = 0;
-                    end
-                    UNIT_DATA2_FROM_CACHE_DATA_OUT: begin
-                        unit_data_in2[i] = cache_data_out[i];
-                    end
-                endcase
-            end
-        end
-    endgenerate
-
-    // Multiplex input into unit_data_inK
-    enum {
-        UNIT_DATAK_FROM_ZERO,
-        UNIT_DATAK_FROM_CACHE_DATA_OUT
-    } unit_data_inK_sel;
-
-    always_comb begin
-        unique case (unit_data_inK_sel)
-            UNIT_DATAK_FROM_ZERO: begin
-                unit_data_inK = 0;
-            end
-            UNIT_DATAK_FROM_CACHE_DATA_OUT: begin
-                unit_data_inK = cache_data_out[0];
-            end
-        endcase
-    end
-
-
     // Assign next state and output
     always_comb begin
         // Set default values
@@ -227,9 +196,16 @@ module VecControl
         cache_write_param = 0;
         cache_data_in_sel = CACHE_DATA_FROM_ZERO;
         // Unit
-        unit_data_in1_sel = UNIT_DATA1_FROM_ZERO;
-        unit_data_in2_sel = UNIT_DATA2_FROM_ZERO;
-        unit_data_inK_sel = UNIT_DATAK_FROM_ZERO;
+        unit_op = VEC_UNIT_OP_ZERO;
+        // Registers for unit
+        reg_unit2_read_op = VEC_DATA_READ_DISABLE;
+        reg_unitK_read_op = VEC_DATA_READ_DISABLE;
+        reg_unit2_write_op = VEC_DATA_WRITE_DISABLE;
+        reg_unitK_write_op = VEC_DATA_WRITE_DISABLE;
+        reg_unit2_read_param = 0;
+        reg_unitK_read_param = 0;
+        reg_unit2_write_param = 0;
+        reg_unitK_write_param = 0;
 
         unique case (state)
             INIT: begin
@@ -241,6 +217,15 @@ module VecControl
 // Case on opcode
 case (opcode)
     // Section 1
+    ADD: begin
+        // Change next state
+        next_state = LOAD1;
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V2;
+        // Store into reg_unit2
+        reg_unit2_write_op = VEC_DATA_WRITE_VEC;
+    end
     // TODO
 
     // Section 2
@@ -271,6 +256,7 @@ case (opcode)
         // Write into DataMem
         data_mem_write_op = VEC_DATA_MEM_WRITE_ALL;
         data_mem_write_addr = op_addr;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
     STORE_SCALAR: begin
         // Read from cache
@@ -281,6 +267,7 @@ case (opcode)
         // Write into DataMem
         data_mem_write_op = VEC_DATA_MEM_WRITE_SINGLE;
         data_mem_write_addr = op_addr;
+        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
 
     // Section 3
@@ -292,6 +279,27 @@ case (opcode)
     end
 endcase
 
+            end
+            LOAD1: begin
+                next_state = NEXT;
+// Case on opcode
+case (opcode)
+    ADD: begin
+        // Change next state
+        next_state = NEXT;
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V1;
+        // Read from reg_unit2
+        reg_unit2_read_op = VEC_DATA_READ_VEC;
+        // Set unit op
+        unit_op = VEC_UNIT_OP_ADD;
+        // Write into cache
+        cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+        cache_write_op = VEC_DATA_WRITE_VEC;
+        cache_write_addr = op_Vd;
+    end
+endcase
             end
             NEXT: begin
                 next_inst_proceed = 1;

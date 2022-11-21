@@ -1,6 +1,7 @@
 `default_nettype none
 
 typedef enum {
+    VEC_UNIT_OP_ZERO,
     VEC_UNIT_OP_ADD,
     VEC_UNIT_OP_SUB,
     VEC_UNIT_OP_DOT,
@@ -25,6 +26,9 @@ module VecUnit
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin
                 unique case (op)
+                    VEC_UNIT_OP_ZERO: begin
+                        data_out[i] = 0;
+                    end
                     VEC_UNIT_OP_ADD: begin
                         data_out[i] = data_in1[i] + data_in2[i];
                     end
