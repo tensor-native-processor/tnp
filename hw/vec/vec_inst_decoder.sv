@@ -58,10 +58,15 @@ module VecInstDecoder
             end
             ACT_SIGMOID,
             ACT_TANH,
-            ACT_RELU: begin
+            ACT_RELU,
+            COPY: begin
                 op_Vd       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
+            end
+            CLEAR: begin
+                op_V1       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
 
             // Section 2

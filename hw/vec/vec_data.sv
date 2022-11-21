@@ -2,6 +2,7 @@
 
 typedef enum {
     VEC_DATA_WRITE_DISABLE,
+    VEC_DATA_WRITE_ZERO,
     VEC_DATA_WRITE_VEC,
     VEC_DATA_WRITE_SCALAR
 } VecDataWriteOp_t;

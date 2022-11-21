@@ -24,6 +24,9 @@ module VecReg
                 unique case (write_op)
                     VEC_DATA_WRITE_DISABLE: begin
                     end
+                    VEC_DATA_WRITE_ZERO: begin
+                        mem[i] <= 0;
+                    end
                     VEC_DATA_WRITE_VEC: begin
                         mem[i] <= data_in[i];
                     end

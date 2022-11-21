@@ -11,6 +11,9 @@ typedef enum logic [7:0] {
 	ACT_TANH        = 8'b00110001,
 	ACT_RELU        = 8'b00110010,
 
+    CLEAR           = 8'b00111000,
+    COPY            = 8'b00111001,
+
 	// Section 2
 	LOAD_VEC        = 8'b01000000,
 	LOAD_SCALAR     = 8'b01000001,

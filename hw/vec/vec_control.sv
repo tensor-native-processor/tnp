@@ -126,7 +126,8 @@ module VecControl
     enum {
         CACHE_DATA_FROM_ZERO,
         CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
-        CACHE_DATA_FROM_UNIT_DATA_OUT
+        CACHE_DATA_FROM_UNIT_DATA_OUT,
+        CACHE_DATA_FROM_CACHE_DATA_OUT
     } cache_data_in_sel;
 
     genvar i;
@@ -142,6 +143,9 @@ module VecControl
                     end
                     CACHE_DATA_FROM_UNIT_DATA_OUT: begin
                         cache_data_in[i] = unit_data_out[i];
+                    end
+                    CACHE_DATA_FROM_CACHE_DATA_OUT: begin
+                        cache_data_in[i] = cache_data_out[i];
                     end
                 endcase
             end
@@ -231,7 +235,6 @@ case (opcode)
         // Store into reg_unit2
         reg_unit2_write_op = VEC_DATA_WRITE_VEC;
     end
-    // TODO
 
     ACT_SIGMOID,
     ACT_TANH,
@@ -249,6 +252,21 @@ case (opcode)
         endcase
         // Write into cache
         cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
+        cache_write_op = VEC_DATA_WRITE_VEC;
+        cache_write_addr = op_Vd;
+    end
+
+    CLEAR: begin
+        // Write into cache
+        cache_write_op = VEC_DATA_WRITE_ZERO;
+        cache_write_addr = op_V1;
+    end
+    COPY: begin
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V1;
+        // Write into cache
+        cache_data_in_sel = CACHE_DATA_FROM_CACHE_DATA_OUT;
         cache_write_op = VEC_DATA_WRITE_VEC;
         cache_write_addr = op_Vd;
     end
