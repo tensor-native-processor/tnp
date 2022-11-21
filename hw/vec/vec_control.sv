@@ -57,8 +57,7 @@ module VecControl
     // State machine
     enum {
         INIT, READY, NEXT, STOP,
-        LOAD11,
-        LOAD21, LOAD22
+        READREG
     } state, next_state;
 
     // Proceed to next_inst
@@ -105,16 +104,7 @@ module VecControl
         .data_out(unit_data_in2)
     );
     // Input K
-    shortreal reg_unitK_data_out[WIDTH-1:0];
-    assign unit_data_inK = reg_unitK_data_out[0];
-    VecReg #(.WIDTH(WIDTH)) reg_unitK(.clock,
-        .read_op(reg_unitK_read_op),
-        .read_param(reg_unitK_read_param),
-        .write_op(reg_unitK_write_op),
-        .write_param(reg_unitK_write_param),
-        .data_in(cache_data_out),
-        .data_out(reg_unitK_data_out)
-    );
+    assign unit_data_inK = unit_data_in2[0];
 
     // State machine
     always_ff @(posedge clock) begin
@@ -223,10 +213,21 @@ case (opcode)
     SUB,
     DOT: begin
         // Change next state
-        next_state = LOAD11;
+        next_state = READREG;
         // Read from cache
         cache_read_op = VEC_DATA_READ_VEC;
         cache_read_addr = op_V2;
+        // Store into reg_unit2
+        reg_unit2_write_op = VEC_DATA_WRITE_VEC;
+    end
+    DELTA,
+    SCALE: begin
+        // Change next state
+        next_state = READREG;
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_SCALAR;
+        cache_read_addr = op_V2;
+        cache_read_param = op_vec_idx;
         // Store into reg_unit2
         reg_unit2_write_op = VEC_DATA_WRITE_VEC;
     end
@@ -304,8 +305,7 @@ case (opcode)
 endcase
 
             end
-            LOAD11: begin
-                next_state = NEXT;
+            READREG: begin
                 // Change next state
                 next_state = NEXT;
                 // Read from cache
@@ -318,6 +318,8 @@ endcase
                     ADD: unit_op = VEC_UNIT_OP_ADD;
                     SUB: unit_op = VEC_UNIT_OP_SUB;
                     DOT: unit_op = VEC_UNIT_OP_DOT;
+                    SCALE: unit_op = VEC_UNIT_OP_SCALE;
+                    DELTA: unit_op = VEC_UNIT_OP_DELTA;
                 endcase
                 // Write into cache
                 cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
