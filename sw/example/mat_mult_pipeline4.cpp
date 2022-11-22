@@ -48,41 +48,31 @@ int main() {
     MatCoreInst inst;
 
     // Load memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 1;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 6;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 512 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 7;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 768 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 2;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 1024 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 0;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    // A
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 0;
+    inst.operands[MatCoreInstDefn::M1] = 1;
+    prog.append(inst);
+    // B
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 256;
+    inst.operands[MatCoreInstDefn::M1] = 6;
+    prog.append(inst);
+    // D
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 512;
+    inst.operands[MatCoreInstDefn::M1] = 7;
+    prog.append(inst);
+    // F
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 768;
+    inst.operands[MatCoreInstDefn::M1] = 2;
+    prog.append(inst);
+    // G
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 1024;
+    inst.operands[MatCoreInstDefn::M1] = 0;
+    prog.append(inst);
 
     // xflip 1
     inst.opcode = MatCoreInstDefn::XFLIP;
@@ -133,29 +123,20 @@ int main() {
     prog.append(inst);
 
     // store 3 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 3;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    inst.opcode = MatCoreInstDefn::STORE_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 256;
+    inst.operands[MatCoreInstDefn::M1] = 3;
+    prog.append(inst);
     // store 4 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 4;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    inst.opcode = MatCoreInstDefn::STORE_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 0;
+    inst.operands[MatCoreInstDefn::M1] = 4;
+    prog.append(inst);
     // store 5 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 512 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 5;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    inst.opcode = MatCoreInstDefn::STORE_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 512;
+    inst.operands[MatCoreInstDefn::M1] = 5;
+    prog.append(inst);
 
     // halt
     inst.opcode = MatCoreInstDefn::HALT;
