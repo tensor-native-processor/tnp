@@ -1,0 +1,2 @@
+#!/bin/bash
+vcs -q -nc -sverilog vec_defn.sv vec_inst_decoder.sv vec_mem.sv vec_data.sv vec_reg.sv vec_unit.sv vec_cache.sv vec_control.sv vec_core.sv vec_core_sim.sv && ./simv
