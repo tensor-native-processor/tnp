@@ -9,9 +9,11 @@ typedef enum logic [7:0] {
     YFLIP           = 8'b00100101,
 
     // Section 2
+    LOAD_MAT        = 8'b01000000,
     LOAD_ROW        = 8'b01000001,
     LOAD_COL        = 8'b01000010,
     LOAD_SCALAR     = 8'b01000011,
+    STORE_MAT       = 8'b01010000,
     STORE_ROW       = 8'b01010001,
     STORE_COL       = 8'b01010010,
     STORE_SCALAR    = 8'b01010011,

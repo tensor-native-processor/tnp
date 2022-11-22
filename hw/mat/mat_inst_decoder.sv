@@ -54,6 +54,12 @@ module MatInstDecoder
             end
 
             // Section 2
+            LOAD_MAT,
+            STORE_MAT: begin
+                op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
+                op_M1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
+            end
             LOAD_ROW,
             STORE_ROW: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
