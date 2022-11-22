@@ -10,9 +10,11 @@ const std::map<MatCoreInstDefn::Opcode, std::vector<MatCoreInstDefn::Operand>> M
     {XFLIP,             {M1}},
     {YFLIP,             {M1}},
 
+    {LOAD_MAT,          {ADDR, M1}},
     {LOAD_ROW,          {ADDR, M1, ROW_IDX}},
     {LOAD_COL,          {ADDR, M1, COL_IDX}},
     {LOAD_SCALAR,       {ADDR, M1, ROW_IDX, COL_IDX}},
+    {STORE_MAT,         {ADDR, M1}},
     {STORE_ROW,         {ADDR, M1, ROW_IDX}},
     {STORE_COL,         {ADDR, M1, COL_IDX}},
     {STORE_SCALAR,      {ADDR, M1, ROW_IDX, COL_IDX}},
@@ -39,10 +41,12 @@ const std::map<MatCoreInstDefn::Opcode, std::string> MatCoreInstDefn::opcodeName
     {XFLIP,             "XFLIP"},
     {YFLIP,             "YFLIP"},
 
+    {LOAD_MAT,          "LOAD_MAT"},
     {LOAD_ROW,          "LOAD_ROW"},
     {LOAD_COL,          "LOAD_COL"},
     {LOAD_SCALAR,       "LOAD_SCALAR"},
 
+    {STORE_MAT,         "STORE_MAT"},
     {STORE_ROW,         "STORE_ROW"},
     {STORE_COL,         "STORE_COL"},
     {STORE_SCALAR,      "STORE_SCALAR"},

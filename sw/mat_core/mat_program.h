@@ -23,9 +23,11 @@ public:
         YFLIP           = 0b00100101,
 
         // Section 2
+        LOAD_MAT        = 0b01000000,
         LOAD_ROW        = 0b01000001,
         LOAD_COL        = 0b01000010,
         LOAD_SCALAR     = 0b01000011,
+        STORE_MAT       = 0b01010000,
         STORE_ROW       = 0b01010001,
         STORE_COL       = 0b01010010,
         STORE_SCALAR    = 0b01010011,
