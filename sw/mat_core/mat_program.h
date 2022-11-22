@@ -119,7 +119,8 @@ private:
         INIT, READY, NEXT, STOP,
         P0XX, P01X, P012,
         PX0X, PX01,
-        PXX0
+        PXX0,
+        ACCESS_MEM
     };
     MatCoreProgram m_prog;
     MatCoreParam m_param;

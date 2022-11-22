@@ -137,6 +137,12 @@ void MatCoreSimEngine::simulateStep() {
                     m_diag_progress_counter = 0;
                     break;
                 }
+                case MatCoreInstDefn::LOAD_MAT:
+                case MatCoreInstDefn::STORE_MAT: {
+                    next_state = State::ACCESS_MEM;
+                    m_diag_progress_counter = 0;
+                    break;
+                }
                 case MatCoreInstDefn::HALT: {
                     next_state = State::STOP;
                     break;
@@ -156,6 +162,15 @@ void MatCoreSimEngine::simulateStep() {
         }
         case State::STOP: {
             next_state = State::STOP;
+            break;
+        }
+        case State::ACCESS_MEM: {
+            if (m_diag_progress_counter == m_param.width - 1) {
+                next_state = State::NEXT;
+            } else {
+                next_state = State::ACCESS_MEM;
+                m_diag_progress_counter++;
+            }
             break;
         }
         case State::P0XX: {
