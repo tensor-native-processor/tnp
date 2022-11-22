@@ -113,6 +113,7 @@ public:
 private:
     enum class State {
         INIT, READY, NEXT, STOP,
+        READREG,
     };
     VecCoreProgram m_prog;
     VecCoreParam m_param;
