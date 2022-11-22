@@ -58,7 +58,8 @@ module MatControl
         INIT, READY, NEXT, STOP,
         P0XX, P01X, P012,
         PX0X, PX01,
-        PXX0
+        PXX0,
+        ACCESS_MEM
     } state, next_state;
 
     // Proceed to next_inst
@@ -308,6 +309,13 @@ case (opcode)
     end
 
     // Section 2
+    LOAD_MAT: begin
+        // Change next state
+        next_state = ACCESS_MEM;
+
+        // Init counter ("row progress counter")
+        diag_progress_counter_clr = 1;
+    end
     LOAD_ROW: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
@@ -338,6 +346,13 @@ case (opcode)
         cache_write_param1 = op_row_idx;
         cache_write_param2 = op_col_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
+    end
+    STORE_MAT: begin
+        // Change next state
+        next_state = ACCESS_MEM;
+
+        // Init counter
+        diag_progress_counter_clr = 1;
     end
     STORE_ROW: begin
         // Read from cache
@@ -390,6 +405,38 @@ endcase
             STOP: begin
                 next_state = STOP;
                 done = 1;
+            end
+            ACCESS_MEM: begin
+                if (diag_progress_counter == WIDTH - 1) begin
+                    next_state = NEXT;
+                end else begin
+                    next_state = ACCESS_MEM;
+                    diag_progress_counter_inc = 1;
+                end
+                unique case (opcode)
+                    LOAD_MAT: begin
+                        // Read from DataMem
+                        data_mem_read_addr = op_addr +
+                            WIDTH * diag_progress_counter;
+                        // Write into cache
+                        cache_write_op = MAT_DATA_WRITE_ROW;
+                        cache_write_addr1 = op_M1;
+                        cache_write_param1 = diag_progress_counter;
+                        cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
+                    end
+                    STORE_MAT: begin
+                        // Read from cache
+                        cache_read_op = MAT_DATA_READ_ROW;
+                        cache_read_addr1 = op_M1;
+                        cache_read_param1 = diag_progress_counter;
+
+                        // Write into DataMem
+                        data_mem_write_op = MAT_DATA_MEM_WRITE_ALL;
+                        data_mem_write_addr = op_addr +
+                            WIDTH * diag_progress_counter;
+                        data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
+                    end
+                endcase
             end
 
             P0XX: begin
