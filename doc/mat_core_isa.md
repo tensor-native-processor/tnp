@@ -39,6 +39,10 @@ Flip matrix `M1` on Y axis (horizontally).
 
 ### Loading from memory
 
+#### LOAD_MAT addr M1
+
+Load matrix `M1` from DRAM address `addr`
+
 #### LOAD_ROW addr M1 row_idx
 
 Load matrix row `row_idx` into matrix `M1`, from DRAM address `addr`
@@ -54,6 +58,10 @@ Load matrix element (`row_idx`, `col_idx`) into matrix `M1`, from DRAM address `
 
 
 ### Storing to memory
+
+#### STORE_MAT addr M1
+
+Store matrix `M1` into DRAM address `addr`
 
 #### STORE_ROW addr M1 row_idx
 
