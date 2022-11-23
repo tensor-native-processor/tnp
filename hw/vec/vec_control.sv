@@ -60,7 +60,7 @@ module VecControl
      output shortreal data_mem_data_in[WIDTH-1:0],
 
      // Interface with switch
-     input logic switch_send_ready,
+     output logic switch_send_ready,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
      output shortreal switch_send_data[SWITCH_WIDTH-1:0],
      input logic switch_send_ok,
@@ -75,7 +75,8 @@ module VecControl
     // State machine
     enum {
         INIT, READY, NEXT, STOP,
-        READREG
+        READREG,
+        WAIT_SWITCH
     } state, next_state;
 
     // Proceed to next_inst
@@ -145,7 +146,8 @@ module VecControl
         CACHE_DATA_FROM_ZERO,
         CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
         CACHE_DATA_FROM_UNIT_DATA_OUT,
-        CACHE_DATA_FROM_CACHE_DATA_OUT
+        CACHE_DATA_FROM_CACHE_DATA_OUT,
+        CACHE_DATA_FROM_SWITCH_RECV_DATA
     } cache_data_in_sel;
 
     genvar i;
@@ -164,6 +166,9 @@ module VecControl
                     end
                     CACHE_DATA_FROM_CACHE_DATA_OUT: begin
                         cache_data_in[i] = cache_data_out[i];
+                    end
+                    CACHE_DATA_FROM_SWITCH_RECV_DATA: begin
+                        cache_data_in[i] = switch_recv_data[i];
                     end
                 endcase
             end
@@ -190,6 +195,9 @@ module VecControl
             end
         end
     endgenerate
+
+    // Connect switch send data from cache data out
+    assign switch_send_data = cache_data_out;
 
     // Assign next state and output
     always_comb begin
@@ -220,6 +228,11 @@ module VecControl
         reg_unitK_read_param = 0;
         reg_unit2_write_param = 0;
         reg_unitK_write_param = 0;
+        // Switch
+        switch_send_ready = 0;
+        switch_send_core_idx = 0;
+        switch_recv_request = 0;
+        switch_recv_core_idx = 0;
 
         unique case (state)
             INIT: begin
@@ -334,8 +347,24 @@ case (opcode)
     // Section 3
     // TODO
     SEND_VEC: begin
+        // Change next state
+        next_state = WAIT_SWITCH;
+
+        // Read from cache
+        cache_read_op = VEC_DATA_READ_VEC;
+        cache_read_addr = op_V1;
+
+        // Send vector
+        switch_send_ready = 1;
+        switch_send_core_idx = op_core_idx;
     end
     RECV_VEC: begin
+        // Change next state
+        next_state = WAIT_SWITCH;
+
+        // Set recv
+        switch_recv_request = 1;
+        switch_recv_core_idx = op_core_idx;
     end
 
     // Section 4
@@ -344,6 +373,29 @@ case (opcode)
     end
 endcase
 
+            end
+            WAIT_SWITCH: begin
+                unique case (opcode)
+                SEND_VEC: begin
+                    if (switch_send_ok) begin
+                        next_state = NEXT;
+                    end else begin
+                        next_state = WAIT_SWITCH;
+                    end
+                end
+                RECV_VEC: begin
+                    if (switch_recv_ready) begin
+                        next_state = NEXT;
+
+                        // Write to cache
+                        cache_write_op = VEC_DATA_WRITE_VEC;
+                        cache_write_addr = op_V1;
+                        cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
+                    end else begin
+                        next_state = WAIT_SWITCH;
+                    end
+                end
+                endcase
             end
             READREG: begin
                 // Change next state

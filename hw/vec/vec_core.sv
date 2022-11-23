@@ -27,7 +27,7 @@ module VecCore
      output logic done,
 
      // Switch send
-     input logic switch_send_ready,
+     output logic switch_send_ready,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
      output shortreal switch_send_data[SWITCH_WIDTH-1:0],
      input logic switch_send_ok,
