@@ -14,6 +14,7 @@ add_subdirectory(vec_core)
 add_subdirectory(switch)
 add_subdirectory(example)
 add_subdirectory(hwtest)
+add_subdirectory(compiler)
 
 if(BUILD_ONNX)
     find_package(Protobuf REQUIRED)
