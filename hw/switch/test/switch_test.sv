@@ -88,6 +88,29 @@ module Switch_test
         @(posedge clock);#1;
         recv_request[0] = 1;
         recv_core_idx[0] = 1;
+        @(posedge clock);#1;
+        recv_request[0] = 1;
+        recv_core_idx[0] = 1;
+        @(posedge clock);#1;
+        recv_request[0] = 0;
+
+        // Send at the same time
+        @(posedge clock);#1;
+        send_ready[0] = 1;
+        send_core_idx[0] = 2;
+        send_data[0][0] = 1001;
+        send_data[0][1] = 1002;
+        send_ready[2] = 1;
+        send_core_idx[2] = 0;
+        send_data[2][0] = 2001;
+        send_data[2][1] = 2002;
+        @(posedge clock);#1;
+        send_ready[0] = 0;
+        send_ready[2] = 0;
+        recv_request[0] = 1;
+        recv_core_idx[0] = 2;
+        recv_request[2] = 1;
+        recv_core_idx[2] = 0;
         
 
         #100 $finish;
