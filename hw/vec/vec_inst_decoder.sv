@@ -85,7 +85,19 @@ module VecInstDecoder
             end
 
             // Section 3
-            // TODO: after interconnect
+            SEND_VEC,
+            RECV_VEC: begin
+                op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
+                op_V1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
+            end
+            SEND_SCALAR,
+            RECV_SCALAR: begin
+                op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
+                op_V1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_vec_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
+            end
 
             // Section 4
             HALT: begin
