@@ -15,6 +15,9 @@ module VecControl
                 WIDTH = 128,
                 CACHE_SIZE = 4,
 
+                SWITCH_WIDTH = 128,
+                SWITCH_CORE_SIZE = 4,
+
                 // Auto-generated sizes
                 OPCODE_TYPE_SIZE = 8 * OPCODE_TYPE_BYTES,
                 MEM_ADDR_TYPE_SIZE = 8 * MEM_ADDR_TYPE_BYTES,
@@ -23,7 +26,10 @@ module VecControl
                 WIDTH_IDX_TYPE_SIZE = 8 * WIDTH_IDX_TYPE_BYTES,
 
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
-                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE))
+                CACHE_ADDR_SIZE = $clog2(CACHE_SIZE),
+
+                SWITCH_CORE_ADDR_SIZE = $clog2(SWITCH_CORE_SIZE)
+    )
     (input logic clock, reset,
      output logic done,
 
@@ -51,7 +57,19 @@ module VecControl
      input shortreal data_mem_data_out[WIDTH-1:0],
      output VecDataMemWriteOp_t data_mem_write_op,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr,
-     output shortreal data_mem_data_in[WIDTH-1:0]
+     output shortreal data_mem_data_in[WIDTH-1:0],
+
+     // Interface with switch
+     input logic switch_send_ready,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
+     output shortreal switch_send_data[SWITCH_WIDTH-1:0],
+     input logic switch_send_ok,
+
+     // Switch recv
+     output logic switch_recv_request,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx,
+     input logic switch_recv_ready,
+     input shortreal switch_recv_data[SWITCH_WIDTH-1:0]
     );
 
     // State machine
@@ -315,6 +333,10 @@ case (opcode)
 
     // Section 3
     // TODO
+    SEND_VEC: begin
+    end
+    RECV_VEC: begin
+    end
 
     // Section 4
     HALT: begin

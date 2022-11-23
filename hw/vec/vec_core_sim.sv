@@ -1,8 +1,25 @@
 `default_nettype none
 
-module VecCoreSim();
+module VecCoreSim
+    #(parameter SWITCH_CORE_SIZE = 4,
+                SWITCH_WIDTH = 16,
+
+                // Auto-gen
+                SWITCH_CORE_ADDR_SIZE = $clog2(SWITCH_CORE_SIZE)
+    )
+    ();
 
     logic clock, reset, done;
+
+    // Switch
+    logic switch_send_ready;
+    logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx;
+    shortreal switch_send_data[SWITCH_WIDTH-1:0];
+    logic switch_send_ok;
+    logic switch_recv_request;
+    logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx;
+    logic switch_recv_ready;
+    shortreal switch_recv_data[SWITCH_WIDTH-1:0];
 
     VecCore DUT(.*);
 

@@ -12,14 +12,32 @@ module VecCore
                 DATA_MEM_ADDR_SIZE = 32,
                 INST_MEM_WIDTH_BYTES = 16,
 
+                SWITCH_WIDTH = 16,
+                SWITCH_CORE_SIZE = 4,
+
                 // Auto-gen
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE),
 
-                INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES
+                INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES,
+
+                SWITCH_CORE_ADDR_SIZE = $clog2(SWITCH_CORE_SIZE)
     )
     (input logic clock, reset,
-     output logic done);
+     output logic done,
+
+     // Switch send
+     input logic switch_send_ready,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
+     output shortreal switch_send_data[SWITCH_WIDTH-1:0],
+     input logic switch_send_ok,
+
+     // Switch recv
+     output logic switch_recv_request,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx,
+     input logic switch_recv_ready,
+     input shortreal switch_recv_data[SWITCH_WIDTH-1:0]
+    );
 
     // Lots of wires
     // Interface with VecUnit
@@ -52,7 +70,9 @@ module VecCore
     VecControl #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE),
         .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
         .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
-        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE)
+        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE),
+        .SWITCH_WIDTH(SWITCH_WIDTH),
+        .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE)
     ) control(.*);
     VecUnit #(.WIDTH(WIDTH)) unit(.clock, 
         .op(unit_op),
