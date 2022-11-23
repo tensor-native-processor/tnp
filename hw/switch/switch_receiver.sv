@@ -110,6 +110,7 @@ module SwitchReceiver
 
                 // Signal receiver ready
                 recv_ready = 1;
+                recv_data_sel = RECV_DATA_FROM_TRANSIT_DATA;
             end else begin
                 next_state = WAIT_TRANSIT;
             end

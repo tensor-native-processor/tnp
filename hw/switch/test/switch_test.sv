@@ -64,6 +64,30 @@ module Switch_test
 
         @(posedge clock);#1;
         recv_request[1] = 0;
+
+        // Sender is blocked
+        @(posedge clock);#1;
+        send_ready[1] = 1;
+        send_core_idx[1] = 0;
+        send_data[1][0] = 123;
+        send_data[1][1] = 456;
+        @(posedge clock);#1;
+        send_ready[1] = 1;
+        send_core_idx[1] = 0;
+        send_data[1][0] = 444;
+        send_data[1][1] = 666;
+
+        @(posedge clock);#1;
+        send_ready[1] = 0;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        @(posedge clock);#1;
+        recv_request[0] = 1;
+        recv_core_idx[0] = 1;
         
 
         #100 $finish;
