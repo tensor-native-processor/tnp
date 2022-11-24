@@ -43,6 +43,11 @@ module VecCoreSim
         clock = 0;
         forever #5 clock = ~clock;
     end
+
+    // Timeout
+    initial begin
+        #10000 $finish;
+    end
     
     integer i, data_mem_file;
 

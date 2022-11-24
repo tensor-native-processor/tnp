@@ -52,10 +52,10 @@ int main() {
 
     // Recv 3
     for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::RECV_ROW;
+        inst.opcode = MatCoreInstDefn::RECV_COL;
         inst.operands[MatCoreInstDefn::CORE_IDX] = 1;
         inst.operands[MatCoreInstDefn::M1] = 3;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
+        inst.operands[MatCoreInstDefn::COL_IDX] = i;
         prog0.append(inst);
     }
 
@@ -94,10 +94,10 @@ int main() {
 
     // Send 2
     for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::SEND_ROW;
+        inst.opcode = MatCoreInstDefn::SEND_COL;
         inst.operands[MatCoreInstDefn::CORE_IDX] = 0;
         inst.operands[MatCoreInstDefn::M1] = 2;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
+        inst.operands[MatCoreInstDefn::COL_IDX] = i;
         prog1.append(inst);
     }
 
