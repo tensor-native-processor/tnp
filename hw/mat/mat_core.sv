@@ -12,14 +12,32 @@ module MatCore
                 DATA_MEM_ADDR_SIZE = 32,
                 INST_MEM_WIDTH_BYTES = 16,
 
+                SWITCH_WIDTH = 16,
+                SWITCH_CORE_SIZE = 4,
+
                 // Auto-gen
                 WIDTH_ADDR_SIZE = $clog2(WIDTH),
                 CACHE_ADDR_SIZE = $clog2(CACHE_SIZE),
 
-                INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES
+                INST_MEM_WIDTH_SIZE = 8 * INST_MEM_WIDTH_BYTES,
+
+                SWITCH_CORE_ADDR_SIZE = $clog2(SWITCH_CORE_SIZE)
     )
     (input logic clock, reset,
-     output logic done);
+     output logic done,
+
+     // Switch send
+     output logic switch_send_ready,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
+     output shortreal switch_send_data[SWITCH_WIDTH-1:0],
+     input logic switch_send_ok,
+
+     // Switch recv
+     output logic switch_recv_request,
+     output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx,
+     input logic switch_recv_ready,
+     input shortreal switch_recv_data[SWITCH_WIDTH-1:0]
+    );
 
     // Lots of wires
     logic unit_set_weight;
