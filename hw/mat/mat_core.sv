@@ -67,7 +67,9 @@ module MatCore
     MatControl #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE),
         .INST_MEM_ADDR_SIZE(INST_MEM_ADDR_SIZE),
         .DATA_MEM_ADDR_SIZE(DATA_MEM_ADDR_SIZE),
-        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE)
+        .INST_MEM_WIDTH_SIZE(INST_MEM_WIDTH_SIZE),
+        .SWITCH_WIDTH(SWITCH_WIDTH),
+        .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE)
     ) control(.*);
     MatUnit #(.WIDTH(WIDTH)) unit(.clock, .set_weight(unit_set_weight),
         .set_weight_row(unit_set_weight_row), .data_in(unit_data_in),
