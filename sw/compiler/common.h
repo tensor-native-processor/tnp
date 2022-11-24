@@ -18,6 +18,7 @@ struct StartupOptions {
 };
 
 const float EPSILON = 1e-5;
+const float CORE_MAT_SIZE = 128;
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {
     StartupOptions rs;
