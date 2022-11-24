@@ -289,6 +289,11 @@ module MatControl
         unit_set_weight = 0;
         unit_set_weight_row = 0;
         unit_data_in_sel = UNIT_DATA_FROM_ZERO;
+        // Switch
+        switch_send_ready = 0;
+        switch_send_core_idx = 0;
+        switch_recv_request = 0;
+        switch_recv_core_idx = 0;
 
         // Diagonal progress counter
         diag_progress_counter_inc = 0;
