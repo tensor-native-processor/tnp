@@ -21,7 +21,10 @@ module VecCoreSim
     logic switch_recv_ready;
     shortreal switch_recv_data[SWITCH_WIDTH-1:0];
 
-    VecCore DUT(.*);
+    VecCore #(
+        .SWITCH_WIDTH(SWITCH_WIDTH),
+        .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE)
+    ) DUT(.*);
 
     // Clock signal
     initial begin
