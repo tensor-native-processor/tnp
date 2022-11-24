@@ -98,6 +98,30 @@ module MatInstDecoder
                 op_col_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
+            SEND_SCALAR,
+            RECV_SCALAR: begin
+                op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
+                op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_col_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+2*WIDTH_IDX_TYPE_BYTES;
+            end
+            SEND_DIAG,
+            RECV_DIAG: begin
+                op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
+                op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M2       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_diag_idx = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+2*REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
+            end
+            RECV_DIAG1,
+            RECV_DIAG2: begin
+                op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
+                op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_diag_idx = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
+            end
+
 
             // Section 4
             HALT: begin
