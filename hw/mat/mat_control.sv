@@ -464,7 +464,11 @@ case (opcode)
         end
     end
     RECV_ROW,
-    RECV_COL: begin
+    RECV_COL,
+    RECV_SCALAR,
+    RECV_DIAG,
+    RECV_DIAG1,
+    RECV_DIAG2: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
@@ -486,6 +490,28 @@ case (opcode)
                 cache_write_op = MAT_DATA_WRITE_COL;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_col_idx;
+            end
+            RECV_SCALAR: begin
+                cache_write_op = MAT_DATA_WRITE_SCALAR;
+                cache_write_addr1 = op_M1;
+                cache_write_param1 = op_row_idx;
+                cache_write_param2 = op_col_idx;
+            end
+            RECV_DIAG: begin
+                cache_write_op = MAT_DATA_WRITE_DIAG;
+                cache_write_addr1 = op_M1;
+                cache_write_addr2 = op_M2;
+                cache_write_param1 = op_diag_idx;
+            end
+            RECV_DIAG1: begin
+                cache_write_op = MAT_DATA_WRITE_DIAG1;
+                cache_write_addr1 = op_M1;
+                cache_write_param1 = op_diag_idx;
+            end
+            RECV_DIAG2: begin
+                cache_write_op = MAT_DATA_WRITE_DIAG2;
+                cache_write_addr1 = op_M1;
+                cache_write_param1 = op_diag_idx;
             end
             endcase
             cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
@@ -510,7 +536,9 @@ endcase
             WAIT_SWITCH: begin
                 unique case (opcode)
                 SEND_ROW,
-                SEND_COL: begin
+                SEND_COL,
+                SEND_SCALAR,
+                SEND_DIAG: begin
                     if (switch_send_ok) begin
                         next_state = NEXT;
                     end else begin
@@ -518,7 +546,11 @@ endcase
                     end
                 end
                 RECV_ROW,
-                RECV_COL: begin
+                RECV_COL,
+                RECV_SCALAR,
+                RECV_DIAG,
+                RECV_DIAG1,
+                RECV_DIAG2: begin
                     if (switch_recv_ready) begin
                         next_state = NEXT;
                         // Write into cache
@@ -532,6 +564,28 @@ endcase
                             cache_write_op = MAT_DATA_WRITE_COL;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_col_idx;
+                        end
+                        RECV_SCALAR: begin
+                            cache_write_op = MAT_DATA_WRITE_SCALAR;
+                            cache_write_addr1 = op_M1;
+                            cache_write_param1 = op_row_idx;
+                            cache_write_param2 = op_col_idx;
+                        end
+                        RECV_DIAG: begin
+                            cache_write_op = MAT_DATA_WRITE_DIAG;
+                            cache_write_addr1 = op_M1;
+                            cache_write_addr2 = op_M2;
+                            cache_write_param1 = op_diag_idx;
+                        end
+                        RECV_DIAG1: begin
+                            cache_write_op = MAT_DATA_WRITE_DIAG1;
+                            cache_write_addr1 = op_M1;
+                            cache_write_param1 = op_diag_idx;
+                        end
+                        RECV_DIAG2: begin
+                            cache_write_op = MAT_DATA_WRITE_DIAG2;
+                            cache_write_addr1 = op_M1;
+                            cache_write_param1 = op_diag_idx;
                         end
                         endcase
                         cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
