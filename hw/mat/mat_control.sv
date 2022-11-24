@@ -422,7 +422,9 @@ case (opcode)
 
     // Section 3
     SEND_ROW,
-    SEND_COL: begin
+    SEND_COL,
+    SEND_SCALAR,
+    SEND_DIAG: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
@@ -437,6 +439,18 @@ case (opcode)
             cache_read_op = MAT_DATA_READ_COL;
             cache_read_addr1 = op_M1;
             cache_read_param1 = op_col_idx;
+        end
+        SEND_SCALAR: begin
+            cache_read_op = MAT_DATA_READ_SCALAR;
+            cache_read_addr1 = op_M1;
+            cache_read_param1 = op_row_idx;
+            cache_read_param2 = op_col_idx;
+        end
+        SEND_DIAG: begin
+            cache_read_op = MAT_DATA_READ_DIAG;
+            cache_read_addr1 = op_M1;
+            cache_read_addr2 = op_M2;
+            cache_read_param1 = op_diag_idx;
         end
         endcase
 
