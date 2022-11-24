@@ -421,6 +421,34 @@ case (opcode)
     end
 
     // Section 3
+    SEND_ROW,
+    SEND_COL: begin
+        // Change next state
+        next_state = WAIT_SWITCH;
+
+        // Read from cache
+        unique case (opcode)
+        SEND_ROW: begin
+            cache_read_op = MAT_DATA_READ_ROW;
+            cache_read_addr1 = op_M1;
+            cache_read_param1 = op_row_idx;
+        end
+        SEND_COL: begin
+            cache_read_op = MAT_DATA_READ_COL;
+            cache_read_addr1 = op_M1;
+            cache_read_param1 = op_col_idx;
+        end
+        endcase
+
+        // Send vector
+        switch_send_ready = 1;
+        switch_send_core_idx = op_core_idx;
+
+        // Test send ok
+        if (switch_send_ok) begin
+            next_state = NEXT;
+        end
+    end
 
     // Section 4
     HALT: begin
@@ -436,6 +464,18 @@ endcase
             STOP: begin
                 next_state = STOP;
                 done = 1;
+            end
+            WAIT_SWITCH: begin
+                unique case (opcode)
+                SEND_ROW,
+                SEND_COL: begin
+                    if (switch_send_ok) begin
+                        next_state = NEXT;
+                    end else begin
+                        next_state = WAIT_SWITCH;
+                    end
+                end
+                endcase
             end
             ACCESS_MEM: begin
                 if (diag_progress_counter == WIDTH - 1) begin
