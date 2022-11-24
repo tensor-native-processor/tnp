@@ -345,14 +345,23 @@ case (opcode)
     end
 
     // Section 3
-    // TODO
-    SEND_VEC: begin
+    SEND_VEC,
+    SEND_SCALAR: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
         // Read from cache
-        cache_read_op = VEC_DATA_READ_VEC;
-        cache_read_addr = op_V1;
+        unique case (opcode)
+        SEND_VEC: begin
+            cache_read_op = VEC_DATA_READ_VEC;
+            cache_read_addr = op_V1;
+        end
+        SEND_SCALAR: begin
+            cache_read_op = VEC_DATA_READ_SCALAR;
+            cache_read_addr = op_V1;
+            cache_read_param = op_vec_idx;
+        end
+        endcase
 
         // Send vector
         switch_send_ready = 1;
@@ -363,7 +372,8 @@ case (opcode)
             next_state = NEXT;
         end
     end
-    RECV_VEC: begin
+    RECV_VEC,
+    RECV_SCALAR: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
@@ -375,8 +385,17 @@ case (opcode)
         if (switch_recv_ready) begin
             next_state = NEXT;
             // Write to cache
-            cache_write_op = VEC_DATA_WRITE_VEC;
-            cache_write_addr = op_V1;
+            unique case (opcode)
+            RECV_VEC: begin
+                cache_write_op = VEC_DATA_WRITE_VEC;
+                cache_write_addr = op_V1;
+            end
+            RECV_SCALAR: begin
+                cache_write_op = VEC_DATA_WRITE_SCALAR;
+                cache_write_addr = op_V1;
+                cache_write_param = op_vec_idx;
+            end
+            endcase
             cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
         end
     end
@@ -390,19 +409,30 @@ endcase
             end
             WAIT_SWITCH: begin
                 unique case (opcode)
-                SEND_VEC: begin
+                SEND_VEC,
+                SEND_SCALAR: begin
                     if (switch_send_ok) begin
                         next_state = NEXT;
                     end else begin
                         next_state = WAIT_SWITCH;
                     end
                 end
-                RECV_VEC: begin
+                RECV_VEC,
+                RECV_SCALAR: begin
                     if (switch_recv_ready) begin
                         next_state = NEXT;
                         // Write to cache
-                        cache_write_op = VEC_DATA_WRITE_VEC;
-                        cache_write_addr = op_V1;
+                        unique case (opcode)
+                        RECV_VEC: begin
+                            cache_write_op = VEC_DATA_WRITE_VEC;
+                            cache_write_addr = op_V1;
+                        end
+                        RECV_SCALAR: begin
+                            cache_write_op = VEC_DATA_WRITE_SCALAR;
+                            cache_write_addr = op_V1;
+                            cache_write_param = op_vec_idx;
+                        end
+                        endcase
                         cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
                     end else begin
                         next_state = WAIT_SWITCH;
