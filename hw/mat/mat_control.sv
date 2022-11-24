@@ -449,6 +449,34 @@ case (opcode)
             next_state = NEXT;
         end
     end
+    RECV_ROW,
+    RECV_COL: begin
+        // Change next state
+        next_state = WAIT_SWITCH;
+
+        // Switch recv
+        switch_recv_request = 1;
+        switch_recv_core_idx = op_core_idx;
+
+        // Test recv ready
+        if (switch_recv_ready) begin
+            next_state = NEXT;
+            // Write to cache
+            unique case (opcode)
+            RECV_ROW: begin
+                cache_write_op = MAT_DATA_WRITE_ROW;
+                cache_write_addr1 = op_M1;
+                cache_write_param1 = op_row_idx;
+            end
+            RECV_COL: begin
+                cache_write_op = MAT_DATA_WRITE_COL;
+                cache_write_addr1 = op_M1;
+                cache_write_param1 = op_col_idx;
+            end
+            endcase
+            cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
+        end
+    end
 
     // Section 4
     HALT: begin
@@ -471,6 +499,27 @@ endcase
                 SEND_COL: begin
                     if (switch_send_ok) begin
                         next_state = NEXT;
+                    end else begin
+                        next_state = WAIT_SWITCH;
+                    end
+                end
+                RECV_ROW,
+                RECV_COL: begin
+                    if (switch_recv_ready) begin
+                        next_state = NEXT;
+                        // Write into cache
+                        unique case (opcode)
+                        RECV_ROW: begin
+                            cache_write_op = MAT_DATA_WRITE_ROW;
+                            cache_write_addr1 = op_M1;
+                            cache_write_param1 = op_row_idx;
+                        end
+                        RECV_COL: begin
+                            cache_write_op = MAT_DATA_WRITE_COL;
+                            cache_write_addr1 = op_M1;
+                            cache_write_param1 = op_col_idx;
+                        end
+                        endcase
                     end else begin
                         next_state = WAIT_SWITCH;
                     end
