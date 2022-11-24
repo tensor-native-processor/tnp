@@ -520,6 +520,7 @@ endcase
                             cache_write_param1 = op_col_idx;
                         end
                         endcase
+                        cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
                     end else begin
                         next_state = WAIT_SWITCH;
                     end
