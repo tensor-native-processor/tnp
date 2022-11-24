@@ -77,7 +77,8 @@ module MatControl
         P0XX, P01X, P012,
         PX0X, PX01,
         PXX0,
-        ACCESS_MEM
+        ACCESS_MEM,
+        WAIT_SWITCH
     } state, next_state;
 
     // Proceed to next_inst
@@ -157,7 +158,8 @@ module MatControl
     enum {
         CACHE_DATA_FROM_ZERO,
         CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
-        CACHE_DATA_FROM_UNIT_DATA_OUT
+        CACHE_DATA_FROM_UNIT_DATA_OUT,
+        CACHE_DATA_FROM_SWITCH_RECV_DATA
     } cache_data_in_sel;
 
     genvar i;
@@ -173,6 +175,9 @@ module MatControl
                     end
                     CACHE_DATA_FROM_UNIT_DATA_OUT: begin
                         cache_data_in[i] = unit_data_out[i];
+                    end
+                    CACHE_DATA_FROM_SWITCH_RECV_DATA: begin
+                        cache_data_in[i] = switch_recv_data[i];
                     end
                 endcase
             end
@@ -220,6 +225,9 @@ module MatControl
             end
         end
     endgenerate
+
+    // Connect switch send data to from cache data out
+    assign switch_send_data = cache_data_out;
 
     // Unit diagonal progress counter
     always_ff @(posedge clock) begin
