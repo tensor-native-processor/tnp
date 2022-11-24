@@ -357,6 +357,11 @@ case (opcode)
         // Send vector
         switch_send_ready = 1;
         switch_send_core_idx = op_core_idx;
+
+        // Test send ok
+        if (switch_send_ok) begin
+            next_state = NEXT;
+        end
     end
     RECV_VEC: begin
         // Change next state
@@ -365,6 +370,15 @@ case (opcode)
         // Set recv
         switch_recv_request = 1;
         switch_recv_core_idx = op_core_idx;
+
+        // Test recv ready
+        if (switch_recv_ready) begin
+            next_state = NEXT;
+            // Write to cache
+            cache_write_op = VEC_DATA_WRITE_VEC;
+            cache_write_addr = op_V1;
+            cache_data_in_sel = CACHE_DATA_FROM_SWITCH_RECV_DATA;
+        end
     end
 
     // Section 4
@@ -386,7 +400,6 @@ endcase
                 RECV_VEC: begin
                     if (switch_recv_ready) begin
                         next_state = NEXT;
-
                         // Write to cache
                         cache_write_op = VEC_DATA_WRITE_VEC;
                         cache_write_addr = op_V1;
