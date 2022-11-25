@@ -1,11 +1,15 @@
 #include "vec_program.h"
 #include "vec_sim.h"
+#include "switch.h"
 #include "error.h"
 #include <sstream>
 
 // Init simulation engine
-VecCoreSimEngine::VecCoreSimEngine(const VecCoreProgram& prog, const VecCoreParam& param)
-: m_prog(prog), m_param(param), m_state(State::INIT), m_pc(0) {}
+VecCoreSimEngine::VecCoreSimEngine(const VecCoreProgram& prog, const VecCoreParam& param, SwitchSimEngine* p_switch)
+: m_prog(prog), m_param(param),
+  m_state(State::INIT), m_pc(0),
+  p_switch(p_switch)
+{}
 
 // Test if completed
 bool VecCoreSimEngine::isDone() const {
@@ -24,6 +28,7 @@ void VecCoreSimEngine::simulateStep() {
             next_state = State::READY;
             break;
         }
+        case State::WAIT_SWITCH: // WAIT_SWITCH only branch to send/recv ops
         case State::READY: {
             switch (inst.opcode) {
                 case VecCoreInstDefn::ADD:
@@ -37,6 +42,24 @@ void VecCoreSimEngine::simulateStep() {
                 case VecCoreInstDefn::HALT: {
                     next_state = State::STOP;
                     break;
+                }
+                case VecCoreInstDefn::SEND_VEC:
+                case VecCoreInstDefn::SEND_SCALAR: {
+                    // Send operation
+                    if (p_switch == nullptr) {
+                        FatalError("Null pointer to switch");
+                    }
+                    bool send_ok = p_switch->sendRequest(m_param.core_self, inst.operands.at(VecCoreInstDefn::CORE_IDX));
+                    next_state = send_ok ? State::NEXT : State::WAIT_SWITCH;
+                }
+                case VecCoreInstDefn::RECV_VEC:
+                case VecCoreInstDefn::RECV_SCALAR: {
+                    // Receive operation
+                    if (p_switch == nullptr) {
+                        FatalError("Null pointer to switch");
+                    }
+                    bool recv_ok = p_switch->recvRequest(m_param.core_self, inst.operands.at(VecCoreInstDefn::CORE_IDX));
+                    next_state = recv_ok ? State::NEXT : State::WAIT_SWITCH;
                 }
                 default: {
                     // All other opcodes lead to NEXT
