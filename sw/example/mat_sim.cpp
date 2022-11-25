@@ -1,4 +1,5 @@
 #include "mat_program.h"
+#include "mat_sim.h"
 #include <cstdio>
 #include <iostream>
 
