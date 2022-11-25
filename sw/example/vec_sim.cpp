@@ -1,4 +1,5 @@
 #include "vec_program.h"
+#include "vec_sim.h"
 #include <cstdio>
 #include <iostream>
 
