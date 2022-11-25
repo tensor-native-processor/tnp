@@ -3,17 +3,19 @@
 
 #include "program.h"
 #include "mat_program.h"
+#include "switch.h"
 
 // MatCore parameters
 struct MatCoreParam {
     size_t width = 16;
+    size_t core_self = 0;
 };
 
 
 // MatCore simulation engine
 class MatCoreSimEngine {
 public:
-    MatCoreSimEngine(const MatCoreProgram&, const MatCoreParam&);
+    MatCoreSimEngine(const MatCoreProgram&, const MatCoreParam&, SwitchSimEngine* p_switch = nullptr);
 
     void simulateStep();
     bool isDone() const;
@@ -24,7 +26,8 @@ private:
         P0XX, P01X, P012,
         PX0X, PX01,
         PXX0,
-        ACCESS_MEM
+        ACCESS_MEM,
+        WAIT_SWITCH
     };
     MatCoreProgram m_prog;
     MatCoreParam m_param;
@@ -33,6 +36,9 @@ private:
     State m_state;
     size_t m_pc;
     size_t m_diag_progress_counter;
+
+    // Pointer to switch
+    SwitchSimEngine* p_switch;
 };
 
 

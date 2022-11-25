@@ -59,3 +59,8 @@ target_link_libraries(vec_comm vec_core)
 add_executable(vec_sim2 vec_sim2.cpp)
 target_include_directories(vec_sim2 PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(vec_sim2 vec_core)
+
+# mat_sim2
+add_executable(mat_sim2 mat_sim2.cpp)
+target_include_directories(mat_sim2 PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_link_libraries(mat_sim2 mat_core)

@@ -5,8 +5,11 @@
 
 
 // Init simulation engine
-MatCoreSimEngine::MatCoreSimEngine(const MatCoreProgram& prog, const MatCoreParam& param)
-: m_prog(prog), m_param(param), m_state(State::INIT), m_pc(0) {}
+MatCoreSimEngine::MatCoreSimEngine(const MatCoreProgram& prog, const MatCoreParam& param, SwitchSimEngine* p_switch)
+: m_prog(prog), m_param(param),
+  m_state(State::INIT), m_pc(0),
+  p_switch(p_switch)
+{}
 
 // Test if completed
 bool MatCoreSimEngine::isDone() const {
@@ -28,6 +31,7 @@ void MatCoreSimEngine::simulateStep() {
             next_state = State::READY;
             break;
         }
+        case State::WAIT_SWITCH: // WAIT_SWITCH only branch to send/recv ops
         case State::READY: {
             switch (inst.opcode) {
                 case MatCoreInstDefn::SET_WEIGHT:
@@ -44,6 +48,32 @@ void MatCoreSimEngine::simulateStep() {
                 }
                 case MatCoreInstDefn::HALT: {
                     next_state = State::STOP;
+                    break;
+                }
+                case MatCoreInstDefn::SEND_ROW:
+                case MatCoreInstDefn::SEND_COL:
+                case MatCoreInstDefn::SEND_SCALAR:
+                case MatCoreInstDefn::SEND_DIAG: {
+                    // Send op
+                    if (p_switch == nullptr) {
+                        FatalError("Null pointer to switch");
+                    }
+                    bool send_ok = p_switch->sendRequest(m_param.core_self, inst.operands.at(MatCoreInstDefn::CORE_IDX));
+                    next_state = send_ok ? State::NEXT : State::WAIT_SWITCH;
+                    break;
+                }
+                case MatCoreInstDefn::RECV_ROW:
+                case MatCoreInstDefn::RECV_COL:
+                case MatCoreInstDefn::RECV_SCALAR:
+                case MatCoreInstDefn::RECV_DIAG:
+                case MatCoreInstDefn::RECV_DIAG1:
+                case MatCoreInstDefn::RECV_DIAG2: {
+                    // Recv op
+                    if (p_switch == nullptr) {
+                        FatalError("Null pointer to switch");
+                    }
+                    bool recv_ok = p_switch->recvRequest(m_param.core_self, inst.operands.at(MatCoreInstDefn::CORE_IDX));
+                    next_state = recv_ok ? State::NEXT : State::WAIT_SWITCH;
                     break;
                 }
                 default: {
