@@ -51,6 +51,7 @@ void VecCoreSimEngine::simulateStep() {
                     }
                     bool send_ok = p_switch->sendRequest(m_param.core_self, inst.operands.at(VecCoreInstDefn::CORE_IDX));
                     next_state = send_ok ? State::NEXT : State::WAIT_SWITCH;
+                    break;
                 }
                 case VecCoreInstDefn::RECV_VEC:
                 case VecCoreInstDefn::RECV_SCALAR: {
@@ -60,6 +61,7 @@ void VecCoreSimEngine::simulateStep() {
                     }
                     bool recv_ok = p_switch->recvRequest(m_param.core_self, inst.operands.at(VecCoreInstDefn::CORE_IDX));
                     next_state = recv_ok ? State::NEXT : State::WAIT_SWITCH;
+                    break;
                 }
                 default: {
                     // All other opcodes lead to NEXT
