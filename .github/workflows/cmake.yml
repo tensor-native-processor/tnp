@@ -1,0 +1,16 @@
+name: CMake
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/sw/build
