@@ -82,6 +82,7 @@ module VecCoreSim
             $fwrite(data_mem_file,
                 "%f\n", DUT[0].data_mem.data_mem[i]);
         end
+        $fclose(data_mem_file);
 
         data_mem_file = $fopen("output1.txt", "w");
         for (i = 0;i < DUT[1].DATA_MEM_SIZE;i++) begin
