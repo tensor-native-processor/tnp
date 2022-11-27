@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(TensorNativeProcessor)
 
+option(BUILD_ONNX "Build ONNX module" OFF)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_BUILD_TYPE RELEASE)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
@@ -12,3 +14,7 @@ add_subdirectory(vec_core)
 add_subdirectory(switch)
 add_subdirectory(example)
 add_subdirectory(hwtest)
+
+if(BUILD_ONNX)
+    add_subdirectory(onnx)
+endif(BUILD_ONNX)
