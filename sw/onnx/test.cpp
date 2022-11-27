@@ -1,7 +1,7 @@
 #include "model.h"
 
 int main() {
-    ONNXModel model("mobilenet.onnx");
+    ONNXModel model("mnist.onnx");
 
     return 0;
 }

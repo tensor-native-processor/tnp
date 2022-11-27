@@ -7,13 +7,12 @@ ONNXModel::ONNXModel(const std::string& filename) {
 
     // Find file size
     FILE* file = fopen(filename.c_str(), "rb");
-    fseek(file, 0, SEEK_END);
-    size_t filesize = ftell(file);
-    rewind(file);
-
     if (file == NULL) {
         FatalError(strerror(errno));
     }
+    fseek(file, 0, SEEK_END);
+    size_t filesize = ftell(file);
+    rewind(file);
 
     // Read into buffer
     void* buffer = malloc(filesize);
