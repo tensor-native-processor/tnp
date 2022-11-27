@@ -30,4 +30,5 @@ ONNXModel::ONNXModel(const std::string& filename) {
 
     // Model info
     LogInfo("IR version " + std::to_string(m_model.ir_version()));
+    m_graph = m_model.graph();
 }

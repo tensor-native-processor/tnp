@@ -16,6 +16,7 @@ public:
 
 private:
     ::onnx::ModelProto m_model;
+    ::onnx::GraphProto m_graph;
 };
 
 
