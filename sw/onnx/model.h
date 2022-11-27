@@ -3,10 +3,20 @@
 
 #include "onnx.proto3.pb.h"
 
+#include <string>
+
 // Typedefs for model
-typedef ::onnx::ModelProto ONNXModel;
 typedef ::onnx::GraphProto ONNXGraph;
 typedef ::onnx::NodeProto ONNXNode;
+
+// ONNX Model
+class ONNXModel {
+public:
+    ONNXModel(const std::string&);
+
+private:
+    ::onnx::ModelProto m_model;
+};
 
 
 #endif
