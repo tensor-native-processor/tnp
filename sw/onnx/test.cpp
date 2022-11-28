@@ -1,7 +1,7 @@
 #include "model.h"
 
 int main() {
-    ONNXModel model("mnist.onnx");
+    ONNXModel model("618.onnx");
 
     return 0;
 }
