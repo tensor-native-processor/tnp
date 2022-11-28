@@ -58,7 +58,8 @@ private:
 
     // Data
     std::map<std::string, Tensor> m_initializers;
-    std::map<std::string, Shape> m_inputs, m_outputs;
+    std::map<std::string, Shape> m_inputs;
+    std::vector<std::string> m_outputs;
 };
 
 

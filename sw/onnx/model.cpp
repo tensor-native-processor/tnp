@@ -94,9 +94,17 @@ void ONNXModel::loadModel() {
     // Input/output
     for (const auto& in : m_graph.input()) {
         m_inputs[in.name()] = Shape{};
+
+        const auto& type = in.type();
+        if (type.value_case() != ::onnx::TypeProto::ValueCase::kTensorType) {
+            LogWarning("Input " + type + " is not tensor (ignored)");
+            continue;
+        }
+        const auto& in_shape = type.tensor_type().shape();
     }
+    // Outputs
     for (const auto& out : m_graph.output()) {
-        m_outputs[out.name()] = Shape{};
+        m_outputs.push_back(out.name());
     }
 
     // Load nodes
