@@ -145,5 +145,11 @@ void ONNXModel::genDepGraph() {
     for (size_t i = 0;i < m_nodeCount;i++) {
         const auto& node = m_graph.node(m_nodePerm[i]);
         LogInfo(node.name() + " (" + node.op_type() + ")");
+        for (const auto& in : node.input()) {
+            LogInfo("  i " + in);
+        }
+        for (const auto& out : node.output()) {
+            LogInfo("  o " + out);
+        }
     }
 }
