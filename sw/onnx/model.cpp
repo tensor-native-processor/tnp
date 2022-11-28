@@ -21,7 +21,8 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
     }
 
     // Value
-    if (tensor.data_type() == ::onnx::TensorProto::FLOAT) {
+    switch (tensor.data_type()) {
+    case ::onnx::TensorProto::FLOAT: {
         if (tensor.float_data_size() != 0) {
             // Float data
             if ((size_t)tensor.float_data_size() > m_size) {
@@ -38,8 +39,25 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
             }
             memcpy(m_value, bytes.c_str(), bytes.size());
         }
-    } else {
+        break;
+    }
+    case ::onnx::TensorProto::INT64: {
+        if (tensor.int64_data_size() != 0) {
+            if ((size_t)tensor.int64_data_size() > m_size) {
+                FatalError("Initializer " + m_name + " larger than dimension " + std::to_string(m_size));
+            }
+            for (size_t i = 0;i < (size_t)tensor.int64_data_size();i++) {
+                // Casted to float for now
+                m_value[i] = (float)tensor.int64_data(i);
+            }
+        } else {
+            LogWarning("Initializer tensor " + m_name + " int64 raw data");
+        }
+        break;
+    }
+    default: {
         LogWarning("Initializer tensor " + m_name + " has unsupported type " + std::to_string(tensor.data_type()) + " and set to 0");
+    }
     }
 }
 
