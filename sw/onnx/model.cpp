@@ -109,19 +109,20 @@ void ONNXModel::genDepGraph() {
     }
 
     // Test input
-    m_nodeDep.assign(m_nodeCount, std::vector<size_t>{});
+    std::vector<std::vector<size_t>> orig_dep(m_nodeCount, std::vector<size_t>{});
     std::vector<size_t> incoming_edges(m_nodeCount, 0);
     for (size_t i = 0;i < m_nodeCount;i++) {
         for (const auto& in : m_graph.node(i).input()) {
             if (rev_output.count(in)) {
                 size_t prev = rev_output[in];
-                m_nodeDep[prev].push_back(i);
+                orig_dep[prev].push_back(i);
                 incoming_edges[i]++;
             }
         }
     }
 
     // Sort
+    std::vector<size_t> node_perm;
     std::queue<size_t> q;
     for (size_t i = 0;i < m_nodeCount;i++) {
         if (incoming_edges[i] == 0) {
@@ -131,9 +132,9 @@ void ONNXModel::genDepGraph() {
     while (!q.empty()) {
         int u = q.front();
         q.pop();
-        m_nodePerm.push_back(u);
+        node_perm.push_back(u);
 
-        for (const auto& v : m_nodeDep[u]) {
+        for (const auto& v : orig_dep[u]) {
             incoming_edges[v]--;
             if (incoming_edges[v] == 0) {
                 q.push(v);
@@ -141,15 +142,23 @@ void ONNXModel::genDepGraph() {
         }
     }
 
+    // Post-processing
+    for (size_t index : node_perm) {
+        const auto& n = m_graph.node(index);
+        ONNXNode node;
+        node.name = n.name();
+        node.op_type = n.op_type();
+        for (const auto& in : n.input()) node.inputs.push_back(in);
+        for (const auto& out : n.output()) node.outputs.push_back(out);
+        for (const auto& attr : n.attribute()) node.attributes[attr.name()] = attr;
+        m_nodeList.push_back(node);
+    }
+
     // Print resulting nodes
-    for (size_t i = 0;i < m_nodeCount;i++) {
-        const auto& node = m_graph.node(m_nodePerm[i]);
-        LogInfo(node.name() + " (" + node.op_type() + ")");
-        for (const auto& in : node.input()) {
-            LogInfo("  i " + in);
-        }
-        for (const auto& out : node.output()) {
-            LogInfo("  o " + out);
-        }
+    for (const auto& node : m_nodeList) {
+        LogInfo(node.name + " (" + node.op_type + ")");
+        for (const auto& in : node.inputs) LogInfo("  i " + in);
+        for (const auto& out : node.outputs) LogInfo("  o " + out);
+        for (const auto& [name, attr] : node.attributes) LogInfo("  a " + name);
     }
 }

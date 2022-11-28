@@ -6,10 +6,6 @@
 #include <string>
 #include <vector>
 
-// Typedefs for model
-typedef ::onnx::GraphProto ONNXGraph;
-typedef ::onnx::NodeProto ONNXNode;
-
 // Tensor
 class Tensor {
 public:
@@ -29,6 +25,14 @@ private:
 };
 
 
+// ONNX Node
+struct ONNXNode {
+    std::string name, op_type;
+    std::vector<std::string> inputs, outputs;
+    std::map<std::string, ::onnx::AttributeProto> attributes;
+};
+
+
 // ONNX Model
 class ONNXModel {
 public:
@@ -38,11 +42,10 @@ private:
     // Protobuf
     ::onnx::ModelProto m_model;
     ::onnx::GraphProto m_graph;
-    size_t m_nodeCount;
 
     // Graph of node dependents
-    std::vector<std::vector<size_t>> m_nodeDep;
-    std::vector<size_t> m_nodePerm;
+    size_t m_nodeCount;
+    std::vector<ONNXNode> m_nodeList;
 
     // Load model
     void loadModel();
