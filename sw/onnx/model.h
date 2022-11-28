@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+// Shape
+typedef std::vector<size_t> Shape;
+
 // Tensor
 class Tensor {
 public:
@@ -17,7 +20,7 @@ private:
     std::string m_name;
 
     // Dimension
-    std::vector<size_t> m_dims;
+    Shape m_shape;
     size_t m_size;
 
     // Value

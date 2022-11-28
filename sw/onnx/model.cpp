@@ -12,7 +12,7 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
     // Dimension
     m_size = 1;
     for (auto dim : tensor.dims()) {
-        m_dims.push_back(dim);
+        m_shape.push_back(dim);
         m_size *= dim;
     }
     m_value = (float*)calloc(m_size, sizeof(float));
