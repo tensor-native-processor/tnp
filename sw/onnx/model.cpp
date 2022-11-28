@@ -2,6 +2,8 @@
 #include "logging.h"
 #include "error.h"
 
+#include <queue>
+
 // Construct Tensor from protobuf
 Tensor::Tensor(const ::onnx::TensorProto& tensor) {
     // Name
@@ -80,11 +82,68 @@ ONNXModel::ONNXModel(const std::string& filename) {
 // Loading data from model
 void ONNXModel::loadModel() {
     m_graph = m_model.graph();
+    m_nodeCount = m_graph.node_size();
     LogInfo("IR version " + std::to_string(m_model.ir_version()));
     LogInfo("Graph name " + m_graph.name());
 
     // Initializer
     for (const auto& init : m_graph.initializer()) {
         m_initializers.emplace(init.name(), init);
+    }
+
+    // Load nodes
+    genDepGraph();
+}
+
+// Generate dependency graph
+void ONNXModel::genDepGraph() {
+    // Map from output name to node
+    std::map<std::string, size_t> rev_output;
+    for (size_t i = 0;i < m_nodeCount;i++) {
+        for (const auto& out : m_graph.node(i).output()) {
+            if (rev_output.count(out)) {
+                FatalError("Dual output into " + out);
+            }
+            rev_output[out] = i;
+        }
+    }
+
+    // Test input
+    m_nodeDep.assign(m_nodeCount, std::vector<size_t>{});
+    std::vector<size_t> incoming_edges(m_nodeCount, 0);
+    for (size_t i = 0;i < m_nodeCount;i++) {
+        for (const auto& in : m_graph.node(i).input()) {
+            if (rev_output.count(in)) {
+                size_t prev = rev_output[in];
+                m_nodeDep[prev].push_back(i);
+                incoming_edges[i]++;
+            }
+        }
+    }
+
+    // Sort
+    std::queue<size_t> q;
+    for (size_t i = 0;i < m_nodeCount;i++) {
+        if (incoming_edges[i] == 0) {
+            q.push(i);
+        }
+    }
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        m_nodePerm.push_back(u);
+
+        for (const auto& v : m_nodeDep[u]) {
+            incoming_edges[v]--;
+            if (incoming_edges[v] == 0) {
+                q.push(v);
+            }
+        }
+    }
+
+    // Print resulting nodes
+    for (size_t i = 0;i < m_nodeCount;i++) {
+        const auto& node = m_graph.node(m_nodePerm[i]);
+        LogInfo(node.name() + " (" + node.op_type() + ")");
     }
 }

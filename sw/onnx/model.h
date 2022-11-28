@@ -38,10 +38,16 @@ private:
     // Protobuf
     ::onnx::ModelProto m_model;
     ::onnx::GraphProto m_graph;
+    size_t m_nodeCount;
+
+    // Graph of node dependents
+    std::vector<std::vector<size_t>> m_nodeDep;
+    std::vector<size_t> m_nodePerm;
 
     // Load model
     void loadModel();
     void loadModelInitializers();
+    void genDepGraph();
 
     // Data
     std::map<std::string, Tensor> m_initializers;
