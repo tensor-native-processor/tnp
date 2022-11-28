@@ -27,15 +27,6 @@ public:
 };
 
 
-// ONNX Node
-class ONNXNode {
-public:
-    std::string m_name, m_op_type;
-    std::vector<std::string> m_inputs, m_outputs;
-    std::map<std::string, ::onnx::AttributeProto> m_attributes;
-};
-
-
 // ONNX Model
 class ONNXModel {
 public:
@@ -46,14 +37,9 @@ private:
     ::onnx::ModelProto m_model;
     ::onnx::GraphProto m_graph;
 
-    // Graph of node dependents
-    size_t m_nodeCount;
-    std::vector<ONNXNode> m_nodeList;
-
     // Load model
     void loadModel();
     void loadModelInitializers();
-    void genDepGraph();
     void genShape();
 
     // Data
