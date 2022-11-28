@@ -15,7 +15,6 @@ public:
     Tensor(const ::onnx::TensorProto&);
     ~Tensor();
 
-private:
     // Name
     std::string m_name;
 
@@ -29,10 +28,11 @@ private:
 
 
 // ONNX Node
-struct ONNXNode {
-    std::string name, op_type;
-    std::vector<std::string> inputs, outputs;
-    std::map<std::string, ::onnx::AttributeProto> attributes;
+class ONNXNode {
+public:
+    std::string m_name, m_op_type;
+    std::vector<std::string> m_inputs, m_outputs;
+    std::map<std::string, ::onnx::AttributeProto> m_attributes;
 };
 
 
@@ -54,9 +54,11 @@ private:
     void loadModel();
     void loadModelInitializers();
     void genDepGraph();
+    void genShape();
 
     // Data
     std::map<std::string, Tensor> m_initializers;
+    std::map<std::string, Shape> m_inputs, m_outputs;
 };
 
 

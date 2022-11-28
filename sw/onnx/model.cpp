@@ -91,8 +91,19 @@ void ONNXModel::loadModel() {
         m_initializers.emplace(init.name(), init);
     }
 
+    // Input/output
+    for (const auto& in : m_graph.input()) {
+        m_inputs[in.name()] = Shape{};
+    }
+    for (const auto& out : m_graph.output()) {
+        m_outputs[out.name()] = Shape{};
+    }
+
     // Load nodes
     genDepGraph();
+
+    // Load shapes
+    genShape();
 }
 
 // Generate dependency graph
@@ -146,19 +157,40 @@ void ONNXModel::genDepGraph() {
     for (size_t index : node_perm) {
         const auto& n = m_graph.node(index);
         ONNXNode node;
-        node.name = n.name();
-        node.op_type = n.op_type();
-        for (const auto& in : n.input()) node.inputs.push_back(in);
-        for (const auto& out : n.output()) node.outputs.push_back(out);
-        for (const auto& attr : n.attribute()) node.attributes[attr.name()] = attr;
+        node.m_name = n.name();
+        node.m_op_type = n.op_type();
+        for (const auto& in : n.input()) node.m_inputs.push_back(in);
+        for (const auto& out : n.output()) node.m_outputs.push_back(out);
+        for (const auto& attr : n.attribute()) node.m_attributes[attr.name()] = attr;
         m_nodeList.push_back(node);
     }
 
     // Print resulting nodes
     for (const auto& node : m_nodeList) {
-        LogInfo(node.name + " (" + node.op_type + ")");
-        for (const auto& in : node.inputs) LogInfo("  i " + in);
-        for (const auto& out : node.outputs) LogInfo("  o " + out);
-        for (const auto& [name, attr] : node.attributes) LogInfo("  a " + name);
+        LogInfo(node.m_name + " (" + node.m_op_type + ")");
+        for (const auto& in : node.m_inputs) LogInfo("  i " + in);
+        for (const auto& out : node.m_outputs) LogInfo("  o " + out);
+        for (const auto& [name, attr] : node.m_attributes) LogInfo("  a " + name);
+    }
+}
+
+void ONNXModel::genShape() {
+    std::map<std::string, Shape> shape;
+    for (const auto& [name, init] : m_initializers) {
+        shape[name] = init.m_shape;
+    }
+    for (const auto& [name, in] : m_inputs) {
+        shape[name] = in;
+    }
+
+    for (const auto& node : m_nodeList) {
+        for (const auto& in : node.m_inputs) {
+            if (shape.count(in) == 0) {
+                FatalError("Unknown input " + in);
+            }
+        }
+        for (const auto& out : node.m_outputs) {
+            shape[out] = Shape{};
+        }
     }
 }
