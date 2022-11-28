@@ -97,7 +97,7 @@ void ONNXModel::loadModel() {
 
         const auto& type = in.type();
         if (type.value_case() != ::onnx::TypeProto::ValueCase::kTensorType) {
-            LogWarning("Input " + type + " is not tensor (ignored)");
+            LogWarning("Input " + in.name() + " is not tensor (ignored)");
             continue;
         }
         const auto& in_shape = type.tensor_type().shape();
