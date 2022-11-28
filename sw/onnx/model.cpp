@@ -95,12 +95,31 @@ void ONNXModel::loadModel() {
     for (const auto& in : m_graph.input()) {
         m_inputs[in.name()] = Shape{};
 
+        // Get tensor type
         const auto& type = in.type();
         if (type.value_case() != ::onnx::TypeProto::ValueCase::kTensorType) {
             LogWarning("Input " + in.name() + " is not tensor (ignored)");
             continue;
         }
-        const auto& in_shape = type.tensor_type().shape();
+
+        // Print overall dimension
+        std::string dim_str = "";
+        for (const auto& dim : type.tensor_type().shape().dim()) {
+            switch (dim.value_case()) {
+            case ::onnx::TensorShapeProto::Dimension::ValueCase::kDimParam: {
+                dim_str += dim.dim_param() + " ";
+                break;
+            }
+            case ::onnx::TensorShapeProto::Dimension::ValueCase::kDimValue: {
+                dim_str += std::to_string(dim.dim_value()) + " ";
+                break;
+            }
+            default: {
+                FatalError("Tensor input " + in.name() + " has no dimension");
+            }
+            }
+        }
+        LogInfo("Input " + in.name() + " dim: " + dim_str);
     }
     // Outputs
     for (const auto& out : m_graph.output()) {
