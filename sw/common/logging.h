@@ -4,5 +4,6 @@
 #include <string>
 
 void LogInfo(const std::string&);
+void LogWarning(const std::string&);
 
 #endif
