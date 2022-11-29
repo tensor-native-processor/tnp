@@ -5,12 +5,16 @@
 
 // Relu
 class OperatorRelu: public Operator {
+public:
     void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
         std::map<std::string, Shape>&) const override;
 
     void simulate(const ::onnx::NodeProto&,
         std::map<std::string, Tensor>&) const override;
+
+private:
+    float relu(float) const;
 };
 
 #endif
