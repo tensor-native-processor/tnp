@@ -17,10 +17,10 @@ public:
     // Operations
     virtual void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
-        std::map<std::string, Shape>&) const;
+        std::map<std::string, Shape>&);
 
     virtual void simulate(const ::onnx::NodeProto&,
-        std::map<std::string, Tensor>&) const;
+        std::map<std::string, Tensor>&);
 };
 
 // Dispatch operators

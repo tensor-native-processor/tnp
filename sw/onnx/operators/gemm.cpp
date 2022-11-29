@@ -5,7 +5,7 @@
 // InferShape for Gemm
 void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Shape>& state_shape) const {
+        std::map<std::string, Shape>& state_shape) {
 
     // Fetch A and B
     if (node.input_size() != 2 && node.input_size() != 3) {
@@ -63,7 +63,7 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
 
 // Simulate for Gemm
 void OperatorGemm::simulate(const ::onnx::NodeProto& node,
-        std::map<std::string, Tensor>& state_tensor) const {
+        std::map<std::string, Tensor>& state_tensor) {
 
     LogWarning("Simulate " + node.name());
 }

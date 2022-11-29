@@ -5,7 +5,7 @@
 // InferShape for Relu
 void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Shape>& state_shape) const {
+        std::map<std::string, Shape>& state_shape) {
 
     // Validate i/o size
     if (node.input_size() != 1 || node.output_size() != 1) {
@@ -22,7 +22,7 @@ void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
 
 // Simulate for Relu
 void OperatorRelu::simulate(const ::onnx::NodeProto& node,
-        std::map<std::string, Tensor>& state_tensor) const {
+        std::map<std::string, Tensor>& state_tensor) {
 
     LogWarning("Simulate " + node.name());
 
