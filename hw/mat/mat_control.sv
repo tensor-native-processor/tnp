@@ -133,7 +133,7 @@ module MatControl
 
     // Next opcode is MatUnit op
     logic next_opcode_is_unit;
-    assign next_opcode_is_unit = next_opcode == SET_WEIGHT || next_opcode == MULTIPLY;
+    assign next_opcode_is_unit = next_opcode == MAT_INST_SET_WEIGHT || next_opcode == MAT_INST_MULTIPLY;
 
 
     // State machine
@@ -312,8 +312,8 @@ module MatControl
 // Case on opcode
 case (opcode)
     // Section 1
-    SET_WEIGHT,
-    MULTIPLY: begin
+    MAT_INST_SET_WEIGHT,
+    MAT_INST_MULTIPLY: begin
         // Change next state
         next_state = P0XX;
 
@@ -323,31 +323,31 @@ case (opcode)
         // Insert into L0
         unit_shift_reg_flip_sel = UNIT_SHIFT_REG_FLIP_CUR;
     end
-    TRANSPOSE: begin
+    MAT_INST_TRANSPOSE: begin
         // Transpose cache matrix
         cache_write_op = MAT_DATA_WRITE_TRANSPOSE;
         cache_write_addr1 = op_M1;
     end
-    XFLIP: begin
+    MAT_INST_XFLIP: begin
         // XFLIP cache matrix
         cache_write_op = MAT_DATA_WRITE_XFLIP;
         cache_write_addr1 = op_M1;
     end
-    YFLIP: begin
+    MAT_INST_YFLIP: begin
         // XFLIP cache matrix
         cache_write_op = MAT_DATA_WRITE_YFLIP;
         cache_write_addr1 = op_M1;
     end
 
     // Section 2
-    LOAD_MAT: begin
+    MAT_INST_LOAD_MAT: begin
         // Change next state
         next_state = ACCESS_MEM;
 
         // Init counter ("row progress counter")
         diag_progress_counter_clr = 1;
     end
-    LOAD_ROW: begin
+    MAT_INST_LOAD_ROW: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
 
@@ -357,7 +357,7 @@ case (opcode)
         cache_write_param1 = op_row_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    LOAD_COL: begin
+    MAT_INST_LOAD_COL: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
 
@@ -367,7 +367,7 @@ case (opcode)
         cache_write_param1 = op_col_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    LOAD_SCALAR: begin
+    MAT_INST_LOAD_SCALAR: begin
         // Read from DataMem
         data_mem_read_addr = op_addr; // data_mem_data_out[0] now contains scalar
 
@@ -378,14 +378,14 @@ case (opcode)
         cache_write_param2 = op_col_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    STORE_MAT: begin
+    MAT_INST_STORE_MAT: begin
         // Change next state
         next_state = ACCESS_MEM;
 
         // Init counter
         diag_progress_counter_clr = 1;
     end
-    STORE_ROW: begin
+    MAT_INST_STORE_ROW: begin
         // Read from cache
         cache_read_op = MAT_DATA_READ_ROW;
         cache_read_addr1 = op_M1;
@@ -396,7 +396,7 @@ case (opcode)
         data_mem_write_addr = op_addr;
         data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
-    STORE_COL: begin
+    MAT_INST_STORE_COL: begin
         // Read from cache
         cache_read_op = MAT_DATA_READ_COL;
         cache_read_addr1 = op_M1;
@@ -407,7 +407,7 @@ case (opcode)
         data_mem_write_addr = op_addr;
         data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
-    STORE_SCALAR: begin
+    MAT_INST_STORE_SCALAR: begin
         // Read from cache
         cache_read_op = MAT_DATA_READ_SCALAR;
         cache_read_addr1 = op_M1;
@@ -421,32 +421,32 @@ case (opcode)
     end
 
     // Section 3
-    SEND_ROW,
-    SEND_COL,
-    SEND_SCALAR,
-    SEND_DIAG: begin
+    MAT_INST_SEND_ROW,
+    MAT_INST_SEND_COL,
+    MAT_INST_SEND_SCALAR,
+    MAT_INST_SEND_DIAG: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
         // Read from cache
         unique case (opcode)
-        SEND_ROW: begin
+        MAT_INST_SEND_ROW: begin
             cache_read_op = MAT_DATA_READ_ROW;
             cache_read_addr1 = op_M1;
             cache_read_param1 = op_row_idx;
         end
-        SEND_COL: begin
+        MAT_INST_SEND_COL: begin
             cache_read_op = MAT_DATA_READ_COL;
             cache_read_addr1 = op_M1;
             cache_read_param1 = op_col_idx;
         end
-        SEND_SCALAR: begin
+        MAT_INST_SEND_SCALAR: begin
             cache_read_op = MAT_DATA_READ_SCALAR;
             cache_read_addr1 = op_M1;
             cache_read_param1 = op_row_idx;
             cache_read_param2 = op_col_idx;
         end
-        SEND_DIAG: begin
+        MAT_INST_SEND_DIAG: begin
             cache_read_op = MAT_DATA_READ_DIAG;
             cache_read_addr1 = op_M1;
             cache_read_addr2 = op_M2;
@@ -463,12 +463,12 @@ case (opcode)
             next_state = NEXT;
         end
     end
-    RECV_ROW,
-    RECV_COL,
-    RECV_SCALAR,
-    RECV_DIAG,
-    RECV_DIAG1,
-    RECV_DIAG2: begin
+    MAT_INST_RECV_ROW,
+    MAT_INST_RECV_COL,
+    MAT_INST_RECV_SCALAR,
+    MAT_INST_RECV_DIAG,
+    MAT_INST_RECV_DIAG1,
+    MAT_INST_RECV_DIAG2: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
@@ -481,34 +481,34 @@ case (opcode)
             next_state = NEXT;
             // Write to cache
             unique case (opcode)
-            RECV_ROW: begin
+            MAT_INST_RECV_ROW: begin
                 cache_write_op = MAT_DATA_WRITE_ROW;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_row_idx;
             end
-            RECV_COL: begin
+            MAT_INST_RECV_COL: begin
                 cache_write_op = MAT_DATA_WRITE_COL;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_col_idx;
             end
-            RECV_SCALAR: begin
+            MAT_INST_RECV_SCALAR: begin
                 cache_write_op = MAT_DATA_WRITE_SCALAR;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_row_idx;
                 cache_write_param2 = op_col_idx;
             end
-            RECV_DIAG: begin
+            MAT_INST_RECV_DIAG: begin
                 cache_write_op = MAT_DATA_WRITE_DIAG;
                 cache_write_addr1 = op_M1;
                 cache_write_addr2 = op_M2;
                 cache_write_param1 = op_diag_idx;
             end
-            RECV_DIAG1: begin
+            MAT_INST_RECV_DIAG1: begin
                 cache_write_op = MAT_DATA_WRITE_DIAG1;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_diag_idx;
             end
-            RECV_DIAG2: begin
+            MAT_INST_RECV_DIAG2: begin
                 cache_write_op = MAT_DATA_WRITE_DIAG2;
                 cache_write_addr1 = op_M1;
                 cache_write_param1 = op_diag_idx;
@@ -519,7 +519,7 @@ case (opcode)
     end
 
     // Section 4
-    HALT: begin
+    MAT_INST_HALT: begin
         next_state = STOP;
     end
 endcase
@@ -535,54 +535,54 @@ endcase
             end
             WAIT_SWITCH: begin
                 unique case (opcode)
-                SEND_ROW,
-                SEND_COL,
-                SEND_SCALAR,
-                SEND_DIAG: begin
+                MAT_INST_SEND_ROW,
+                MAT_INST_SEND_COL,
+                MAT_INST_SEND_SCALAR,
+                MAT_INST_SEND_DIAG: begin
                     if (switch_send_ok) begin
                         next_state = NEXT;
                     end else begin
                         next_state = WAIT_SWITCH;
                     end
                 end
-                RECV_ROW,
-                RECV_COL,
-                RECV_SCALAR,
-                RECV_DIAG,
-                RECV_DIAG1,
-                RECV_DIAG2: begin
+                MAT_INST_RECV_ROW,
+                MAT_INST_RECV_COL,
+                MAT_INST_RECV_SCALAR,
+                MAT_INST_RECV_DIAG,
+                MAT_INST_RECV_DIAG1,
+                MAT_INST_RECV_DIAG2: begin
                     if (switch_recv_ready) begin
                         next_state = NEXT;
                         // Write into cache
                         unique case (opcode)
-                        RECV_ROW: begin
+                        MAT_INST_RECV_ROW: begin
                             cache_write_op = MAT_DATA_WRITE_ROW;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_row_idx;
                         end
-                        RECV_COL: begin
+                        MAT_INST_RECV_COL: begin
                             cache_write_op = MAT_DATA_WRITE_COL;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_col_idx;
                         end
-                        RECV_SCALAR: begin
+                        MAT_INST_RECV_SCALAR: begin
                             cache_write_op = MAT_DATA_WRITE_SCALAR;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_row_idx;
                             cache_write_param2 = op_col_idx;
                         end
-                        RECV_DIAG: begin
+                        MAT_INST_RECV_DIAG: begin
                             cache_write_op = MAT_DATA_WRITE_DIAG;
                             cache_write_addr1 = op_M1;
                             cache_write_addr2 = op_M2;
                             cache_write_param1 = op_diag_idx;
                         end
-                        RECV_DIAG1: begin
+                        MAT_INST_RECV_DIAG1: begin
                             cache_write_op = MAT_DATA_WRITE_DIAG1;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_diag_idx;
                         end
-                        RECV_DIAG2: begin
+                        MAT_INST_RECV_DIAG2: begin
                             cache_write_op = MAT_DATA_WRITE_DIAG2;
                             cache_write_addr1 = op_M1;
                             cache_write_param1 = op_diag_idx;
@@ -603,7 +603,7 @@ endcase
                     diag_progress_counter_inc = 1;
                 end
                 unique case (opcode)
-                    LOAD_MAT: begin
+                    MAT_INST_LOAD_MAT: begin
                         // Read from DataMem
                         data_mem_read_addr = op_addr +
                             WIDTH * diag_progress_counter;
@@ -613,7 +613,7 @@ endcase
                         cache_write_param1 = diag_progress_counter;
                         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
                     end
-                    STORE_MAT: begin
+                    MAT_INST_STORE_MAT: begin
                         // Read from cache
                         cache_read_op = MAT_DATA_READ_ROW;
                         cache_read_addr1 = op_M1;
@@ -651,7 +651,7 @@ endcase
 
                 // Write weight at the end
                 if (diag_progress_counter == WIDTH - 1 &&
-                        l0_opcode == SET_WEIGHT) begin
+                        l0_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = 0;
                 end
@@ -680,18 +680,18 @@ endcase
 
                 // Write weight at the end
                 if (diag_progress_counter == WIDTH - 1 &&
-                        l0_opcode == SET_WEIGHT) begin
+                        l0_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = 0;
                 end
                 // Write weight before the end
                 if (diag_progress_counter != WIDTH - 1 &&
-                        l1_opcode == SET_WEIGHT) begin
+                        l1_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = diag_progress_counter + 1;
                 end
                 // Write into cache
-                if (l1_opcode == MULTIPLY) begin
+                if (l1_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG1;
                     cache_write_addr1 = l1_Md;
@@ -716,12 +716,12 @@ endcase
 
                 // Write weight before the end
                 if (diag_progress_counter != WIDTH - 1 &&
-                        l0_opcode == SET_WEIGHT) begin
+                        l0_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = diag_progress_counter + 1;
                 end
                 // Write into cache
-                if (l0_opcode == MULTIPLY) begin
+                if (l0_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG1;
                     cache_write_addr1 = l0_Md;
@@ -738,7 +738,7 @@ endcase
                 end
 
                 // Write into cache
-                if (l0_opcode == MULTIPLY) begin
+                if (l0_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG2;
                     cache_write_addr1 = l0_Md;
@@ -763,22 +763,22 @@ endcase
 
                 // Write weight before the end
                 if (diag_progress_counter != WIDTH - 1 &&
-                        l0_opcode == SET_WEIGHT) begin
+                        l0_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = diag_progress_counter + 1;
                 end
-                if (l0_opcode == MULTIPLY && l1_opcode == MULTIPLY) begin
+                if (l0_opcode == MAT_INST_MULTIPLY && l1_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG;
                     cache_write_addr1 = l0_Md;
                     cache_write_addr2 = l1_Md;
                     cache_write_param1 = diag_progress_counter;
-                end else if (l0_opcode == MULTIPLY) begin
+                end else if (l0_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG1;
                     cache_write_addr1 = l0_Md;
                     cache_write_param1 = diag_progress_counter;
-                end else if (l1_opcode == MULTIPLY) begin
+                end else if (l1_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG2;
                     cache_write_addr1 = l1_Md;
@@ -810,30 +810,30 @@ endcase
 
                 // Write weight before the end
                 if (diag_progress_counter == WIDTH - 1 &&
-                        l0_opcode == SET_WEIGHT) begin
+                        l0_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = 0;
                 end
 
                 // Write weight before the end
                 if (diag_progress_counter != WIDTH - 1 &&
-                        l1_opcode == SET_WEIGHT) begin
+                        l1_opcode == MAT_INST_SET_WEIGHT) begin
                     unit_set_weight = 1;
                     unit_set_weight_row = diag_progress_counter + 1;
                 end
                 // Write into cache
-                if (l1_opcode == MULTIPLY && l2_opcode == MULTIPLY) begin
+                if (l1_opcode == MAT_INST_MULTIPLY && l2_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG;
                     cache_write_addr1 = l1_Md;
                     cache_write_addr2 = l2_Md;
                     cache_write_param1 = diag_progress_counter;
-                end else if (l1_opcode == MULTIPLY) begin
+                end else if (l1_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG1;
                     cache_write_addr1 = l1_Md;
                     cache_write_param1 = diag_progress_counter;
-                end else if (l2_opcode == MULTIPLY) begin
+                end else if (l2_opcode == MAT_INST_MULTIPLY) begin
                     cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
                     cache_write_op = MAT_DATA_WRITE_DIAG2;
                     cache_write_addr1 = l2_Md;

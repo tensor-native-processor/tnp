@@ -40,42 +40,42 @@ module MatInstDecoder
 
         case (opcode)
             // Section 1
-            SET_WEIGHT,
-            TRANSPOSE,
-            XFLIP,
-            YFLIP: begin
+            MAT_INST_SET_WEIGHT,
+            MAT_INST_TRANSPOSE,
+            MAT_INST_XFLIP,
+            MAT_INST_YFLIP: begin
                 op_M1       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
-            MULTIPLY: begin
+            MAT_INST_MULTIPLY: begin
                 op_Md       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
             end
 
             // Section 2
-            LOAD_MAT,
-            STORE_MAT: begin
+            MAT_INST_LOAD_MAT,
+            MAT_INST_STORE_MAT: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
-            LOAD_ROW,
-            STORE_ROW: begin
+            MAT_INST_LOAD_ROW,
+            MAT_INST_STORE_ROW: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_row_idx  = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            LOAD_COL,
-            STORE_COL: begin
+            MAT_INST_LOAD_COL,
+            MAT_INST_STORE_COL: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_col_idx  = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            LOAD_SCALAR,
-            STORE_SCALAR: begin
+            MAT_INST_LOAD_SCALAR,
+            MAT_INST_STORE_SCALAR: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_row_idx  = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
@@ -84,38 +84,38 @@ module MatInstDecoder
             end
 
             // Section 3
-            SEND_ROW,
-            RECV_ROW: begin
+            MAT_INST_SEND_ROW,
+            MAT_INST_RECV_ROW: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_row_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            SEND_COL,
-            RECV_COL: begin
+            MAT_INST_SEND_COL,
+            MAT_INST_RECV_COL: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_col_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            SEND_SCALAR,
-            RECV_SCALAR: begin
+            MAT_INST_SEND_SCALAR,
+            MAT_INST_RECV_SCALAR: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_row_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 op_col_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES+2*WIDTH_IDX_TYPE_BYTES;
             end
-            SEND_DIAG,
-            RECV_DIAG: begin
+            MAT_INST_SEND_DIAG,
+            MAT_INST_RECV_DIAG: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_M2       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_diag_idx = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+2*REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            RECV_DIAG1,
-            RECV_DIAG2: begin
+            MAT_INST_RECV_DIAG1,
+            MAT_INST_RECV_DIAG2: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_diag_idx = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
@@ -124,7 +124,7 @@ module MatInstDecoder
 
 
             // Section 4
-            HALT: begin
+            MAT_INST_HALT: begin
                 inst_size = 0;
             end
         endcase
