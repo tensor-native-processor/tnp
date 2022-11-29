@@ -210,3 +210,15 @@ void ONNXModel::genShape() {
         LogInfo(msg);
     }
 }
+
+
+// Simulate model
+void ONNXModel::simulate() {
+    std::map<std::string, Tensor> state_tensor(m_initializers);
+
+    // Simulate each operator
+    Operator op;
+    for (const auto& node : m_graph.node()) {
+        op.simulate(node, state_tensor);
+    }
+}

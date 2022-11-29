@@ -28,6 +28,14 @@ void Operator::inferShape(const ::onnx::NodeProto& node,
     delete op;
 }
 
+// Dispatch simulate
+void Operator::simulate(const ::onnx::NodeProto& node,
+        std::map<std::string, Tensor>& state_tensor) const {
+    Operator* op = OperatorDispatch::createOperator(node.op_type());
+    op->simulate(node, state_tensor);
+    delete op;
+}
+
 
 // InferShape for Gemm
 void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
@@ -88,6 +96,14 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
 }
 
 
+// Simulate for Gemm
+void OperatorGemm::simulate(const ::onnx::NodeProto& node,
+        std::map<std::string, Tensor>& state_tensor) const {
+
+    LogWarning("Simulate " + node.name());
+}
+
+
 // InferShape for Relu
 void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
@@ -103,4 +119,11 @@ void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
     }
     Shape shapeX = state_shape.at(node.input(0));
     state_shape[node.output(0)] = shapeX;
+}
+
+// Simulate for Relu
+void OperatorRelu::simulate(const ::onnx::NodeProto& node,
+        std::map<std::string, Tensor>& state_tensor) const {
+
+    LogWarning("Simulate " + node.name());
 }
