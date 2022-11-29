@@ -16,5 +16,6 @@ add_subdirectory(example)
 add_subdirectory(hwtest)
 
 if(BUILD_ONNX)
+    find_package(Protobuf REQUIRED)
     add_subdirectory(onnx)
 endif(BUILD_ONNX)
