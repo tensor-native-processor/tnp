@@ -169,4 +169,16 @@ void ONNXModel::genShape() {
 
         op.inferShape(node, m_initializers, shape);
     }
+
+    // Print output shape
+    for (const auto& out : m_outputs) {
+        std::string msg = "  o " + out + ":";
+        if (shape.count(out) == 0) {
+            FatalError("No output shape " + out);
+        }
+        for (const auto& d : shape.at(out)) {
+            msg += " " + std::to_string(d);
+        }
+        LogInfo(msg);
+    }
 }
