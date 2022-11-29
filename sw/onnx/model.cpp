@@ -111,7 +111,7 @@ void ONNXModel::loadModel() {
 
     // Input/output
     for (const auto& in : m_graph.input()) {
-        m_inputs[in.name()] = Shape{};
+        Shape cur_shape;
 
         // Get tensor type
         const auto& type = in.type();
@@ -126,9 +126,11 @@ void ONNXModel::loadModel() {
             switch (dim.value_case()) {
             case ::onnx::TensorShapeProto::Dimension::ValueCase::kDimParam: {
                 dim_str += dim.dim_param() + " ";
+                LogWarning("Tensor input " + in.name() + " dim param " + dim.dim_param() + " skipped");
                 break;
             }
             case ::onnx::TensorShapeProto::Dimension::ValueCase::kDimValue: {
+                cur_shape.push_back(dim.dim_value());
                 dim_str += std::to_string(dim.dim_value()) + " ";
                 break;
             }
@@ -138,6 +140,7 @@ void ONNXModel::loadModel() {
             }
         }
         LogInfo("Input " + in.name() + " dim: " + dim_str);
+        m_inputs[in.name()] = cur_shape;
     }
     // Outputs
     for (const auto& out : m_graph.output()) {
