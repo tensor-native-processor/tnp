@@ -5,6 +5,7 @@
 
 // Gemm
 class OperatorGemm: public Operator {
+public:
     void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
         std::map<std::string, Shape>&) const override;
