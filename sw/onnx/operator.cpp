@@ -3,20 +3,28 @@
 #include "error.h"
 
 // Operator directory
-OperatorGemm g_operatorGemm;
-OperatorRelu g_operatorRelu;
-
-const std::map<std::string, const Operator*> g_operatorDirectory = {
-    {"Gemm", &g_operatorGemm},
-    {"Relu", &g_operatorRelu},
+const std::map<std::string, Operator*(*)()> OperatorDispatch::g_operatorDirectory = {
+    {"Gemm", createOperatorImpl<OperatorGemm>},
+    {"Relu", createOperatorImpl<OperatorRelu>},
 };
+
+// Dispatch to correct operator
+Operator* OperatorDispatch::createOperator(const std::string& name) {
+    return g_operatorDirectory.at(name)();
+}
+template<class T>
+Operator* OperatorDispatch::createOperatorImpl() {
+    return new T;
+}
 
 
 // Dispatch inferShape
 void Operator::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
         std::map<std::string, Shape>& state_shape) const {
-    g_operatorDirectory.at(node.op_type())->inferShape(node, state_initializer, state_shape);
+    Operator* op = OperatorDispatch::createOperator(node.op_type());
+    op->inferShape(node, state_initializer, state_shape);
+    delete op;
 }
 
 
