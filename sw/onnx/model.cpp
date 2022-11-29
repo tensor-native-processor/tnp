@@ -1,6 +1,7 @@
 #include "model.h"
 #include "logging.h"
 #include "error.h"
+#include "operator.h"
 
 #include <queue>
 
