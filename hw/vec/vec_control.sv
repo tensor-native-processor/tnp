@@ -244,9 +244,9 @@ module VecControl
 // Case on opcode
 case (opcode)
     // Section 1
-    ADD,
-    SUB,
-    DOT: begin
+    VEC_INST_ADD,
+    VEC_INST_SUB,
+    VEC_INST_DOT: begin
         // Change next state
         next_state = READREG;
         // Read from cache
@@ -255,8 +255,8 @@ case (opcode)
         // Store into reg_unit2
         reg_unit2_write_op = VEC_DATA_WRITE_VEC;
     end
-    DELTA,
-    SCALE: begin
+    VEC_INST_DELTA,
+    VEC_INST_SCALE: begin
         // Change next state
         next_state = READREG;
         // Read from cache
@@ -267,9 +267,9 @@ case (opcode)
         reg_unit2_write_op = VEC_DATA_WRITE_VEC;
     end
 
-    ACT_SIGMOID,
-    ACT_TANH,
-    ACT_RELU: begin
+    VEC_INST_ACT_SIGMOID,
+    VEC_INST_ACT_TANH,
+    VEC_INST_ACT_RELU: begin
         // Change next state
         next_state = NEXT;
         // Read from cache
@@ -277,9 +277,9 @@ case (opcode)
         cache_read_addr = op_V1;
         // Set unit op
         unique case (opcode)
-            ACT_SIGMOID: unit_op = VEC_UNIT_OP_ACT_SIGMOID;
-            ACT_TANH: unit_op = VEC_UNIT_OP_ACT_TANH;
-            ACT_RELU: unit_op = VEC_UNIT_OP_ACT_RELU;
+            VEC_INST_ACT_SIGMOID: unit_op = VEC_UNIT_OP_ACT_SIGMOID;
+            VEC_INST_ACT_TANH: unit_op = VEC_UNIT_OP_ACT_TANH;
+            VEC_INST_ACT_RELU: unit_op = VEC_UNIT_OP_ACT_RELU;
         endcase
         // Write into cache
         cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;
@@ -287,12 +287,12 @@ case (opcode)
         cache_write_addr = op_Vd;
     end
 
-    CLEAR: begin
+    VEC_INST_CLEAR: begin
         // Write into cache
         cache_write_op = VEC_DATA_WRITE_ZERO;
         cache_write_addr = op_V1;
     end
-    COPY: begin
+    VEC_INST_COPY: begin
         // Read from cache
         cache_read_op = VEC_DATA_READ_VEC;
         cache_read_addr = op_V1;
@@ -303,7 +303,7 @@ case (opcode)
     end
 
     // Section 2
-    LOAD_VEC: begin
+    VEC_INST_LOAD_VEC: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
 
@@ -312,7 +312,7 @@ case (opcode)
         cache_write_addr = op_V1;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    LOAD_SCALAR: begin
+    VEC_INST_LOAD_SCALAR: begin
         // Read from DataMem
         data_mem_read_addr = op_addr;
 
@@ -322,7 +322,7 @@ case (opcode)
         cache_write_param = op_vec_idx;
         cache_data_in_sel = CACHE_DATA_FROM_DATA_MEM_DATA_OUT;
     end
-    STORE_VEC: begin
+    VEC_INST_STORE_VEC: begin
         // Read from cache
         cache_read_op = VEC_DATA_READ_VEC;
         cache_read_addr = op_V1;
@@ -332,7 +332,7 @@ case (opcode)
         data_mem_write_addr = op_addr;
         data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
     end
-    STORE_SCALAR: begin
+    VEC_INST_STORE_SCALAR: begin
         // Read from cache
         cache_read_op = VEC_DATA_READ_SCALAR;
         cache_read_addr = op_V1;
@@ -345,18 +345,18 @@ case (opcode)
     end
 
     // Section 3
-    SEND_VEC,
-    SEND_SCALAR: begin
+    VEC_INST_SEND_VEC,
+    VEC_INST_SEND_SCALAR: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
         // Read from cache
         unique case (opcode)
-        SEND_VEC: begin
+        VEC_INST_SEND_VEC: begin
             cache_read_op = VEC_DATA_READ_VEC;
             cache_read_addr = op_V1;
         end
-        SEND_SCALAR: begin
+        VEC_INST_SEND_SCALAR: begin
             cache_read_op = VEC_DATA_READ_SCALAR;
             cache_read_addr = op_V1;
             cache_read_param = op_vec_idx;
@@ -372,8 +372,8 @@ case (opcode)
             next_state = NEXT;
         end
     end
-    RECV_VEC,
-    RECV_SCALAR: begin
+    VEC_INST_RECV_VEC,
+    VEC_INST_RECV_SCALAR: begin
         // Change next state
         next_state = WAIT_SWITCH;
 
@@ -386,11 +386,11 @@ case (opcode)
             next_state = NEXT;
             // Write to cache
             unique case (opcode)
-            RECV_VEC: begin
+            VEC_INST_RECV_VEC: begin
                 cache_write_op = VEC_DATA_WRITE_VEC;
                 cache_write_addr = op_V1;
             end
-            RECV_SCALAR: begin
+            VEC_INST_RECV_SCALAR: begin
                 cache_write_op = VEC_DATA_WRITE_SCALAR;
                 cache_write_addr = op_V1;
                 cache_write_param = op_vec_idx;
@@ -401,7 +401,7 @@ case (opcode)
     end
 
     // Section 4
-    HALT: begin
+    VEC_INST_HALT: begin
         next_state = STOP;
     end
 endcase
@@ -409,25 +409,25 @@ endcase
             end
             WAIT_SWITCH: begin
                 unique case (opcode)
-                SEND_VEC,
-                SEND_SCALAR: begin
+                VEC_INST_SEND_VEC,
+                VEC_INST_SEND_SCALAR: begin
                     if (switch_send_ok) begin
                         next_state = NEXT;
                     end else begin
                         next_state = WAIT_SWITCH;
                     end
                 end
-                RECV_VEC,
-                RECV_SCALAR: begin
+                VEC_INST_RECV_VEC,
+                VEC_INST_RECV_SCALAR: begin
                     if (switch_recv_ready) begin
                         next_state = NEXT;
                         // Write to cache
                         unique case (opcode)
-                        RECV_VEC: begin
+                        VEC_INST_RECV_VEC: begin
                             cache_write_op = VEC_DATA_WRITE_VEC;
                             cache_write_addr = op_V1;
                         end
-                        RECV_SCALAR: begin
+                        VEC_INST_RECV_SCALAR: begin
                             cache_write_op = VEC_DATA_WRITE_SCALAR;
                             cache_write_addr = op_V1;
                             cache_write_param = op_vec_idx;
@@ -450,11 +450,11 @@ endcase
                 reg_unit2_read_op = VEC_DATA_READ_VEC;
                 // Set unit op
                 unique case (opcode)
-                    ADD: unit_op = VEC_UNIT_OP_ADD;
-                    SUB: unit_op = VEC_UNIT_OP_SUB;
-                    DOT: unit_op = VEC_UNIT_OP_DOT;
-                    SCALE: unit_op = VEC_UNIT_OP_SCALE;
-                    DELTA: unit_op = VEC_UNIT_OP_DELTA;
+                    VEC_INST_ADD: unit_op = VEC_UNIT_OP_ADD;
+                    VEC_INST_SUB: unit_op = VEC_UNIT_OP_SUB;
+                    VEC_INST_DOT: unit_op = VEC_UNIT_OP_DOT;
+                    VEC_INST_SCALE: unit_op = VEC_UNIT_OP_SCALE;
+                    VEC_INST_DELTA: unit_op = VEC_UNIT_OP_DELTA;
                 endcase
                 // Write into cache
                 cache_data_in_sel = CACHE_DATA_FROM_UNIT_DATA_OUT;

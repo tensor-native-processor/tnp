@@ -40,44 +40,44 @@ module VecInstDecoder
 
         case (opcode)
             // Section 1
-            ADD,
-            SUB,
-            DOT: begin
+            VEC_INST_ADD,
+            VEC_INST_SUB,
+            VEC_INST_DOT: begin
                 op_Vd       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V2       = inst_value[OPCODE_TYPE_SIZE+2*REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+3*REG_ADDR_TYPE_BYTES;
             end
-            SCALE,
-            DELTA: begin
+            VEC_INST_SCALE,
+            VEC_INST_DELTA: begin
                 op_Vd       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V2       = inst_value[OPCODE_TYPE_SIZE+2*REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_vec_idx  = inst_value[OPCODE_TYPE_SIZE+3*REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+3*REG_ADDR_TYPE_BYTES+WIDTH_IDX_TYPE_BYTES;
             end
-            ACT_SIGMOID,
-            ACT_TANH,
-            ACT_RELU,
-            COPY: begin
+            VEC_INST_ACT_SIGMOID,
+            VEC_INST_ACT_TANH,
+            VEC_INST_ACT_RELU,
+            VEC_INST_COPY: begin
                 op_Vd       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
             end
-            CLEAR: begin
+            VEC_INST_CLEAR: begin
                 op_V1       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
 
             // Section 2
-            LOAD_VEC,
-            STORE_VEC: begin
+            VEC_INST_LOAD_VEC,
+            VEC_INST_STORE_VEC: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+MEM_ADDR_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
-            LOAD_SCALAR,
-            STORE_SCALAR: begin
+            VEC_INST_LOAD_SCALAR,
+            VEC_INST_STORE_SCALAR: begin
                 op_addr     = inst_value[OPCODE_TYPE_SIZE +: MEM_ADDR_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_vec_idx  = inst_value[OPCODE_TYPE_SIZE+MEM_ADDR_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
@@ -85,14 +85,14 @@ module VecInstDecoder
             end
 
             // Section 3
-            SEND_VEC,
-            RECV_VEC: begin
+            VEC_INST_SEND_VEC,
+            VEC_INST_RECV_VEC: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+CORE_IDX_TYPE_BYTES+REG_ADDR_TYPE_BYTES;
             end
-            SEND_SCALAR,
-            RECV_SCALAR: begin
+            VEC_INST_SEND_SCALAR,
+            VEC_INST_RECV_SCALAR: begin
                 op_core_idx = inst_value[OPCODE_TYPE_SIZE +: CORE_IDX_TYPE_SIZE];
                 op_V1       = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_vec_idx  = inst_value[OPCODE_TYPE_SIZE+CORE_IDX_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
@@ -100,7 +100,7 @@ module VecInstDecoder
             end
 
             // Section 4
-            HALT: begin
+            VEC_INST_HALT: begin
                 inst_size = 0;
             end
         endcase
