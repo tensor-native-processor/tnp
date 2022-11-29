@@ -18,6 +18,9 @@ public:
     virtual void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
         std::map<std::string, Shape>&) const;
+
+    virtual void simulate(const ::onnx::NodeProto&,
+        std::map<std::string, Tensor>&) const;
 };
 
 // Dispatch operators
@@ -38,6 +41,9 @@ class OperatorGemm: public Operator {
     void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
         std::map<std::string, Shape>&) const override;
+
+    void simulate(const ::onnx::NodeProto&,
+        std::map<std::string, Tensor>&) const override;
 };
 
 
@@ -46,6 +52,9 @@ class OperatorRelu: public Operator {
     void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
         std::map<std::string, Shape>&) const override;
+
+    void simulate(const ::onnx::NodeProto&,
+        std::map<std::string, Tensor>&) const override;
 };
 
 #endif

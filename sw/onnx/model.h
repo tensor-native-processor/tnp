@@ -35,6 +35,8 @@ class ONNXModel {
 public:
     ONNXModel(const std::string&);
 
+    void simulate();
+
 private:
     // Protobuf
     ::onnx::ModelProto m_model;
