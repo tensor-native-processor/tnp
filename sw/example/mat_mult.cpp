@@ -29,20 +29,15 @@ int main() {
     MatCoreInst inst;
 
     // Load memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 0;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 1;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 0;
+    inst.operands[MatCoreInstDefn::M1] = 0;
+    prog.append(inst);
+
+    inst.opcode = MatCoreInstDefn::LOAD_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 256;
+    inst.operands[MatCoreInstDefn::M1] = 1;
+    prog.append(inst);
 
     // set weight 0
     inst.opcode = MatCoreInstDefn::SET_WEIGHT;
@@ -56,13 +51,10 @@ int main() {
     prog.append(inst);
 
     // store 2 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 512 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 2;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    inst.opcode = MatCoreInstDefn::STORE_MAT;
+    inst.operands[MatCoreInstDefn::ADDR] = 0;
+    inst.operands[MatCoreInstDefn::M1] = 2;
+    prog.append(inst);
 
     // halt
     inst.opcode = MatCoreInstDefn::HALT;
