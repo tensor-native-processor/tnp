@@ -25,4 +25,11 @@ class OperatorGemm: public Operator {
 };
 
 
+// Relu
+class OperatorRelu: public Operator {
+    void inferShape(const ::onnx::NodeProto&,
+        const std::map<std::string, Tensor>&,
+        std::map<std::string, Shape>&) const override;
+};
+
 #endif

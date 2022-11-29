@@ -160,16 +160,10 @@ void ONNXModel::genShape() {
     }
 
     // Determine shape for each node
+    Operator op;
     for (const auto& node : m_graph.node()) {
         LogInfo(node.name() + " (" + node.op_type() + ")");
 
-        for (const auto& in : node.input()) {
-            if (shape.count(in) == 0) {
-                FatalError("Unknown input " + in);
-            }
-        }
-        for (const auto& out : node.output()) {
-            shape[out] = Shape{};
-        }
+        op.inferShape(node, m_initializers, shape);
     }
 }
