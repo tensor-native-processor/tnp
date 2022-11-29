@@ -62,6 +62,34 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
     }
 }
 
+// Construct Tensor from shape
+Tensor::Tensor(const Shape& shape)
+: m_shape(shape) {
+    // Calculate size
+    m_size = 1;
+    for (auto dim : m_shape) {
+        m_size *= dim;
+    }
+    // Allocate value
+    m_value = (float*)calloc(m_size, sizeof(float));
+    if (m_value == NULL) {
+        FatalError("Insufficient memory");
+    }
+}
+
+// Copy-construct tensor
+Tensor::Tensor(const Tensor& tensor)
+: m_name(tensor.m_name), m_shape(tensor.m_shape), m_size(tensor.m_size) {
+    // Allocate value
+    m_value = (float*)calloc(m_size, sizeof(float));
+    if (m_value == NULL) {
+        FatalError("Insufficient memory");
+    }
+    // Copy from tensor
+    memcpy(m_value, tensor.m_value, m_size * sizeof(float));
+}
+
+
 // Cleanup tensor
 Tensor::~Tensor() {
     free(m_value);

@@ -13,9 +13,12 @@ typedef std::vector<size_t> Shape;
 class Tensor {
 public:
     Tensor(const ::onnx::TensorProto&);
+    Tensor(const Shape&);
+
+    Tensor(const Tensor&);
     ~Tensor();
 
-    // Name
+    // Name (optional)
     std::string m_name;
 
     // Dimension
