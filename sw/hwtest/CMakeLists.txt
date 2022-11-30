@@ -20,3 +20,10 @@ target_link_libraries(mat_send_scalar mat_core)
 add_executable(mat_send_diag mat_send_diag.cpp)
 target_include_directories(mat_send_diag PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_send_diag mat_core)
+
+
+# proc_u-16m4-16v4
+add_executable(proc_u-16m4-16v4 proc_u-16m4-16v4.cpp)
+target_include_directories(proc_u-16m4-16v4 PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_include_directories(proc_u-16m4-16v4 PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(proc_u-16m4-16v4 mat_core vec_core)
