@@ -23,7 +23,9 @@ module VecCoreSim
 
     VecCore #(
         .SWITCH_WIDTH(SWITCH_WIDTH),
-        .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE)
+        .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE),
+        .INST_MEM_SIZE(65536),
+        .DATA_MEM_SIZE(65536)
     ) DUT(.*);
 
     // Clock signal
