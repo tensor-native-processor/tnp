@@ -27,6 +27,10 @@ public:
 
     // Value
     float* m_value;
+
+    typedef std::vector<size_t> Index;
+    float& locate(const Index&);
+    const float& locate(const Index&) const;
 };
 
 

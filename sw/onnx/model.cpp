@@ -95,6 +95,24 @@ Tensor::~Tensor() {
     free(m_value);
 }
 
+// Locate an index in tensor
+const float& Tensor::locate(const Index& idx) const {
+    if (idx.size() != m_shape.size()) {
+        FatalError("Tensor index mismatch shape");
+    }
+
+    size_t decode = 0, block = 1;
+    for (size_t pos = m_shape.size() - 1;pos >= 0;pos--) {
+        decode += idx[pos] * block;
+        block *= m_shape[pos];
+    }
+    return m_value[decode];
+}
+float& Tensor::locate(const Index& idx) {
+    return const_cast<float&>(const_cast<const Tensor*>(this)->locate(idx));
+}
+
+
 // Constructor for ONNXModel
 ONNXModel::ONNXModel(const std::string& filename) {
     LogInfo("Loading model " + filename);
