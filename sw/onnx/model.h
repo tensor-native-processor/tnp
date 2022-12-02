@@ -34,8 +34,12 @@ public:
     float& locate(const Index&);
     const float& locate(const Index&) const;
 
+    // Cast this tensor through unidirectional broadcast
+    void unidirectionalBroadcast(const Shape&);
+
 private:
     void swap(Tensor&);
+    void unidirectionalBroadcastCopy(size_t, Index&, Tensor&);
 };
 
 

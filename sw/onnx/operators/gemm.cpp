@@ -137,19 +137,8 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
 
     if (node.input_size() == 3) {
         // Add matrix C
-        const Tensor& tensorC = stateTensor.at(node.input(2));
-        /*
-        if (tensorC.m_shape.size() != 2 ||
-            tensorC.m_shape[0] != tensorOut.m_shape[0] ||
-            tensorC.m_shape[1] != tensorOut.m_shape[1]) {
-            FatalError("Gemm tensor C shape mismatch");
-        }
-        */
-        if (tensorC.m_shape.size() == 1)
-        for (size_t i = 0;i < tensorOut.m_shape[0];i++)
-            for (size_t j = 0;j < tensorOut.m_shape[1];j++)
-                tensorOut.locate({i, j}) += tensorC.locate({j});
-        else
+        Tensor tensorC = stateTensor.at(node.input(2));
+        tensorC.unidirectionalBroadcast(tensorOut.m_shape);
 
         for (size_t i = 0;i < tensorOut.m_shape[0];i++)
             for (size_t j = 0;j < tensorOut.m_shape[1];j++)

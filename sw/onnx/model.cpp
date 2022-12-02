@@ -110,6 +110,60 @@ void Tensor::swap(Tensor& x) {
     std::swap(m_value, x.m_value);
 }
 
+// Unidirectional broadcast
+// https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md
+void Tensor::unidirectionalBroadcast(const Shape& destShape) {
+    size_t destDim = destShape.size();
+    size_t deltaDim = destDim - m_shape.size();
+    if (deltaDim < 0) {
+        FatalError("Tensor u-broadcast dim inv");
+    }
+    // Prepend 1 to m_shape (m_size is the same)
+    if (deltaDim > 0) {
+        m_shape.insert(m_shape.begin(), deltaDim, 1);
+    }
+
+    // Validate shape
+    bool sameShape = true;
+    for (size_t d = 0;d < deltaDim;d++) {
+        if (m_shape[d] != destShape[d]) {
+            sameShape = false;
+        }
+    }
+    if (sameShape) {
+        return;
+    }
+
+    // Copy tensor
+    Tensor outTensor(destShape);
+    Index progIdx(destDim, 0);
+    unidirectionalBroadcastCopy(0, progIdx, outTensor);
+    swap(outTensor);
+}
+void Tensor::unidirectionalBroadcastCopy(size_t x, Index& progIdx, Tensor& outTensor) {
+    if (x == progIdx.size()) {
+        // Copy vector
+        Index origIdx = progIdx;
+        for (size_t d = 0;d < progIdx.size();d++) {
+            if (origIdx[d] >= m_shape[d]) {
+                // Override shape
+                if (m_shape[d] == 1) {
+                    origIdx[d] = 0;
+                } else {
+                    FatalError("Tensor u-broadcast shape err");
+                }
+            }
+        }
+        outTensor.locate(progIdx) = locate(origIdx);
+        return;
+    }
+    for (size_t i = 0;i < outTensor.m_shape[x];i++) {
+        progIdx[x] = i;
+        unidirectionalBroadcastCopy(x + 1, progIdx, outTensor);
+        progIdx[x] = 0;
+    }
+}
+
 
 // Constructor for ONNXModel
 ONNXModel::ONNXModel(const std::string& filename) {
