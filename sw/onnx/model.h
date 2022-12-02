@@ -30,8 +30,12 @@ public:
     // Value
     std::unique_ptr<float[]> m_value;
 
+    // Locate a float from index
     float& locate(const Index&);
     const float& locate(const Index&) const;
+
+private:
+    void swap(Tensor&);
 };
 
 

@@ -102,6 +102,14 @@ float& Tensor::locate(const Index& idx) {
     return const_cast<float&>(const_cast<const Tensor*>(this)->locate(idx));
 }
 
+// Swap with another Tensor
+void Tensor::swap(Tensor& x) {
+    std::swap(m_name, x.m_name);
+    std::swap(m_shape, x.m_shape);
+    std::swap(m_size, x.m_size);
+    std::swap(m_value, x.m_value);
+}
+
 
 // Constructor for ONNXModel
 ONNXModel::ONNXModel(const std::string& filename) {
