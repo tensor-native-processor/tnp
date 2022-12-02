@@ -8,13 +8,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install protobuf
+      run: sudo apt-get install protobuf-compiler
+
     - name: Configure
-      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DBUILD_ONNX=on
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/sw/build
+      run: cmake --build ${{github.workspace}}/sw/build --parallel
