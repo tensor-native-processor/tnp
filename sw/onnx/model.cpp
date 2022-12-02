@@ -17,10 +17,8 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
         m_shape.push_back(dim);
         m_size *= dim;
     }
-    m_value = (float*)calloc(m_size, sizeof(float));
-    if (m_value == NULL) {
-        FatalError("Insufficient memory");
-    }
+    m_value = std::make_unique<float[]>(m_size);
+    std::fill_n(m_value.get(), m_size, 0);
 
     // Value
     switch (tensor.data_type()) {
@@ -39,7 +37,7 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
             if (bytes.size() / sizeof(float) > m_size) {
                 FatalError("Initializer " + m_name + " larger than dimension " + std::to_string(m_size));
             }
-            memcpy(m_value, bytes.c_str(), bytes.size());
+            std::copy_n(bytes.c_str(), bytes.size(), (char*)m_value.get());
         }
         break;
     }
@@ -72,29 +70,20 @@ Tensor::Tensor(const Shape& shape)
         m_size *= dim;
     }
     // Allocate value
-    m_value = (float*)calloc(m_size, sizeof(float));
-    if (m_value == NULL) {
-        FatalError("Insufficient memory");
-    }
+    m_value = std::make_unique<float[]>(m_size);
+    std::fill_n(m_value.get(), m_size, 0);
 }
 
 // Copy-construct tensor
 Tensor::Tensor(const Tensor& tensor)
 : m_name(tensor.m_name), m_shape(tensor.m_shape), m_size(tensor.m_size) {
     // Allocate value
-    m_value = (float*)calloc(m_size, sizeof(float));
-    if (m_value == NULL) {
-        FatalError("Insufficient memory");
-    }
+    m_value = std::make_unique<float[]>(m_size);
+
     // Copy from tensor
-    memcpy(m_value, tensor.m_value, m_size * sizeof(float));
+    std::copy_n(tensor.m_value.get(), m_size, m_value.get());
 }
 
-
-// Cleanup tensor
-Tensor::~Tensor() {
-    free(m_value);
-}
 
 // Locate an index in tensor
 const float& Tensor::locate(const Index& idx) const {

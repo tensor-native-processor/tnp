@@ -19,7 +19,6 @@ public:
     Tensor(const Shape&);
 
     Tensor(const Tensor&);
-    ~Tensor();
 
     // Name (optional)
     std::string m_name;
@@ -29,7 +28,7 @@ public:
     size_t m_size;
 
     // Value
-    float* m_value;
+    std::unique_ptr<float[]> m_value;
 
     float& locate(const Index&);
     const float& locate(const Index&) const;
