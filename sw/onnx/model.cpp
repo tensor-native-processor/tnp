@@ -4,6 +4,7 @@
 #include "operator.h"
 
 #include <queue>
+#include <fstream>
 
 // Construct Tensor from protobuf
 Tensor::Tensor(const ::onnx::TensorProto& tensor) {
@@ -102,7 +103,7 @@ const float& Tensor::locate(const Index& idx) const {
     }
 
     size_t decode = 0, block = 1;
-    for (size_t pos = m_shape.size() - 1;pos >= 0;pos--) {
+    for (ssize_t pos = m_shape.size() - 1;pos >= 0;pos--) {
         decode += idx[pos] * block;
         block *= m_shape[pos];
     }
@@ -234,9 +235,27 @@ void ONNXModel::genShape() {
 void ONNXModel::simulate() {
     std::map<std::string, Tensor> state_tensor(m_initializers);
 
+    // MNIST-specific input
+    std::string inputName = m_graph.input(0).name();
+    std::ifstream inputFile("X.txt");
+    Tensor inputTensor({10, 400});
+    for (size_t b = 0;b < 10;b++) {
+        for (size_t i = 0;i < 400;i++) inputFile >> inputTensor.locate({b, i});
+    }
+    inputFile.close();
+    state_tensor.emplace(inputName, inputTensor);
+
     // Simulate each operator
     Operator op;
     for (const auto& node : m_graph.node()) {
         op.simulate(node, state_tensor);
+    }
+
+    // MNIST-specific output
+    std::string outputName = m_graph.output(0).name();
+    const Tensor& outputTensor = state_tensor.at(outputName);
+    for (size_t b = 0;b < 10;b++) {
+        for (size_t i = 0;i < 10;i++) std::cout << outputTensor.locate({b, i}) << ", ";
+        std::cout << std::endl;
     }
 }
