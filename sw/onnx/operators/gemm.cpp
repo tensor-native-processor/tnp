@@ -149,7 +149,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
             for (size_t i = 0;i < B;i++) {
                 sum += pTensorA->m_value[j * B + i] * pTensorB->m_value[i * C + k];
             }
-            tensorOut.m_value[j * C + k] = sum;
+            tensorOut.m_value[j * C + k] = attr_alpha * sum;
         }
 
     if (node.input_size() == 3) {
@@ -159,7 +159,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
 
         for (size_t i = 0;i < tensorOut.m_shape[0];i++)
             for (size_t j = 0;j < tensorOut.m_shape[1];j++)
-                tensorOut.locate({i, j}) += tensorC.locate({i, j});
+                tensorOut.locate({i, j}) += attr_beta * tensorC.locate({i, j});
     }
 
     // Set output
