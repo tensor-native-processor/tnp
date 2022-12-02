@@ -31,13 +31,13 @@ void OperatorGemm::getAttributes(const ::onnx::NodeProto& node) {
 // InferShape for Gemm
 void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Shape>& state_shape) {
+        std::map<std::string, Tensor::Shape>& state_shape) {
 
     // Fetch A and B
     if (node.input_size() != 2 && node.input_size() != 3) {
         FatalError("Gemm input size " + std::to_string(node.input_size()));
     }
-    Shape shapeA, shapeB;
+    Tensor::Shape shapeA, shapeB;
     if (state_shape.count(node.input(0)) == 0 ||
         state_shape.count(node.input(1)) == 0) {
         FatalError("Gemm cannot determine shape A/B " + node.input(0) + "/" + node.input(1));
@@ -59,7 +59,7 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
     }
 
     // Output shape
-    Shape cur_shape{
+    Tensor::Shape cur_shape{
         shapeA[0], shapeB[1]
     };
     if (node.output_size() != 1) {
@@ -97,7 +97,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     if (!m_transA) {
         pTensorA = new Tensor(origTensorA);
     } else {
-        pTensorA = new Tensor(Shape{
+        pTensorA = new Tensor(Tensor::Shape{
             origTensorA.m_shape[1],
             origTensorA.m_shape[0]
         });
@@ -110,7 +110,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     if (!m_transB) {
         pTensorB = new Tensor(origTensorB);
     } else {
-        pTensorB = new Tensor(Shape{
+        pTensorB = new Tensor(Tensor::Shape{
             origTensorB.m_shape[1],
             origTensorB.m_shape[0]
         });
@@ -124,7 +124,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     if (pTensorA->m_shape[1] != pTensorB->m_shape[0]) {
         FatalError("Gemm tensor dim mismatch");
     }
-    Tensor tensorOut(Shape{pTensorA->m_shape[0], pTensorB->m_shape[1]});
+    Tensor tensorOut(Tensor::Shape{pTensorA->m_shape[0], pTensorB->m_shape[1]});
     for (size_t i = 0;i < pTensorA->m_shape[1];i++)
         for (size_t j = 0;j < pTensorA->m_shape[0];j++)
             for (size_t k = 0;k < pTensorB->m_shape[1];k++)

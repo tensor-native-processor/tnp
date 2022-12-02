@@ -5,7 +5,7 @@
 // InferShape for Relu
 void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
         const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Shape>& state_shape) {
+        std::map<std::string, Tensor::Shape>& state_shape) {
 
     // Validate i/o size
     if (node.input_size() != 1 || node.output_size() != 1) {
@@ -16,7 +16,7 @@ void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
     if (state_shape.count(node.input(0)) == 0) {
         FatalError("Gemm cannot determine shape X " + node.input(0));
     }
-    Shape shapeX = state_shape.at(node.input(0));
+    Tensor::Shape shapeX = state_shape.at(node.input(0));
     state_shape[node.output(0)] = shapeX;
 }
 

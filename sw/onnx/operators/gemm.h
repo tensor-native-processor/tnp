@@ -8,7 +8,7 @@ class OperatorGemm: public Operator {
 public:
     void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
-        std::map<std::string, Shape>&) override;
+        std::map<std::string, Tensor::Shape>&) override;
 
     void simulate(const ::onnx::NodeProto&,
         std::map<std::string, Tensor>&) override;

@@ -158,7 +158,7 @@ void ONNXModel::loadModel() {
 
     // Input/output
     for (const auto& in : m_graph.input()) {
-        Shape cur_shape;
+        Tensor::Shape cur_shape;
 
         // Get tensor type
         const auto& type = in.type();
@@ -201,7 +201,7 @@ void ONNXModel::loadModel() {
 
 // Generate shape for each variable
 void ONNXModel::genShape() {
-    std::map<std::string, Shape> shape;
+    std::map<std::string, Tensor::Shape> shape;
     for (const auto& [name, init] : m_initializers) {
         shape[name] = init.m_shape;
     }

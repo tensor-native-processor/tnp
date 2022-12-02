@@ -17,7 +17,7 @@ public:
     // Operations
     virtual void inferShape(const ::onnx::NodeProto&,
         const std::map<std::string, Tensor>&,
-        std::map<std::string, Shape>&);
+        std::map<std::string, Tensor::Shape>&);
 
     virtual void simulate(const ::onnx::NodeProto&,
         std::map<std::string, Tensor>&);
