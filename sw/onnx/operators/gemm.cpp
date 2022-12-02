@@ -30,20 +30,20 @@ void OperatorGemm::getAttributes(const ::onnx::NodeProto& node) {
 
 // InferShape for Gemm
 void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
-        const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Tensor::Shape>& state_shape) {
+        const std::map<std::string, Tensor>& stateInitializer,
+        std::map<std::string, Tensor::Shape>& stateShape) {
 
     // Fetch A and B
     if (node.input_size() != 2 && node.input_size() != 3) {
         FatalError("Gemm input size " + std::to_string(node.input_size()));
     }
     Tensor::Shape shapeA, shapeB;
-    if (state_shape.count(node.input(0)) == 0 ||
-        state_shape.count(node.input(1)) == 0) {
+    if (stateShape.count(node.input(0)) == 0 ||
+        stateShape.count(node.input(1)) == 0) {
         FatalError("Gemm cannot determine shape A/B " + node.input(0) + "/" + node.input(1));
     }
-    shapeA = state_shape.at(node.input(0));
-    shapeB = state_shape.at(node.input(1));
+    shapeA = stateShape.at(node.input(0));
+    shapeB = stateShape.at(node.input(1));
     if (shapeA.size() != 2 || shapeB.size() != 2) {
         FatalError("Gemm input dimension not 2D");
     }
@@ -65,13 +65,13 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
     if (node.output_size() != 1) {
         FatalError("Gemm output size not 1");
     }
-    state_shape[node.output(0)] = cur_shape;
+    stateShape[node.output(0)] = cur_shape;
 }
 
 
 // Simulate for Gemm
 void OperatorGemm::simulate(const ::onnx::NodeProto& node,
-        std::map<std::string, Tensor>& state_tensor) {
+        std::map<std::string, Tensor>& stateTensor) {
 
     LogWarning("Simulate " + node.name());
 
@@ -79,12 +79,12 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     if (node.input_size() != 2 && node.input_size() != 3) {
         FatalError("Gemm input size " + std::to_string(node.input_size()));
     }
-    if (state_tensor.count(node.input(0)) == 0 ||
-        state_tensor.count(node.input(1)) == 0) {
+    if (stateTensor.count(node.input(0)) == 0 ||
+        stateTensor.count(node.input(1)) == 0) {
         FatalError("Gemm cannot determine shape A/B " + node.input(0) + "/" + node.input(1));
     }
-    const Tensor& origTensorA = state_tensor.at(node.input(0)),
-                  origTensorB = state_tensor.at(node.input(1));
+    const Tensor& origTensorA = stateTensor.at(node.input(0)),
+                  origTensorB = stateTensor.at(node.input(1));
 
     if (origTensorA.m_shape.size() != 2 || origTensorB.m_shape.size() != 2) {
         FatalError("Gemm input dimension not 2D");
@@ -132,7 +132,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
 
     if (node.input_size() == 3) {
         // Add matrix C
-        const Tensor& tensorC = state_tensor.at(node.input(2));
+        const Tensor& tensorC = stateTensor.at(node.input(2));
         /*
         if (tensorC.m_shape.size() != 2 ||
             tensorC.m_shape[0] != tensorOut.m_shape[0] ||
@@ -155,7 +155,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     if (node.output_size() != 1) {
         FatalError("Gemm output size not 1");
     }
-    state_tensor.emplace(node.output(0), tensorOut);
+    stateTensor.emplace(node.output(0), tensorOut);
 
     delete pTensorA;
     delete pTensorB;
