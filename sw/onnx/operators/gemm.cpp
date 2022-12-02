@@ -125,10 +125,14 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
         FatalError("Gemm tensor dim mismatch");
     }
     Tensor tensorOut(Tensor::Shape{pTensorA->m_shape[0], pTensorB->m_shape[1]});
-    for (size_t i = 0;i < pTensorA->m_shape[1];i++)
-        for (size_t j = 0;j < pTensorA->m_shape[0];j++)
-            for (size_t k = 0;k < pTensorB->m_shape[1];k++)
-                tensorOut.locate({j, k}) += pTensorA->locate({j, i}) * pTensorB->locate({i, k});
+    for (size_t j = 0;j < pTensorA->m_shape[0];j++)
+        for (size_t k = 0;k < pTensorB->m_shape[1];k++) {
+            float sum = 0;
+            for (size_t i = 0;i < pTensorA->m_shape[1];i++) {
+                sum += pTensorA->locate({j, i}) * pTensorB->locate({i, k});
+            }
+            tensorOut.locate({j, k}) = sum;
+        }
 
     if (node.input_size() == 3) {
         // Add matrix C
