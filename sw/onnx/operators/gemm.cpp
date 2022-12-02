@@ -12,18 +12,35 @@ void OperatorGemm::getAttributes(const ::onnx::NodeProto& node) {
         attrs[attr.name()] = attr;
     }
     if (attrs.count("transA") != 0) {
-        const auto& attrTransA = attrs.at("transA");
-        if (attrTransA.type() != ::onnx::AttributeProto::INT) {
+        const auto& attrProtoTransA = attrs.at("transA");
+        if (attrProtoTransA.type() != ::onnx::AttributeProto::INT) {
             FatalError("Gemm transA not int type");
         }
-        attr_transA = (bool)attrTransA.i();
+        attr_transA = (bool)attrProtoTransA.i();
     }
     if (attrs.count("transB") != 0) {
-        const auto& attrTransB = attrs.at("transB");
-        if (attrTransB.type() != ::onnx::AttributeProto::INT) {
+        const auto& attrProtoTransB = attrs.at("transB");
+        if (attrProtoTransB.type() != ::onnx::AttributeProto::INT) {
             FatalError("Gemm transB not int type");
         }
-        attr_transB = (bool)attrTransB.i();
+        attr_transB = (bool)attrProtoTransB.i();
+    }
+
+    // Fetch alpha and beta
+    attr_alpha = attr_beta = 1.0f;
+    if (attrs.count("alpha") != 0) {
+        const auto& attrProtoAlpha = attrs.at("alpha");
+        if (attrProtoAlpha.type() != ::onnx::AttributeProto::FLOAT) {
+            FatalError("Gemm alpha not float type");
+        }
+        attr_alpha = (float)attrProtoAlpha.f();
+    }
+    if (attrs.count("beta") != 0) {
+        const auto& attrProtoBeta = attrs.at("beta");
+        if (attrProtoBeta.type() != ::onnx::AttributeProto::FLOAT) {
+            FatalError("Gemm alpha not float type");
+        }
+        attr_beta = (float)attrProtoBeta.f();
     }
 }
 
