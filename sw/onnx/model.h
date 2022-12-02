@@ -6,12 +6,15 @@
 #include <string>
 #include <vector>
 
-// Shape
-typedef std::vector<size_t> Shape;
 
 // Tensor
 class Tensor {
 public:
+    // Types
+    typedef std::vector<size_t> Index;
+    typedef std::vector<size_t> Shape;
+
+    // Constructor
     Tensor(const ::onnx::TensorProto&);
     Tensor(const Shape&);
 
@@ -28,7 +31,6 @@ public:
     // Value
     float* m_value;
 
-    typedef std::vector<size_t> Index;
     float& locate(const Index&);
     const float& locate(const Index&) const;
 };
@@ -53,7 +55,7 @@ private:
 
     // Data
     std::map<std::string, Tensor> m_initializers;
-    std::map<std::string, Shape> m_inputs;
+    std::map<std::string, Tensor::Shape> m_inputs;
     std::vector<std::string> m_outputs;
 };
 
