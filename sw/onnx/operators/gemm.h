@@ -15,7 +15,8 @@ public:
 
 private:
     void getAttributes(const ::onnx::NodeProto&);
-    bool m_transA, m_transB;
+    bool attr_transA, attr_transB;
+    float attr_alpha, attr_beta;
 };
 
 #endif

@@ -6,7 +6,7 @@
 // Get attributes from protobuf
 void OperatorGemm::getAttributes(const ::onnx::NodeProto& node) {
     // Fetch transA and transB
-    m_transA = m_transB = false;
+    attr_transA = attr_transB = false;
     std::map<std::string, ::onnx::AttributeProto> attrs;
     for (const auto& attr : node.attribute()) {
         attrs[attr.name()] = attr;
@@ -16,14 +16,14 @@ void OperatorGemm::getAttributes(const ::onnx::NodeProto& node) {
         if (attrTransA.type() != ::onnx::AttributeProto::INT) {
             FatalError("Gemm transA not int type");
         }
-        m_transA = (bool)attrTransA.i();
+        attr_transA = (bool)attrTransA.i();
     }
     if (attrs.count("transB") != 0) {
         const auto& attrTransB = attrs.at("transB");
         if (attrTransB.type() != ::onnx::AttributeProto::INT) {
             FatalError("Gemm transB not int type");
         }
-        m_transB = (bool)attrTransB.i();
+        attr_transB = (bool)attrTransB.i();
     }
 }
 
@@ -52,8 +52,8 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
     getAttributes(node);
 
     // Do transA/B
-    if (m_transA) std::swap(shapeA[0], shapeA[1]);
-    if (m_transB) std::swap(shapeB[0], shapeB[1]);
+    if (attr_transA) std::swap(shapeA[0], shapeA[1]);
+    if (attr_transB) std::swap(shapeB[0], shapeB[1]);
     if (shapeA[1] != shapeB[0]) {
         FatalError("Gemm mat mult dim mismatch");
     }
@@ -94,7 +94,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     getAttributes(node);
     Tensor* pTensorA = NULL, *pTensorB = NULL;
 
-    if (!m_transA) {
+    if (!attr_transA) {
         pTensorA = new Tensor(origTensorA);
     } else {
         pTensorA = new Tensor(Tensor::Shape{
@@ -107,7 +107,7 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
             }
         }
     }
-    if (!m_transB) {
+    if (!attr_transB) {
         pTensorB = new Tensor(origTensorB);
     } else {
         pTensorB = new Tensor(Tensor::Shape{
