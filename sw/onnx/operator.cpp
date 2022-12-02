@@ -25,17 +25,17 @@ Operator* OperatorDispatch::createOperatorImpl() {
 
 // Dispatch inferShape
 void Operator::inferShape(const ::onnx::NodeProto& node,
-        const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Tensor::Shape>& state_shape) {
+        const std::map<std::string, Tensor>& stateInitializer,
+        std::map<std::string, Tensor::Shape>& stateShape) {
     Operator* op = OperatorDispatch::createOperator(node.op_type());
-    op->inferShape(node, state_initializer, state_shape);
+    op->inferShape(node, stateInitializer, stateShape);
     delete op;
 }
 
 // Dispatch simulate
 void Operator::simulate(const ::onnx::NodeProto& node,
-        std::map<std::string, Tensor>& state_tensor) {
+        std::map<std::string, Tensor>& stateTensor) {
     Operator* op = OperatorDispatch::createOperator(node.op_type());
-    op->simulate(node, state_tensor);
+    op->simulate(node, stateTensor);
     delete op;
 }

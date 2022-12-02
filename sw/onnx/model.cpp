@@ -233,7 +233,7 @@ void ONNXModel::genShape() {
 
 // Simulate model
 void ONNXModel::simulate() {
-    std::map<std::string, Tensor> state_tensor(m_initializers);
+    std::map<std::string, Tensor> stateTensor(m_initializers);
 
     // MNIST-specific input
     std::string inputName = m_graph.input(0).name();
@@ -243,17 +243,17 @@ void ONNXModel::simulate() {
         for (size_t i = 0;i < 400;i++) inputFile >> inputTensor.locate({b, i});
     }
     inputFile.close();
-    state_tensor.emplace(inputName, inputTensor);
+    stateTensor.emplace(inputName, inputTensor);
 
     // Simulate each operator
     Operator op;
     for (const auto& node : m_graph.node()) {
-        op.simulate(node, state_tensor);
+        op.simulate(node, stateTensor);
     }
 
     // MNIST-specific output
     std::string outputName = m_graph.output(0).name();
-    const Tensor& outputTensor = state_tensor.at(outputName);
+    const Tensor& outputTensor = stateTensor.at(outputName);
     for (size_t b = 0;b < 10;b++) {
         for (size_t i = 0;i < 10;i++) std::cout << outputTensor.locate({b, i}) << ", ";
         std::cout << std::endl;

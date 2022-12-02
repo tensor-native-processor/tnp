@@ -4,8 +4,8 @@
 
 // InferShape for Relu
 void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
-        const std::map<std::string, Tensor>& state_initializer,
-        std::map<std::string, Tensor::Shape>& state_shape) {
+        const std::map<std::string, Tensor>& stateInitializer,
+        std::map<std::string, Tensor::Shape>& stateShape) {
 
     // Validate i/o size
     if (node.input_size() != 1 || node.output_size() != 1) {
@@ -13,16 +13,16 @@ void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
     }
 
     // Echo shape
-    if (state_shape.count(node.input(0)) == 0) {
+    if (stateShape.count(node.input(0)) == 0) {
         FatalError("Gemm cannot determine shape X " + node.input(0));
     }
-    Tensor::Shape shapeX = state_shape.at(node.input(0));
-    state_shape[node.output(0)] = shapeX;
+    Tensor::Shape shapeX = stateShape.at(node.input(0));
+    stateShape[node.output(0)] = shapeX;
 }
 
 // Simulate for Relu
 void OperatorRelu::simulate(const ::onnx::NodeProto& node,
-        std::map<std::string, Tensor>& state_tensor) {
+        std::map<std::string, Tensor>& stateTensor) {
 
     LogWarning("Simulate " + node.name());
 
@@ -32,15 +32,15 @@ void OperatorRelu::simulate(const ::onnx::NodeProto& node,
     }
 
     // Fetch input tensor
-    if (state_tensor.count(node.input(0)) == 0) {
+    if (stateTensor.count(node.input(0)) == 0) {
         FatalError("Relu cannot find input tensor");
     }
-    const Tensor& in_tensor = state_tensor.at(node.input(0));
+    const Tensor& in_tensor = stateTensor.at(node.input(0));
     Tensor out_tensor(in_tensor.m_shape);
     for (size_t i = 0;i < in_tensor.m_size;i++) {
         out_tensor.m_value[i] = relu(in_tensor.m_value[i]);
     }
-    state_tensor.emplace(node.output(0), out_tensor);
+    stateTensor.emplace(node.output(0), out_tensor);
 }
 
 // Relu function
