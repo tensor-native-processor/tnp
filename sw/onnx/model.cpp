@@ -89,18 +89,18 @@ void ONNXModel::loadModel() {
     }
 
     // Load shapes
-    genShape();
+    inferShape();
 }
 
 
 // Generate shape for each variable
-void ONNXModel::genShape() {
-    std::map<std::string, Tensor::Shape> shape;
+void ONNXModel::inferShape() {
+    std::map<std::string, Tensor::Shape> stateShapes;
     for (const auto& [name, init] : m_initializers) {
-        shape[name] = init.m_shape;
+        stateShapes[name] = init.m_shape;
     }
     for (const auto& [name, in] : m_inputs) {
-        shape[name] = in;
+        stateShapes[name] = in;
     }
 
     // Determine shape for each node
@@ -108,16 +108,16 @@ void ONNXModel::genShape() {
     for (const auto& node : m_graph.node()) {
         LogInfo(node.name() + " (" + node.op_type() + ")");
 
-        op.inferShape(node, m_initializers, shape);
+        op.inferShape(node, m_initializers, stateShapes);
     }
 
     // Print output shape
     for (const auto& out : m_outputs) {
         std::string msg = "  o " + out + ":";
-        if (shape.count(out) == 0) {
+        if (stateShapes.count(out) == 0) {
             FatalError("No output shape " + out);
         }
-        for (const auto& d : shape.at(out)) {
+        for (const auto& d : stateShapes.at(out)) {
             msg += " " + std::to_string(d);
         }
         LogInfo(msg);

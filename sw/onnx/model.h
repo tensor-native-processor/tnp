@@ -23,7 +23,7 @@ private:
     // Load model
     void loadModel();
     void loadModelInitializers();
-    void genShape();
+    void inferShape();
 
     // Data
     std::map<std::string, Tensor> m_initializers;
