@@ -126,30 +126,30 @@ void ONNXModel::genShape() {
 
 
 // Simulate model
-void ONNXModel::simulate() {
-    std::map<std::string, Tensor> stateTensor(m_initializers);
+std::vector<Tensor> ONNXModel::simulate(const std::vector<Tensor>& inputTensors) {
+    std::map<std::string, Tensor> stateTensors(m_initializers);
 
-    // MNIST-specific input
-    std::string inputName = m_graph.input(0).name();
-    std::ifstream inputFile("X.txt");
-    Tensor inputTensor({10, 400});
-    for (size_t b = 0;b < 10;b++) {
-        for (size_t i = 0;i < 400;i++) inputFile >> inputTensor.locate({b, i});
+    // Import inputTensor into stateTensor
+    if (inputTensors.size() < (size_t)m_graph.input_size()) {
+        FatalError("Insufficient inputs for simulate");
     }
-    inputFile.close();
-    stateTensor.emplace(inputName, inputTensor);
+    for (size_t i = 0;i < (size_t)m_graph.input_size();i++) {
+        stateTensors.emplace(m_graph.input(i).name(), inputTensors[i]);
+    }
 
     // Simulate each operator
     Operator op;
     for (const auto& node : m_graph.node()) {
-        op.simulate(node, stateTensor);
+        op.simulate(node, stateTensors);
     }
 
-    // MNIST-specific output
-    std::string outputName = m_graph.output(0).name();
-    const Tensor& outputTensor = stateTensor.at(outputName);
-    for (size_t b = 0;b < 10;b++) {
-        for (size_t i = 0;i < 10;i++) std::cout << outputTensor.locate({b, i}) << ", ";
-        std::cout << std::endl;
+    // Output tensor
+    std::vector<Tensor> outputTensors;
+    for (size_t i = 0;i < (size_t)m_graph.output_size();i++) {
+        if (stateTensors.count(m_graph.output(i).name()) == 0) {
+            FatalError("No output " + m_graph.output(i).name());
+        }
+        outputTensors.emplace_back(stateTensors.at(m_graph.output(i).name()));
     }
+    return outputTensors;
 }

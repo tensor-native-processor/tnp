@@ -13,7 +13,7 @@ class ONNXModel {
 public:
     ONNXModel(const std::string&);
 
-    void simulate();
+    std::vector<Tensor> simulate(const std::vector<Tensor>&);
 
 private:
     // Protobuf
