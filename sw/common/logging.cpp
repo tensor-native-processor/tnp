@@ -3,7 +3,12 @@
 #include <iostream>
 #include <cstdio>
 #include <ctime>
+
+#ifdef _WIN32
+#define isatty(x) 0
+#else
 #include <unistd.h>
+#endif
 
 // Print info
 void LogInfo(const std::string& msg) {
