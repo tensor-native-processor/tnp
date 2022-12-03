@@ -44,9 +44,8 @@ int main(int argc, char *argv[]) {
     std::vector<std::vector<float>> matRef;
     loadFromFile(options.matRefFile, matRef);
 
-    std::vector<std::vector<float>> matBruteForce = multBruteForce(matA, matB);
 
-    compareMatrices(matBruteForce, matRef);
+    // compareMatrices(matBruteForce, matRef);
 
     matA.clear();
     for (int i = 0; i < 3; i ++) {
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
     //     }
     //     matB.push_back(row);
     // }
-
+    
     assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
 
     std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
@@ -97,6 +96,19 @@ int main(int argc, char *argv[]) {
 
     printf("%d %d %d %d\n", matARSize, matACSize, matARBlockSize, matACBlockSize);
 
+    std::vector<std::vector<float>> matBruteForce = multBruteForce(matA, matB); 
+    std::ofstream ans("ans.txt");
+    for (int i = 0; i < matARBlockSize * BLOCK_WIDTH; i++) {
+        for (int j = 0; j < matBCBlockSize * BLOCK_WIDTH; j++) {
+            float num = 0;
+            if (i < matBruteForce.size() && j < matBruteForce[0].size()) {
+                num = matBruteForce[i][j];
+            }
+            ans << num << std::endl;
+        }
+    }    
+    ans.close();
+    
     std::ofstream matDM("data_mem0.txt");
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matACBlockSize; cBlockIdx++) {
@@ -260,7 +272,6 @@ int main(int argc, char *argv[]) {
                 matInst.operands[MatCoreInstDefn::M1] = matBBlockReg;
                 matProg.append(matInst);
 
-                /*
                 // send rows to vec core for addition
                 for (int i = 0; i < BLOCK_WIDTH; i++) {
                     // send rows of tmp to vec core
@@ -306,7 +317,6 @@ int main(int argc, char *argv[]) {
                     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
                     matProg.append(matInst);
                 }
-                */
 
                 printf("matABlock_%d%d: %3d matBBlock_%d%d: %3d+%3d matCBlock_%d%d: %3d+%3d\n", 
                 rBlockIdx, kBlockIdx, matAMemOffset, 
