@@ -18,7 +18,7 @@ struct StartupOptions {
 };
 
 const float EPSILON = 1e-5;
-const int BLOCK_WIDTH = 2;
+const int BLOCK_WIDTH = 16;
 const int BLOCK_AREA = BLOCK_WIDTH * BLOCK_WIDTH;
 const int MAT_REG_SIZE = 256;
 const int VEC_REG_SIZE = 256;

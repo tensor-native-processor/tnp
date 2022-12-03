@@ -87,8 +87,6 @@ int main(int argc, char *argv[]) {
     int matACSize = matA[0].size();
     int matBRSize = matB.size();
     int matBCSize = matB[0].size();
-    // int matASize = matARSize * matACSize;
-    // int matBSize = matBRSize * matBCSize;
 
     int matARBlockSize = (matA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
     int matACBlockSize = (matA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
@@ -306,11 +304,17 @@ int main(int argc, char *argv[]) {
     matInst.opcode = MatCoreInstDefn::HALT;
     matProg.append(matInst);
     SaveProgram(matProg.toBinary(), "inst_mem0.txt");
+    
+    std::ofstream matTxt("inst_mem0_text.txt");
+    matTxt << matProg.toText();
+    matTxt.close();
 
     // halt vec    
     vecInst.opcode = VecCoreInstDefn::HALT;
     vecProg.append(vecInst);
-    SaveProgram(vecProg.toBinary(), "inst_mem4.txt");
+    std::ofstream vecTxt("inst_mem4_text.txt");
+    vecTxt << vecProg.toText();
+    vecTxt.close();
 
     // inst, data mem for mat core 1-3
     for (int i = 1; i < 4; i++) {
