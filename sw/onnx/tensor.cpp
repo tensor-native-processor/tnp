@@ -129,6 +129,9 @@ void Tensor::unidirectionalBroadcast(const Shape& destShape) {
     for (size_t d = 0;d < deltaDim;d++) {
         if (m_shape[d] != destShape[d]) {
             sameShape = false;
+            if (m_shape[d] != 1) {
+                FatalError("Tensor u-broadcast shape err");
+            }
         }
     }
     if (sameShape) {
