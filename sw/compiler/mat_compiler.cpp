@@ -83,6 +83,8 @@ int main(int argc, char *argv[]) {
 
     assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
 
+    std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
+
     int matARSize = matA.size();
     int matACSize = matA[0].size();
     int matBRSize = matB.size();
@@ -105,6 +107,12 @@ int main(int argc, char *argv[]) {
     for (int rBlockIdx = 0; rBlockIdx < matBRBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matDM);
+        }
+    }
+
+    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
+            writeBlockMatToMem(matC, rBlockIdx, cBlockIdx, false, matDM);
         }
     }
     matDM.close();
@@ -179,6 +187,26 @@ int main(int argc, char *argv[]) {
         }
     }
     
+    bool isMatCRegsFull = false;
+    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
+        if (isMatCRegsFull) break;
+        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
+            int matCBlockOffset = rBlockIdx * matACBlockSize + cBlockIdx;
+            int matCMemOffset = matCBlockOffset * BLOCK_AREA;
+            
+            if (matCBlockOffset == matRegs) {
+                isMatCRegsFull = true;
+                break;
+            }
+
+            // load a matC block 
+            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
+            matInst.operands[MatCoreInstDefn::ADDR] = matCMemStart + matCMemOffset; 
+            matInst.operands[MatCoreInstDefn::M1] = matCRegStart + matCBlockOffset;
+            matProg.append(matInst);
+        }
+    }
+
     // matCBlock_rc += matABlock_rk * matBBlock_kc
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
@@ -232,6 +260,8 @@ int main(int argc, char *argv[]) {
                 matInst.operands[MatCoreInstDefn::M1] = matBBlockReg;
                 matProg.append(matInst);
 
+                /*
+                // send rows to vec core for addition
                 for (int i = 0; i < BLOCK_WIDTH; i++) {
                     // send rows of tmp to vec core
                     matInst.opcode = MatCoreInstDefn::SEND_ROW;
@@ -276,6 +306,7 @@ int main(int argc, char *argv[]) {
                     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
                     matProg.append(matInst);
                 }
+                */
 
                 printf("matABlock_%d%d: %3d matBBlock_%d%d: %3d+%3d matCBlock_%d%d: %3d+%3d\n", 
                 rBlockIdx, kBlockIdx, matAMemOffset, 
@@ -312,6 +343,8 @@ int main(int argc, char *argv[]) {
     // halt vec    
     vecInst.opcode = VecCoreInstDefn::HALT;
     vecProg.append(vecInst);
+    SaveProgram(vecProg.toBinary(), "inst_mem4.txt");
+
     std::ofstream vecTxt("inst_mem4_text.txt");
     vecTxt << vecProg.toText();
     vecTxt.close();

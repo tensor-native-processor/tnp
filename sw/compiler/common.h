@@ -69,7 +69,7 @@ inline std::vector<std::vector<float>> multBruteForce(const std::vector<std::vec
 std::vector<std::vector<float>> &matB) {
     assert(matA[0].size() == matB.size());
 
-    std::vector<std::vector<float>> ans(matA.size(), std::vector<float>(matB.size()));
+    std::vector<std::vector<float>> ans(matA.size(), std::vector<float>(matB[0].size()));
     for (int i = 0; i < ans.size(); i++) {
         for (int j = 0; j < ans[i].size(); j++) {
             for (int k = 0; k < matB.size(); k++) {
