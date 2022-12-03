@@ -24,8 +24,6 @@ void OperatorRelu::inferShape(const ::onnx::NodeProto& node,
 void OperatorRelu::simulate(const ::onnx::NodeProto& node,
         std::map<std::string, Tensor>& stateTensor) {
 
-    LogWarning("Simulate " + node.name());
-
     // Validate i/o size
     if (node.input_size() != 1 || node.output_size() != 1) {
         FatalError("Relu io size not 1");

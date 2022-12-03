@@ -90,8 +90,6 @@ void OperatorGemm::inferShape(const ::onnx::NodeProto& node,
 void OperatorGemm::simulate(const ::onnx::NodeProto& node,
         std::map<std::string, Tensor>& stateTensor) {
 
-    LogWarning("Simulate " + node.name());
-
     // Fetch A and B
     if (node.input_size() != 2 && node.input_size() != 3) {
         FatalError("Gemm input size " + std::to_string(node.input_size()));

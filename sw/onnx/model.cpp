@@ -140,6 +140,7 @@ std::vector<Tensor> ONNXModel::simulate(const std::vector<Tensor>& inputTensors)
     // Simulate each operator
     Operator op;
     for (const auto& node : m_graph.node()) {
+        LogInfo("Simulate: " + node.name());
         op.simulate(node, stateTensors);
     }
 
