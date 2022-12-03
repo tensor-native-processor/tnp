@@ -37,6 +37,8 @@ public:
     // Cast this tensor through unidirectional broadcast
     void unidirectionalBroadcast(const Shape&);
 
+    static void multidirectionalBroadcast(std::initializer_list<std::reference_wrapper<Tensor>>);
+
 private:
     void swap(Tensor&);
     void unidirectionalBroadcastCopy(size_t, Index&, Tensor&);

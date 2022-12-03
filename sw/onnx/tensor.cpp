@@ -167,3 +167,33 @@ void Tensor::unidirectionalBroadcastCopy(size_t x, Index& progIdx, Tensor& outTe
         progIdx[x] = 0;
     }
 }
+
+
+// Multidirectional broadcast
+// https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md
+void Tensor::multidirectionalBroadcast(std::initializer_list<std::reference_wrapper<Tensor>> srcTensors) {
+    // Determine dimension
+    size_t destDim = 0;
+    for (const auto& srcTensorRef : srcTensors) {
+        destDim = std::max(destDim, srcTensorRef.get().m_shape.size());
+    }
+
+    // Prepend 1
+    for (const auto& srcTensorRef : srcTensors) {
+        auto& srcTensor = srcTensorRef.get();
+        srcTensor.m_shape.insert(srcTensor.m_shape.begin(), destDim - srcTensor.m_shape.size(), 1);
+    }
+
+    // Determine shape
+    Shape destShape(destDim, 0);
+    for (size_t i = 0;i < destDim;i++) {
+        for (const auto& srcTensorRef : srcTensors) {
+            destShape[i] = std::max(destShape[i], srcTensorRef.get().m_shape[i]);
+        }
+    }
+
+    // Apply u-broadcast
+    for (const auto& srcTensorRef : srcTensors) {
+        srcTensorRef.get().unidirectionalBroadcast(destShape);
+    }
+}
