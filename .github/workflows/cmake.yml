@@ -12,6 +12,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Install protobuf
+      run: sudo apt install protobuf-compiler libprotobuf-dev
 
     - name: Install protobuf
       run: sudo apt-get install protobuf-compiler
