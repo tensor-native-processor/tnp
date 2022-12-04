@@ -64,3 +64,11 @@ target_link_libraries(vec_sim2 vec_core)
 add_executable(mat_sim2 mat_sim2.cpp)
 target_include_directories(mat_sim2 PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_sim2 mat_core)
+
+
+# proc_u-16m4-16v4_sim
+add_executable(proc_u-16m4-16v4_sim proc_u-16m4-16v4_sim.cpp)
+target_include_directories(proc_u-16m4-16v4_sim PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_include_directories(proc_u-16m4-16v4_sim PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(proc_u-16m4-16v4_sim mat_core)
+target_link_libraries(proc_u-16m4-16v4_sim vec_core)
