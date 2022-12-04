@@ -2,11 +2,7 @@
 #include "mat_program.h"
 #include "vec_program.h"
 
-void single_core() {
-       
-}
-
-int writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int cBlockIdx, bool xflipTranspose, std::ofstream &dm) {
+void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int cBlockIdx, bool xflipTranspose, std::ofstream &dm) {
     if (!xflipTranspose) {
         for (int i = rBlockIdx * BLOCK_WIDTH; i < rBlockIdx * BLOCK_WIDTH + BLOCK_WIDTH; i++) {
             for (int j = cBlockIdx * BLOCK_WIDTH; j < cBlockIdx * BLOCK_WIDTH + BLOCK_WIDTH; j++) {
@@ -28,57 +24,33 @@ int writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int 
             }
         }
     }
-    // returns the mem offset
-    return BLOCK_WIDTH * BLOCK_WIDTH;
 }
 
 int main(int argc, char *argv[]) {
-    StartupOptions options = parseOptions(argc, argv);
-
     std::vector<std::vector<float>> matA;
-    loadFromFile(options.matAFile, matA);
-
     std::vector<std::vector<float>> matB;
-    loadFromFile(options.matBFile, matB);
 
-    std::vector<std::vector<float>> matRef;
-    loadFromFile(options.matRefFile, matRef);
-
-
-    // compareMatrices(matBruteForce, matRef);
-
-    matA.clear();
-    for (int i = 0; i < 3; i ++) {
+    /*
+    (31, 31) * (31, 17) took 22275 cycles (CPU time 49.670s)
+    (64, 128) * (128, 10) took 86115 cycles (CPU time 178.530s)
+    */
+    // 64 * 128
+    for (int i = 0; i < 64; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 3; j ++) {
-           row.push_back(i * 3 + j + 1); 
+        for (int j = 0; j < 128; j++) {
+           row.push_back(j + 1); 
         }
         matA.push_back(row);
     }
-    printf("%d\n", matA.size());
-    // for (int i = 0; i < 31; i++) {
-    //     std::vector<float> row;
-    //     for (int j = 0; j < 31; j++) {
-    //        row.push_back(j + 1); 
-    //     }
-    //     matA.push_back(row);
-    // }
-
-    matB.clear();
-    for (int i = 0; i < 3; i ++) {
+    
+    // 128 * 10
+    for (int i = 0; i < 128; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 3; j ++) {
-           row.push_back(i * 3 + j + 1); 
+        for (int j = 0; j < 10; j++) {
+           row.push_back(j + 1); 
         }
         matB.push_back(row);
     }
-    // for (int i = 0; i < 31; i++) {
-    //     std::vector<float> row;
-    //     for (int j = 0; j < 17; j++) {
-    //        row.push_back(j); 
-    //     }
-    //     matB.push_back(row);
-    // }
     
     assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
 
@@ -94,47 +66,50 @@ int main(int argc, char *argv[]) {
     int matBRBlockSize = (matB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
     int matBCBlockSize = (matB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
 
-    printf("%d %d %d %d\n", matARSize, matACSize, matARBlockSize, matACBlockSize);
-
-    std::vector<std::vector<float>> matBruteForce = multBruteForce(matA, matB); 
-    std::ofstream ans("ans.txt");
-    for (int i = 0; i < matARBlockSize * BLOCK_WIDTH; i++) {
-        for (int j = 0; j < matBCBlockSize * BLOCK_WIDTH; j++) {
-            float num = 0;
-            if (i < matBruteForce.size() && j < matBruteForce[0].size()) {
-                num = matBruteForce[i][j];
-            }
-            ans << num << std::endl;
-        }
-    }    
-    ans.close();
+    std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
     
+    // output0.txt should be idential to ans0.txt 
+    std::ofstream matAns("ans0.txt");
+    matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
     std::ofstream matDM("data_mem0.txt");
+    matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
+    
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matACBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matDM);
+            // writes to ans for reference and easy diffing   
+            writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matAns);
         }
     }
     
     for (int rBlockIdx = 0; rBlockIdx < matBRBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matDM);
+            // writes to ans for reference and easy diffing
+            writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matAns);
         }
     }
 
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matC, rBlockIdx, cBlockIdx, false, matDM);
+            writeBlockMatToMem(matRef, rBlockIdx, cBlockIdx, false, matAns);
         }
     }
-    matDM.close();
     
+    matDM.close(); 
+
     std::ofstream vecDM("data_mem4.txt");
     vecDM.close(); 
 
     int matAMemSize = matARBlockSize * matACBlockSize * BLOCK_AREA;
     int matBMemSize = matBRBlockSize * matBCBlockSize * BLOCK_AREA;
     int matCMemSize = matARBlockSize * matBCBlockSize * BLOCK_AREA;
+
+    for (int i = 0; i < DATA_MEM_SIZE - (matAMemSize + matBMemSize + matCMemSize); i++) {
+        matAns << 0.0 << std::endl;
+    }
+    matAns.close();
 
     int matAMemStart = 0;
     int matBMemStart = matAMemSize;
@@ -203,7 +178,7 @@ int main(int argc, char *argv[]) {
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         if (isMatCRegsFull) break;
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            int matCBlockOffset = rBlockIdx * matACBlockSize + cBlockIdx;
+            int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx;
             int matCMemOffset = matCBlockOffset * BLOCK_AREA;
             
             if (matCBlockOffset == matRegs) {
@@ -247,7 +222,7 @@ int main(int argc, char *argv[]) {
                     matProg.append(matInst);
                 }
                 
-                int matCBlockOffset = rBlockIdx * matACBlockSize + cBlockIdx; 
+                int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
                 int matCMemOffset = matCBlockOffset * BLOCK_AREA;
                 int matCBlockReg = matCRegStart + matCBlockOffset % matRegs;
 
@@ -318,7 +293,7 @@ int main(int argc, char *argv[]) {
                     matProg.append(matInst);
                 }
 
-                printf("matABlock_%d%d: %3d matBBlock_%d%d: %3d+%3d matCBlock_%d%d: %3d+%3d\n", 
+                printf("matABlock_%d%d: %7d matBBlock_%d%d: %7d+%7d matCBlock_%d%d: %7d+%7d\n", 
                 rBlockIdx, kBlockIdx, matAMemOffset, 
                 kBlockIdx, cBlockIdx, matBMemStart, matBMemOffset,
                 rBlockIdx, cBlockIdx, matCMemStart, matCMemOffset);
@@ -330,7 +305,7 @@ int main(int argc, char *argv[]) {
     // TODO capacity miss
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            int matCBlockOffset = rBlockIdx * matACBlockSize + cBlockIdx; 
+            int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
             int matCMemOffset = matCBlockOffset * BLOCK_AREA;
             int matCBlockReg = matCRegStart + matCBlockOffset % matRegs;
 

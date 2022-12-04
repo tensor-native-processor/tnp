@@ -22,6 +22,8 @@ const int BLOCK_WIDTH = 16;
 const int BLOCK_AREA = BLOCK_WIDTH * BLOCK_WIDTH;
 const int MAT_REG_SIZE = 256;
 const int VEC_REG_SIZE = 256;
+const int FLOAT_PRECISION = 6;
+const int DATA_MEM_SIZE = 65536;
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {
     StartupOptions rs;
@@ -69,7 +71,7 @@ inline std::vector<std::vector<float>> multBruteForce(const std::vector<std::vec
 std::vector<std::vector<float>> &matB) {
     assert(matA[0].size() == matB.size());
 
-    std::vector<std::vector<float>> ans(matA.size(), std::vector<float>(matB[0].size()));
+    std::vector<std::vector<float>> ans(matA.size(), std::vector<float>(matB[0].size(), 0));
     for (int i = 0; i < ans.size(); i++) {
         for (int j = 0; j < ans[i].size(); j++) {
             for (int k = 0; k < matB.size(); k++) {
