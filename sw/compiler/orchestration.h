@@ -21,13 +21,16 @@ class Orchestrator {
 public:
     Orchestrator(const OrchestratorParam&);
 
-    void save() const;
+    void save();
 
 private:
     OrchestratorParam m_param;
 
-    std::vector<MatCoreProgram> m_matProg;
-    std::vector<VecCoreProgram> m_vecProg;
+    std::vector<MatCoreProgram> m_matProgs;
+    std::vector<VecCoreProgram> m_vecProgs;
+
+    size_t getMatCoreID(size_t) const;
+    size_t getVecCoreID(size_t) const;
 };
 
 #endif
