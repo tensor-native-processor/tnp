@@ -64,11 +64,15 @@ private:
     std::vector<MatCoreState> m_matCoreStatus;
     std::vector<VecCoreState> m_vecCoreStatus;
 
+    // Total matrix handle
+    size_t m_matrixHandleCount;
+
     // Matrix state
     struct MatrixState {
+        MatrixState(size_t, size_t);
         size_t bx, by;
         size_t coreIdx;
-        std::vector<std::vector<size_t>> regIdx;
+        std::vector<std::vector<size_t>> activeRegIdx;
     };
     std::map<MatrixHandle, MatrixState> m_dataMatrixStatus;
 
