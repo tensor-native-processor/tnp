@@ -14,7 +14,7 @@ add_subdirectory(vec_core)
 add_subdirectory(switch)
 add_subdirectory(example)
 add_subdirectory(simulation)
-add_subdirectory(hwtest)
+add_subdirectory(test)
 add_subdirectory(compiler)
 
 if(BUILD_ONNX)
