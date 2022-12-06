@@ -7,20 +7,29 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  linux:
     runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
     
     - name: Install protobuf
-      run: sudo apt install protobuf-compiler libprotobuf-dev
-
-    - name: Install protobuf
       run: sudo apt-get install protobuf-compiler
 
     - name: Configure
       run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DBUILD_ONNX=on
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/sw/build --parallel
+
+  windows:
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build
 
     - name: Build
       run: cmake --build ${{github.workspace}}/sw/build --parallel
