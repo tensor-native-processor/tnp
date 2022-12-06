@@ -48,16 +48,24 @@ private:
     // MatCore/VecCore state
     struct MatCoreState {
         MatCoreProgram prog;
-        std::set<size_t> freeReg;
+        std::set<size_t> freeRegIdx;
     };
     struct VecCoreState {
         VecCoreProgram prog;
-        std::set<size_t> freeReg;
+        std::set<size_t> freeRegIdx;
     };
 
     // Programs
     std::vector<MatCoreState> m_matCoreStatus;
     std::vector<VecCoreState> m_vecCoreStatus;
+
+    // Matrix state
+    struct MatrixState {
+        size_t bx, by;
+        size_t coreIdx;
+        std::vector<std::vector<size_t>> regIdx;
+    };
+    std::map<MatrixHandle, MatrixState> m_dataMatrixStatus;
 
     // Encode core ID to global IDs
     size_t getMatCoreID(size_t) const;
