@@ -8,7 +8,7 @@ int main() {
         .vecCacheSize = 256,
         .vecCoreCount = 4
     });
-    orch.save();
+    orch.compile();
 
     return 0;
 }

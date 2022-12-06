@@ -19,7 +19,7 @@ size_t Orchestrator::getVecCoreID(size_t id) const {
 }
 
 // Save generated program to files
-void Orchestrator::save() {
+void Orchestrator::compile() {
     // Add halt instruction
     for (size_t id = 0;id < m_matProgs.size();id++) {
         MatCoreInst matInst;

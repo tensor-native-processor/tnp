@@ -21,14 +21,35 @@ class Orchestrator {
 public:
     Orchestrator(const OrchestratorParam&);
 
-    void save();
+    // Matrix
+    struct Matrix {
+        size_t x, y;
+    };
+
+    // Matrix handle
+    typedef size_t MatrixHandle;
+
+    // Save to files
+    void compile();
+
+    // Data operations
+    MatrixHandle dataAllocate(const Matrix&);
+    void dataDeallocate(MatrixHandle);
+    void dataBindConstant(MatrixHandle, const float*);
+
+    // Arithmetic operations
+    MatrixHandle arithmeticMatMult(MatrixHandle, MatrixHandle);
+    MatrixHandle arithmeticRelu(MatrixHandle);
 
 private:
+    // Orchestrator parameter
     OrchestratorParam m_param;
 
+    // Programs
     std::vector<MatCoreProgram> m_matProgs;
     std::vector<VecCoreProgram> m_vecProgs;
 
+    // Encode core ID to global IDs
     size_t getMatCoreID(size_t) const;
     size_t getVecCoreID(size_t) const;
 };
