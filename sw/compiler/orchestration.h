@@ -15,6 +15,9 @@ struct OrchestratorParam {
     // VecCore
     size_t vecCacheSize;
     size_t vecCoreCount;
+
+    // Float precision
+    size_t floatPrecision = 10;
 };
 
 class Orchestrator {
@@ -33,9 +36,9 @@ public:
     void compile();
 
     // Data operations
-    MatrixHandle dataAllocate(const Matrix&);
-    void dataDeallocate(MatrixHandle);
-    void dataBindConstant(MatrixHandle, const float*);
+    MatrixHandle dataMatrixAllocate(const Matrix&);
+    void dataMatrixDeallocate(MatrixHandle);
+    void dataMatrixBindConstant(MatrixHandle, const float*);
 
     // Arithmetic operations
     MatrixHandle arithmeticMatMult(MatrixHandle, MatrixHandle);
@@ -49,10 +52,12 @@ private:
     struct MatCoreState {
         MatCoreProgram prog;
         std::set<size_t> freeRegIdx;
+        std::vector<float> dataMem;
     };
     struct VecCoreState {
         VecCoreProgram prog;
         std::set<size_t> freeRegIdx;
+        std::vector<float> dataMem;
     };
 
     // Programs
