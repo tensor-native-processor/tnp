@@ -45,9 +45,19 @@ private:
     // Orchestrator parameter
     OrchestratorParam m_param;
 
+    // MatCore/VecCore state
+    struct MatCoreState {
+        MatCoreProgram prog;
+        std::set<size_t> freeReg;
+    };
+    struct VecCoreState {
+        VecCoreProgram prog;
+        std::set<size_t> freeReg;
+    };
+
     // Programs
-    std::vector<MatCoreProgram> m_matProgs;
-    std::vector<VecCoreProgram> m_vecProgs;
+    std::vector<MatCoreState> m_matCoreStatus;
+    std::vector<VecCoreState> m_vecCoreStatus;
 
     // Encode core ID to global IDs
     size_t getMatCoreID(size_t) const;
