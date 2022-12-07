@@ -18,8 +18,7 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
         m_shape.push_back(dim);
         m_size *= dim;
     }
-    m_value = std::make_unique<float[]>(m_size);
-    std::fill_n(m_value.get(), m_size, 0);
+    m_value.assign(m_size, 0.0f);
 
     // Value
     switch (tensor.data_type()) {
@@ -38,7 +37,7 @@ Tensor::Tensor(const ::onnx::TensorProto& tensor) {
             if (bytes.size() / sizeof(float) > m_size) {
                 FatalError("Initializer " + m_name + " larger than dimension " + std::to_string(m_size));
             }
-            std::copy_n(bytes.c_str(), bytes.size(), (char*)m_value.get());
+            std::copy_n(bytes.c_str(), bytes.size(), (char*)m_value.data());
         }
         break;
     }
@@ -71,18 +70,7 @@ Tensor::Tensor(const Shape& shape)
         m_size *= dim;
     }
     // Allocate value
-    m_value = std::make_unique<float[]>(m_size);
-    std::fill_n(m_value.get(), m_size, 0);
-}
-
-// Copy-construct tensor
-Tensor::Tensor(const Tensor& tensor)
-: m_name(tensor.m_name), m_shape(tensor.m_shape), m_size(tensor.m_size) {
-    // Allocate value
-    m_value = std::make_unique<float[]>(m_size);
-
-    // Copy from tensor
-    std::copy_n(tensor.m_value.get(), m_size, m_value.get());
+    m_value.assign(m_size, 0.0f);
 }
 
 

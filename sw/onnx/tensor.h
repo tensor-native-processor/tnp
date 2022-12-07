@@ -18,8 +18,6 @@ public:
     Tensor(const ::onnx::TensorProto&);
     Tensor(const Shape&);
 
-    Tensor(const Tensor&);
-
     // Name (optional)
     std::string m_name;
 
@@ -28,7 +26,7 @@ public:
     size_t m_size;
 
     // Value
-    std::unique_ptr<float[]> m_value;
+    std::vector<float> m_value;
 
     // Locate a float from index
     float& locate(const Index&);
