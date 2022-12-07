@@ -11,7 +11,18 @@ Orchestrator::Orchestrator(const OrchestratorParam& param)
   m_matCoreStatus(param.matCoreCount),
   m_vecCoreStatus(param.vecCoreCount),
   m_matrixHandleCount(0)
-{}
+{
+    for (size_t coreID = 0;coreID < m_param.matCoreCount;coreID++) {
+        for (size_t regID = 0;regID < m_param.matCacheSize;regID++) {
+            m_matCoreStatus[coreID].freeRegIdx.insert(regID);
+        }
+    }
+    for (size_t coreID = 0;coreID < m_param.vecCoreCount;coreID++) {
+        for (size_t regID = 0;regID < m_param.vecCacheSize;regID++) {
+            m_vecCoreStatus[coreID].freeRegIdx.insert(regID);
+        }
+    }
+}
 
 
 // Get absolute MatCore/VecCore ID
@@ -140,7 +151,7 @@ void Orchestrator::dataMatrixBindConstant(MatrixHandle h, const float* data) {
 
 // MatMult
 Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
-    // Allocate a new matrix
+    // Find h1/h2
     if (m_dataMatrixStatus.count(h1) == 0 ||
         m_dataMatrixStatus.count(h2) == 0) {
         FatalError("Orchestrator matmult handle not exist");
@@ -154,4 +165,11 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     if (m1Shape.y != m2Shape.x) {
         FatalError("Orchestrator matmult dim mismatch");
     }
+
+    // Allocate a new matrix
+    MatrixHandle hd = dataMatrixAllocate(MatrixShape{
+        .x = m1Shape.x,
+        .y = m2Shape.y
+    });
+    return hd;
 }
