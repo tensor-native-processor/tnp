@@ -1,5 +1,6 @@
 #include "orchestration.h"
 #include "error.h"
+#include "logging.h"
 
 #include <string>
 #include <fstream>
@@ -121,6 +122,17 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& m
         }
     }
 
+    // Log allocated registers
+    LogInfo("Orchestrator alloc - core 0: " + std::to_string(m_matCoreStatus[0].freeRegIdx.size()) + " remaining");
+    LogInfo("    handle: " + std::to_string(handle));
+    for (size_t i = 0;i < matrixShape.x;i++) {
+        std::string line = "    ";
+        for (size_t j = 0;j < matrixShape.y;j++) {
+            line += std::to_string(matrixState.activeRegIdx[i][j]) + ",";
+        }
+        LogInfo(line);
+    }
+
     // Return handle
     return handle;
 }
@@ -140,6 +152,8 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
         }
     }
     m_dataMatrixStatus.erase(handle);
+
+    LogInfo("Orchestrator dealloc - core 0: " + std::to_string(m_matCoreStatus[0].freeRegIdx.size()) + " remaining");
 }
 
 // Bind to constants
