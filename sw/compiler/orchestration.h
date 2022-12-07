@@ -24,10 +24,19 @@ class Orchestrator {
 public:
     Orchestrator(const OrchestratorParam&);
 
-    // Matrix
+    // Matrix shape
     struct MatrixShape {
         size_t x, y;
     };
+
+    // Processed matrix result
+    struct MatrixResult {
+        MatrixShape matrixShape;
+        size_t coreIdx;
+        std::vector<std::vector<size_t>> dataMemAddr;
+    };
+    // Matrix constant
+    typedef std::vector<std::vector<std::vector<float>>> MatrixConstant;
 
     // Matrix handle
     typedef size_t MatrixHandle;
@@ -38,7 +47,8 @@ public:
     // Data operations
     MatrixHandle dataMatrixAllocate(const MatrixShape&);
     void dataMatrixDeallocate(MatrixHandle);
-    void dataMatrixBindConstant(MatrixHandle, const float*);
+    void dataMatrixLoadConstant(MatrixHandle, const MatrixConstant&);
+    MatrixResult dataMatrixStoreResult(MatrixHandle);
 
     // Arithmetic operations
     MatrixHandle arithmeticMatMult(MatrixHandle, MatrixHandle);

@@ -137,16 +137,15 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& m
     return handle;
 }
 
-// Deallocate a mtrix
+// Deallocate a matrix
 void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
     // Release registers
     if (m_dataMatrixStatus.count(handle) == 0) {
         FatalError("Orchestrator dealloc " + std::to_string(handle) + " not exist");
     }
     auto& matrixState = m_dataMatrixStatus.at(handle);
-    const auto& matrixShape = matrixState.matrixShape;
-    for (size_t i = 0;i < matrixShape.x;i++) {
-        for (size_t j = 0;j < matrixShape.y;j++) {
+    for (size_t i = 0;i < matrixState.matrixShape.x;i++) {
+        for (size_t j = 0;j < matrixState.matrixShape.y;j++) {
             size_t regIdx = matrixState.activeRegIdx[i][j];
             m_matCoreStatus[matrixState.coreIdx].freeRegIdx.insert(regIdx);
         }
@@ -156,8 +155,63 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
     LogInfo("Orchestrator dealloc - core 0: " + std::to_string(m_matCoreStatus[0].freeRegIdx.size()) + " remaining");
 }
 
-// Bind to constants
-void Orchestrator::dataMatrixBindConstant(MatrixHandle h, const float* data) {
+// Load matrix from constants
+void Orchestrator::dataMatrixLoadConstant(MatrixHandle handle, const MatrixConstant& inputData) {
+    const auto& matrixState = m_dataMatrixStatus.at(handle);
+    // Store into coreIdx
+    auto& dataMem = m_matCoreStatus[matrixState.coreIdx].dataMem;
+    auto& prog = m_matCoreStatus[matrixState.coreIdx].prog;
+
+    // Load mat
+    for (size_t bx = 0;bx < matrixState.matrixShape.x;bx++) {
+        for (size_t by = 0;by < matrixState.matrixShape.y;by++) {
+            // Add load instruction
+            MatCoreInst inst;
+            inst.opcode = MatCoreInstDefn::LOAD_MAT;
+            inst.operands[MatCoreInstDefn::ADDR] = dataMem.size(); // Start address
+            inst.operands[MatCoreInstDefn::M1] = matrixState.coreIdx;
+            prog.append(inst);
+
+            // Add constant to dataMem
+            if (inputData[bx][by].size() != m_param.width * m_param.width) {
+                FatalError("Orchestrator load constant width mismatch");
+            }
+            dataMem.insert(dataMem.end(), inputData[bx][by].begin(), inputData[bx][by].end());
+        }
+    }
+}
+
+// Store matrix result to data memory
+Orchestrator::MatrixResult Orchestrator::dataMatrixStoreResult(MatrixHandle handle) {
+    const auto& matrixState = m_dataMatrixStatus.at(handle);
+    auto& dataMem = m_matCoreStatus[matrixState.coreIdx].dataMem;
+    auto& prog = m_matCoreStatus[matrixState.coreIdx].prog;
+
+    // Save to dataMem
+    std::vector<std::vector<size_t>> dataMemAddr(matrixState.matrixShape.x,
+        std::vector<size_t>(matrixState.matrixShape.y, 0));
+
+    for (size_t bx = 0;bx < matrixState.matrixShape.x;bx++) {
+        for (size_t by = 0;by < matrixState.matrixShape.y;by++) {
+            // Record address
+            dataMemAddr[bx][by] = dataMem.size();
+
+            // Add save instruction
+            MatCoreInst inst;
+            inst.opcode = MatCoreInstDefn::STORE_MAT;
+            inst.operands[MatCoreInstDefn::ADDR] = dataMemAddr[bx][by];
+            inst.operands[MatCoreInstDefn::M1] = matrixState.coreIdx;
+            prog.append(inst);
+
+            // Allocate free space in dataMem
+            dataMem.insert(dataMem.end(), m_param.width * m_param.width, 0.0f);
+        }
+    }
+    return MatrixResult{
+        .matrixShape = matrixState.matrixShape,
+        .coreIdx = matrixState.coreIdx,
+        .dataMemAddr = dataMemAddr
+    };
 }
 
 
@@ -170,20 +224,17 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
         m_dataMatrixStatus.count(h2) == 0) {
         FatalError("Orchestrator matmult handle not exist");
     }
-    auto& m1State = m_dataMatrixStatus.at(h1),
-          m2State = m_dataMatrixStatus.at(h2);
+    const auto& m1State = m_dataMatrixStatus.at(h1),
+                m2State = m_dataMatrixStatus.at(h2);
 
-    const auto& m1Shape = m1State.matrixShape,
-                m2Shape = m2State.matrixShape;
-
-    if (m1Shape.y != m2Shape.x) {
+    if (m1State.matrixShape.y != m2State.matrixShape.x) {
         FatalError("Orchestrator matmult dim mismatch");
     }
 
     // Allocate a new matrix
     MatrixHandle hd = dataMatrixAllocate(MatrixShape{
-        .x = m1Shape.x,
-        .y = m2Shape.y
+        .x = m1State.matrixShape.x,
+        .y = m2State.matrixShape.y
     });
     return hd;
 }
