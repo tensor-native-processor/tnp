@@ -69,9 +69,12 @@ void Orchestrator::compile() {
 
 
 // Initialize MatrixState
-Orchestrator::MatrixState::MatrixState(size_t bx, size_t by)
-: bx(bx), by(by), activeRegIdx(bx, std::vector<size_t>(by, 0))
-{}
+Orchestrator::MatrixState::MatrixState(const MatrixShape& matrixShape)
+: matrixShape(matrixShape)
+{
+    activeRegIdx.assign(matrixShape.x,
+        std::vector<size_t>(matrixShape.y, 0));
+}
 
 
 // Data operations
@@ -79,13 +82,12 @@ Orchestrator::MatrixState::MatrixState(size_t bx, size_t by)
 // In this case veccore are unused by orchestrator
 
 // Allocate a matrix
-Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const Matrix& matrix) {
+Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& matrixShape) {
     MatrixHandle handle = m_matrixHandleCount++;
 
     // Determine register size
-    size_t bx = (matrix.x + m_param.width - 1) / m_param.width,
-           by = (matrix.y + m_param.width - 1) / m_param.width;
-    auto res = m_dataMatrixStatus.emplace(handle, MatrixState(bx, by));
+    auto res = m_dataMatrixStatus.emplace(handle,
+        MatrixState(matrixShape));
     if (!res.second) {
         FatalError("Duplicate MatrixHandle");
     }
@@ -94,8 +96,8 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const Matrix& matrix
     auto& matrixState = res.first->second;
     matrixState.coreIdx = 0;
 
-    for (size_t i = 0;i < bx;i++) {
-        for (size_t j = 0;j < by;j++) {
+    for (size_t i = 0;i < matrixShape.x;i++) {
+        for (size_t j = 0;j < matrixShape.y;j++) {
             // Attempt to get a free register
             auto freeRegIter = m_matCoreStatus[0].freeRegIdx.begin();
             if (freeRegIter == m_matCoreStatus[0].freeRegIdx.end()) {
@@ -119,10 +121,9 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
         FatalError("Orchestrator dealloc " + std::to_string(handle) + " not exist");
     }
     auto& matrixState = m_dataMatrixStatus.at(handle);
-    size_t bx = matrixState.bx,
-           by = matrixState.by;
-    for (size_t i = 0;i < bx;i++) {
-        for (size_t j = 0;j < by;j++) {
+    const auto& matrixShape = matrixState.matrixShape;
+    for (size_t i = 0;i < matrixShape.x;i++) {
+        for (size_t j = 0;j < matrixShape.y;j++) {
             size_t regIdx = matrixState.activeRegIdx[i][j];
             m_matCoreStatus[matrixState.coreIdx].freeRegIdx.insert(regIdx);
         }
@@ -132,4 +133,25 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
 
 // Bind to constants
 void Orchestrator::dataMatrixBindConstant(MatrixHandle h, const float* data) {
+}
+
+
+// Arithmetic operations
+
+// MatMult
+Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
+    // Allocate a new matrix
+    if (m_dataMatrixStatus.count(h1) == 0 ||
+        m_dataMatrixStatus.count(h2) == 0) {
+        FatalError("Orchestrator matmult handle not exist");
+    }
+    auto& m1State = m_dataMatrixStatus.at(h1),
+          m2State = m_dataMatrixStatus.at(h2);
+
+    const auto& m1Shape = m1State.matrixShape,
+                m2Shape = m2State.matrixShape;
+
+    if (m1Shape.y != m2Shape.x) {
+        FatalError("Orchestrator matmult dim mismatch");
+    }
 }

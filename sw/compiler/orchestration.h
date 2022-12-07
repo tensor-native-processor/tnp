@@ -25,7 +25,7 @@ public:
     Orchestrator(const OrchestratorParam&);
 
     // Matrix
-    struct Matrix {
+    struct MatrixShape {
         size_t x, y;
     };
 
@@ -36,7 +36,7 @@ public:
     void compile();
 
     // Data operations
-    MatrixHandle dataMatrixAllocate(const Matrix&);
+    MatrixHandle dataMatrixAllocate(const MatrixShape&);
     void dataMatrixDeallocate(MatrixHandle);
     void dataMatrixBindConstant(MatrixHandle, const float*);
 
@@ -69,9 +69,9 @@ private:
 
     // Matrix state
     struct MatrixState {
-        MatrixState(size_t, size_t);
-        size_t bx, by;
+        MatrixState(const MatrixShape&);
         size_t coreIdx;
+        MatrixShape matrixShape;
         std::vector<std::vector<size_t>> activeRegIdx;
     };
     std::map<MatrixHandle, MatrixState> m_dataMatrixStatus;
