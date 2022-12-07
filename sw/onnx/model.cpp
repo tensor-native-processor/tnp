@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "error.h"
 #include "operator.h"
+#include "orchestration.h"
 
 #include <queue>
 #include <fstream>
@@ -153,4 +154,39 @@ std::vector<Tensor> ONNXModel::simulate(const std::vector<Tensor>& inputTensors)
         outputTensors.emplace_back(stateTensors.at(m_graph.output(i).name()));
     }
     return outputTensors;
+}
+
+// Compile model into TNP binaries
+void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Tensor>& inputTensors) {
+    Orchestrator orch(orchParam);
+    std::map<std::string, Orchestrator::MatrixHandle> stateTensorHandles;
+
+    // Import initializers as handles
+    // TODO convert m_initializers into matrix
+
+    // Import inputTensor into stateTensor
+    if (inputTensors.size() < (size_t)m_graph.input_size()) {
+        FatalError("Insufficient inputs for simulate");
+    }
+    for (size_t i = 0;i < (size_t)m_graph.input_size();i++) {
+        // TODO:
+        // stateTensors.emplace(m_graph.input(i).name(), inputTensors[i]);
+    }
+
+    // Simulate each operator
+    Operator op;
+    for (const auto& node : m_graph.node()) {
+        LogInfo("Compiling: " + node.name());
+        // op.compile(node, orch, stateTensorHandles);
+    }
+
+    // Output tensor
+    std::vector<Tensor> outputTensors;
+    for (size_t i = 0;i < (size_t)m_graph.output_size();i++) {
+        if (stateTensorHandles.count(m_graph.output(i).name()) == 0) {
+            FatalError("No output " + m_graph.output(i).name());
+        }
+        auto handle = stateTensorHandles.at(m_graph.output(i).name()); 
+        orch.dataMatrixStoreResult(handle);
+    }
 }

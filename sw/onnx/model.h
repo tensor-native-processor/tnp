@@ -4,6 +4,8 @@
 #include "onnx.proto3.pb.h"
 
 #include "tensor.h"
+#include "orchestration.h"
+
 #include <string>
 #include <vector>
 
@@ -13,7 +15,9 @@ class ONNXModel {
 public:
     ONNXModel(const std::string&);
 
+    // Operations on the model
     std::vector<Tensor> simulate(const std::vector<Tensor>&);
+    void compile(const OrchestratorParam&, const std::vector<Tensor>&);
 
 private:
     // Protobuf
