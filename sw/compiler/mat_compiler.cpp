@@ -74,7 +74,7 @@ void conditionalStoreAndLoad(
 
 
 void singleCoreHelper(
-    int coreIdx, MatCoreProgram &matProg, VecCoreProgram &vecProg,
+    int matCoreIdx, int vecCoreIdx, MatCoreProgram &matProg, VecCoreProgram &vecProg,
     std::vector<std::vector<float>> &matA, 
     std::vector<std::vector<float>> &matB,
     std::vector<std::vector<float>> &matC,
@@ -82,7 +82,7 @@ void singleCoreHelper(
     int matARBlockSize, int matACBlockSize,
     int matBRBlockSize, int matBCBlockSize) {
 
-    std::ofstream matDM("data_mem" + std::to_string(coreIdx) + ".txt");
+    std::ofstream matDM(getDataMemName(matCoreIdx));
     matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
     
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
@@ -105,7 +105,7 @@ void singleCoreHelper(
     
     matDM.close(); 
 
-    std::ofstream vecDM("data_mem4.txt");
+    std::ofstream vecDM(getDataMemName(vecCoreIdx));
     vecDM.close(); 
 
     int matAMemSize = matARBlockSize * matACBlockSize * BLOCK_AREA;
@@ -260,7 +260,7 @@ void singleCore(
     int matBRBlockSize, int matBCBlockSize) {
     
     // output0.txt should be idential to ans0.txt 
-    std::ofstream matAns("ans0.txt");
+    std::ofstream matAns(getAnsName(MAT_CORE_START_IDX));
     matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
 
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
@@ -297,24 +297,25 @@ void singleCore(
     VecCoreProgram vecProg;
     VecCoreInst vecInst;
     
-    singleCoreHelper(0, matProg, vecProg, matA, matB, matC, matRef,
+    singleCoreHelper(MAT_CORE_START_IDX, VEC_CORE_START_IDX,
+    matProg, vecProg, matA, matB, matC, matRef,
     matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize);
 
     // halt mat
     matInst.opcode = MatCoreInstDefn::HALT;
     matProg.append(matInst);
-    SaveProgram(matProg.toBinary(), "inst_mem0.txt");
+    SaveProgram(matProg.toBinary(), getInstMemName(MAT_CORE_START_IDX));
     
-    std::ofstream matTxt("inst_mem0_text.txt");
+    std::ofstream matTxt(getInstMemTextName(MAT_CORE_START_IDX));
     matTxt << matProg.toText();
     matTxt.close();
 
     // halt vec    
     vecInst.opcode = VecCoreInstDefn::HALT;
     vecProg.append(vecInst);
-    SaveProgram(vecProg.toBinary(), "inst_mem4.txt");
+    SaveProgram(vecProg.toBinary(), getInstMemName(VEC_CORE_START_IDX));
 
-    std::ofstream vecTxt("inst_mem4_text.txt");
+    std::ofstream vecTxt(getInstMemTextName(VEC_CORE_START_IDX));
     vecTxt << vecProg.toText();
     vecTxt.close();
 
@@ -324,29 +325,23 @@ void singleCore(
         MatCoreInst inst; 
         inst.opcode = MatCoreInstDefn::HALT;
         prog.append(inst);
-        char* fileName = (char*)malloc(14 * sizeof(char));
-        snprintf(fileName, 14, "inst_mem%d.txt", i);
         SaveProgram(
-            prog.toBinary(), fileName 
+            prog.toBinary(), getInstMemName(MAT_CORE_START_IDX + i) 
         );
-        snprintf(fileName, 14, "data_mem%d.txt", i);
-        std::ofstream dm(fileName);
+        std::ofstream dm(getDataMemName(MAT_CORE_START_IDX + i));
         dm.close();
     }
 
     // inst, data mem for vec core 5-7
-    for (int i = 5; i < 8; i++) {
+    for (int i = 1; i < 4; i++) {
         VecCoreProgram prog;
         VecCoreInst inst; 
         inst.opcode = VecCoreInstDefn::HALT;
         prog.append(inst);
-        char* fileName = (char*)malloc(14 * sizeof(char));
-        snprintf(fileName, 14, "inst_mem%d.txt", i);
         SaveProgram(
-            prog.toBinary(), fileName 
+            prog.toBinary(), getInstMemName(VEC_CORE_START_IDX + i) 
         );
-        snprintf(fileName, 14, "data_mem%d.txt", i);
-        std::ofstream dm(fileName);
+        std::ofstream dm(getDataMemName(VEC_CORE_START_IDX + i));
         dm.close();
     }
 }

@@ -24,7 +24,9 @@ const int MAT_REG_SIZE = 256;
 const int VEC_REG_SIZE = 256;
 const int FLOAT_PRECISION = 6;
 const int DATA_MEM_SIZE = 65536;
+const int MAT_CORE_START_IDX = 0;
 const int NUM_MAT_CORES = 4;
+const int VEC_CORE_START_IDX = 4;
 const int NUM_VEC_CORES = 4;
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {
@@ -97,6 +99,22 @@ inline void compareMatrices(const std::vector<std::vector<float>> &matSource,
             }
         }
     }
+}
+
+inline std::string getDataMemName(int coreIdx) {
+    return "data_mem" + std::to_string(coreIdx) + ".txt"; 
+}
+
+inline std::string getInstMemName(int coreIdx) {
+    return "inst_mem" + std::to_string(coreIdx) + ".txt"; 
+}
+
+inline std::string getInstMemTextName(int coreIdx) {
+    return "inst_mem" + std::to_string(coreIdx) + "_text.txt"; 
+}
+
+inline std::string getAnsName(int coreIdx) {
+    return "ans" + std::to_string(coreIdx) + ".txt"; 
 }
 
 #endif
