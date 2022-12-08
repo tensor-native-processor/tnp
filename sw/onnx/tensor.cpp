@@ -6,6 +6,8 @@
 
 #include <queue>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 
 // Construct Tensor from protobuf
 Tensor::Tensor(const ::onnx::TensorProto& tensor) {
@@ -206,6 +208,11 @@ Orchestrator::MatrixConstant Tensor::toMatrixConstant(size_t width) const {
             std::vector<float>(width * width, 0.0f)
         )
     );
+
+    std::stringstream ss;
+    ss << "Tensor->MatrixConstant: " << m_shape[0] << ", "
+       << m_shape[1] << " => " << res.m_shape.x << ", " << res.m_shape.y;
+    LogInfo(ss.str());
 
     // Fill out res.m_data
     for (size_t bx = 0;bx < res.m_shape.x;bx++) {
