@@ -247,18 +247,19 @@ void singleCoreHelper(
             matProg.append(matInst);
         }
     }
-
-
 }
 
 void singleCore(
     std::vector<std::vector<float>> &matA, 
     std::vector<std::vector<float>> &matB,
     std::vector<std::vector<float>> &matC,
-    std::vector<std::vector<float>> &matRef,
-    int matARBlockSize, int matACBlockSize,
-    int matBRBlockSize, int matBCBlockSize) {
-    
+    std::vector<std::vector<float>> &matRef) {
+
+    int matARBlockSize = (matA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matACBlockSize = (matA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matBRBlockSize = (matB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matBCBlockSize = (matB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+
     // output0.txt should be idential to ans0.txt 
     std::ofstream matAns(getAnsName(MAT_CORE_START_IDX));
     matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
@@ -380,20 +381,9 @@ int main(int argc, char *argv[]) {
     assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
 
     std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
-
-    int matARSize = matA.size();
-    int matACSize = matA[0].size();
-    int matBRSize = matB.size();
-    int matBCSize = matB[0].size();
-
-    int matARBlockSize = (matA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matACBlockSize = (matA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matBRBlockSize = (matB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matBCBlockSize = (matB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-
     std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
 
-    singleCore(matA, matB, matC, matRef,matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize); 
+    singleCore(matA, matB, matC, matRef); 
 
     return 0;
 }
