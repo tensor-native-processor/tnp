@@ -18,13 +18,15 @@ int main() {
     auto h3 = orch.dataMatrixAllocate({2, 2});
 
     // Fill data into H3
-    Orchestrator::MatrixConstant h3Data(2,
+    Orchestrator::MatrixConstant h3Data;
+    h3Data.matrixShape = {2, 2};
+    h3Data.data.assign(2,
         std::vector<std::vector<float>>(2,
             std::vector<float>(256, 0)
         )
     );
-    h3Data[0][0][3 * 16 + 4] = 9;
-    h3Data[1][0][2 * 16 + 2] = 12;
+    h3Data.data[0][0][3 * 16 + 4] = 9;
+    h3Data.data[1][0][2 * 16 + 2] = 12;
     orch.dataMatrixLoadConstant(h3, h3Data);
 
     orch.compile();

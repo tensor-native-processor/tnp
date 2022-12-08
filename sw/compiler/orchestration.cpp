@@ -6,6 +6,14 @@
 #include <fstream>
 #include <iomanip>
 
+// MatrixShape comparison
+bool operator==(const Orchestrator::MatrixShape& l, const Orchestrator::MatrixShape& r) {
+    return l.x == r.x && l.y == r.y;
+}
+bool operator!=(const Orchestrator::MatrixShape& l, const Orchestrator::MatrixShape& r) {
+    return !(l == r);
+}
+
 // Construct orchestrator
 Orchestrator::Orchestrator(const OrchestratorParam& param)
 : m_param(param),
@@ -157,10 +165,15 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
 
 // Load matrix from constants
 void Orchestrator::dataMatrixLoadConstant(MatrixHandle handle, const MatrixConstant& inputData) {
+    // Retrieve matrix
     const auto& matrixState = m_dataMatrixStatus.at(handle);
-    // Store into coreIdx
     auto& dataMem = m_matCoreStatus[matrixState.coreIdx].dataMem;
     auto& prog = m_matCoreStatus[matrixState.coreIdx].prog;
+
+    // Validate shape
+    if (matrixState.matrixShape != inputData.matrixShape) {
+        FatalError("Orchestrator load constant dim mismatch");
+    }
 
     // Load mat
     for (size_t bx = 0;bx < matrixState.matrixShape.x;bx++) {
@@ -173,10 +186,10 @@ void Orchestrator::dataMatrixLoadConstant(MatrixHandle handle, const MatrixConst
             prog.append(inst);
 
             // Add constant to dataMem
-            if (inputData[bx][by].size() != m_param.width * m_param.width) {
+            if (inputData.data[bx][by].size() != m_param.width * m_param.width) {
                 FatalError("Orchestrator load constant width mismatch");
             }
-            dataMem.insert(dataMem.end(), inputData[bx][by].begin(), inputData[bx][by].end());
+            dataMem.insert(dataMem.end(), inputData.data[bx][by].begin(), inputData.data[bx][by].end());
         }
     }
 }
