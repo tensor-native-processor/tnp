@@ -3,6 +3,8 @@
 
 #include "onnx.proto3.pb.h"
 
+#include "orchestration.h"
+
 #include <string>
 #include <vector>
 
@@ -36,6 +38,9 @@ public:
     void unidirectionalBroadcast(const Shape&);
 
     static void multidirectionalBroadcast(std::initializer_list<std::reference_wrapper<Tensor>>);
+
+    // Convert to Orchestrator::MatrixConstant
+    Orchestrator::MatrixConstant toMatrixConstant() const;
 
 private:
     void swap(Tensor&);

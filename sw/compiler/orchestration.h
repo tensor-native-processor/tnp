@@ -27,6 +27,9 @@ public:
     // Matrix shape
     struct MatrixShape {
         size_t x, y;
+
+        friend bool operator==(const MatrixShape&, const MatrixShape&);
+        friend bool operator!=(const MatrixShape&, const MatrixShape&);
     };
 
     // Processed matrix result
@@ -36,7 +39,10 @@ public:
         std::vector<std::vector<size_t>> dataMemAddr;
     };
     // Matrix constant
-    typedef std::vector<std::vector<std::vector<float>>> MatrixConstant;
+    struct MatrixConstant {
+        MatrixShape matrixShape;
+        std::vector<std::vector<std::vector<float>>> data;
+    };
 
     // Matrix handle
     typedef size_t MatrixHandle;
