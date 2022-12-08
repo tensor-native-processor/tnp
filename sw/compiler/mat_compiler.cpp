@@ -72,39 +72,34 @@ void conditionalStoreAndLoad(
     }
 }
 
-void singleCore(
+
+void singleCoreHelper(
+    int coreIdx, MatCoreProgram &matProg, VecCoreProgram &vecProg,
     std::vector<std::vector<float>> &matA, 
     std::vector<std::vector<float>> &matB,
     std::vector<std::vector<float>> &matC,
     std::vector<std::vector<float>> &matRef,
     int matARBlockSize, int matACBlockSize,
     int matBRBlockSize, int matBCBlockSize) {
-    // output0.txt should be idential to ans0.txt 
-    std::ofstream matAns("ans0.txt");
-    matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
-    std::ofstream matDM("data_mem0.txt");
+
+    std::ofstream matDM("data_mem" + std::to_string(coreIdx) + ".txt");
     matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
     
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matACBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matDM);
-            // writes to ans for reference and easy diffing   
-            writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matAns);
         }
     }
     
     for (int rBlockIdx = 0; rBlockIdx < matBRBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matDM);
-            // writes to ans for reference and easy diffing
-            writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matAns);
         }
     }
 
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
             writeBlockMatToMem(matC, rBlockIdx, cBlockIdx, false, matDM);
-            writeBlockMatToMem(matRef, rBlockIdx, cBlockIdx, false, matAns);
         }
     }
     
@@ -116,11 +111,6 @@ void singleCore(
     int matAMemSize = matARBlockSize * matACBlockSize * BLOCK_AREA;
     int matBMemSize = matBRBlockSize * matBCBlockSize * BLOCK_AREA;
     int matCMemSize = matARBlockSize * matBCBlockSize * BLOCK_AREA;
-
-    for (int i = 0; i < DATA_MEM_SIZE - (matAMemSize + matBMemSize + matCMemSize); i++) {
-        matAns << 0.0 << std::endl;
-    }
-    matAns.close();
 
     int matAMemStart = 0;
     int matBMemStart = matAMemSize;
@@ -144,10 +134,7 @@ void singleCore(
     int vecReg1 = 1;
     int vecReg2 = 2;
 
-    MatCoreProgram matProg;
     MatCoreInst matInst;
-
-    VecCoreProgram vecProg;
     VecCoreInst vecInst;
 
     loadMatBlocks(matARBlockSize, matACBlockSize,
@@ -261,6 +248,58 @@ void singleCore(
         }
     }
 
+
+}
+
+void singleCore(
+    std::vector<std::vector<float>> &matA, 
+    std::vector<std::vector<float>> &matB,
+    std::vector<std::vector<float>> &matC,
+    std::vector<std::vector<float>> &matRef,
+    int matARBlockSize, int matACBlockSize,
+    int matBRBlockSize, int matBCBlockSize) {
+    
+    // output0.txt should be idential to ans0.txt 
+    std::ofstream matAns("ans0.txt");
+    matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
+
+    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < matACBlockSize; cBlockIdx++) {
+            // writes to ans for reference and easy diffing   
+            writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matAns);
+        }
+    }
+    
+    for (int rBlockIdx = 0; rBlockIdx < matBRBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
+            // writes to ans for reference and easy diffing
+            writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matAns);
+        }
+    }
+
+    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
+            writeBlockMatToMem(matRef, rBlockIdx, cBlockIdx, false, matAns);
+        }
+    }
+
+    int matAMemSize = matARBlockSize * matACBlockSize * BLOCK_AREA;
+    int matBMemSize = matBRBlockSize * matBCBlockSize * BLOCK_AREA;
+    int matCMemSize = matARBlockSize * matBCBlockSize * BLOCK_AREA;
+
+    for (int i = 0; i < DATA_MEM_SIZE - (matAMemSize + matBMemSize + matCMemSize); i++) {
+        matAns << 0.0 << std::endl;
+    }
+    matAns.close();
+
+    MatCoreProgram matProg;
+    MatCoreInst matInst;
+    VecCoreProgram vecProg;
+    VecCoreInst vecInst;
+    
+    singleCoreHelper(0, matProg, vecProg, matA, matB, matC, matRef,
+    matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize);
+
     // halt mat
     matInst.opcode = MatCoreInstDefn::HALT;
     matProg.append(matInst);
@@ -310,6 +349,10 @@ void singleCore(
         std::ofstream dm(fileName);
         dm.close();
     }
+}
+
+void multiCore() {
+    //
 }
 
 int main(int argc, char *argv[]) {

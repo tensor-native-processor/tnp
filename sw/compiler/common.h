@@ -24,6 +24,8 @@ const int MAT_REG_SIZE = 256;
 const int VEC_REG_SIZE = 256;
 const int FLOAT_PRECISION = 6;
 const int DATA_MEM_SIZE = 65536;
+const int NUM_MAT_CORES = 4;
+const int NUM_VEC_CORES = 4;
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {
     StartupOptions rs;
