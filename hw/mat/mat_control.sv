@@ -159,7 +159,8 @@ module MatControl
         CACHE_DATA_FROM_ZERO,
         CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
         CACHE_DATA_FROM_UNIT_DATA_OUT,
-        CACHE_DATA_FROM_SWITCH_RECV_DATA
+        CACHE_DATA_FROM_SWITCH_RECV_DATA,
+        CACHE_DATA_FROM_CACHE_DATA_OUT
     } cache_data_in_sel;
 
     genvar i;
@@ -178,6 +179,9 @@ module MatControl
                     end
                     CACHE_DATA_FROM_SWITCH_RECV_DATA: begin
                         cache_data_in[i] = switch_recv_data[i];
+                    end
+                    CACHE_DATA_FROM_CACHE_DATA_OUT: begin
+                        cache_data_in[i] = cache_data_out[i];
                     end
                 endcase
             end
@@ -337,6 +341,14 @@ case (opcode)
         // XFLIP cache matrix
         cache_write_op = MAT_DATA_WRITE_YFLIP;
         cache_write_addr1 = op_M1;
+    end
+
+    MAT_INST_COPY: begin
+        // Change next state
+        next_state = ACCESS_MEM; // Not really "access-mem"
+
+        // Init counter ("row progress counter")
+        diag_progress_counter_clr = 1;
     end
 
     // Section 2
@@ -624,6 +636,17 @@ endcase
                         data_mem_write_addr = op_addr +
                             WIDTH * diag_progress_counter;
                         data_mem_data_in_sel = DATA_MEM_DATA_FROM_CACHE_DATA_OUT;
+                    end
+                    MAT_INST_COPY: begin
+                        // Read from cache
+                        cache_read_op = MAT_DATA_READ_ROW;
+                        cache_read_addr1 = op_M1;
+                        cache_read_param1 = diag_progress_counter;
+                        // Write into cache
+                        cache_write_op = MAT_DATA_WRITE_ROW;
+                        cache_write_addr1 = op_Md;
+                        cache_write_param1 = diag_progress_counter;
+                        cache_data_in_sel = CACHE_DATA_FROM_CACHE_DATA_OUT;
                     end
                 endcase
             end

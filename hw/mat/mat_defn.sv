@@ -8,6 +8,8 @@ typedef enum logic [7:0] {
     MAT_INST_XFLIP              = 8'b00100100,
     MAT_INST_YFLIP              = 8'b00100101,
 
+    MAT_INST_COPY               = 8'b00110000,
+
     // Section 2
     MAT_INST_LOAD_MAT           = 8'b01000000,
     MAT_INST_LOAD_ROW           = 8'b01000001,

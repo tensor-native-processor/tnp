@@ -65,7 +65,7 @@ int main() {
     // store 5 to memory
     inst.opcode = MatCoreInstDefn::STORE_MAT;
     inst.operands[MatCoreInstDefn::ADDR] = 0;
-    inst.operands[MatCoreInstDefn::M1] = 2;
+    inst.operands[MatCoreInstDefn::M1] = 5;
     prog.append(inst);
 
     // halt
