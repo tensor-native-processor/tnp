@@ -2,6 +2,7 @@
 #define __OPERATOR_H__
 
 #include "model.h"
+#include "orchestration.h"
 
 #include <map>
 #include <string>
@@ -21,6 +22,10 @@ public:
 
     virtual void simulate(const ::onnx::NodeProto&,
         std::map<std::string, Tensor>&);
+
+    virtual void compile(const ::onnx::NodeProto&,
+        Orchestrator&,
+        std::map<std::string, Orchestrator::MatrixHandle>&);
 };
 
 // Dispatch operators

@@ -13,6 +13,10 @@ public:
     void simulate(const ::onnx::NodeProto&,
         std::map<std::string, Tensor>&) override;
 
+    void compile(const ::onnx::NodeProto&,
+        Orchestrator&,
+        std::map<std::string, Orchestrator::MatrixHandle>&) override;
+
 private:
     void getAttributes(const ::onnx::NodeProto&);
     bool attr_transA, attr_transB;
