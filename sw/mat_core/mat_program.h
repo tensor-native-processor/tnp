@@ -22,6 +22,8 @@ public:
         XFLIP           = 0b00100100,
         YFLIP           = 0b00100101,
 
+        COPY            = 0b00110000,
+
         // Section 2
         LOAD_MAT        = 0b01000000,
         LOAD_ROW        = 0b01000001,
