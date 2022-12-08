@@ -26,48 +26,41 @@ void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int
     }
 }
 
-int main(int argc, char *argv[]) {
-    std::vector<std::vector<float>> matA;
-    std::vector<std::vector<float>> matB;
+void loadMatBlocks(int rBlockSize, int cBlockSize, 
+int matRegStart, int matMemStart, 
+int matRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
+    MatCoreInst matInst;
+    bool isMatARegsFull = false;
+    for (int rBlockIdx = 0; rBlockIdx < rBlockSize; rBlockIdx++) {
+        if (isMatARegsFull) break;
+        for (int cBlockIdx = 0; cBlockIdx < cBlockSize; cBlockIdx++) {
+            int matABlockOffset = rBlockIdx * cBlockSize + cBlockIdx;
+            int matAMemOffset = matABlockOffset * BLOCK_AREA;
 
-    /*
-    (31, 31) * (31, 17) took 22275 cycles (CPU time 49.670s)
-    (64, 128) * (128, 10) took 86115 cycles (CPU time 178.530s)
-    */
-    // 64 * 128
-    for (int i = 0; i < 64; i++) {
-        std::vector<float> row;
-        for (int j = 0; j < 128; j++) {
-           row.push_back(j + 1); 
+            if (matABlockOffset == matRegs) {
+                isMatARegsFull = true;
+                break;
+            }
+
+            // load a mat block 
+            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
+            int reg = matRegStart + matABlockOffset;
+            int addr = matMemStart + matAMemOffset;
+            matRegToMemAddr[reg] = addr;
+            matInst.operands[MatCoreInstDefn::ADDR] = addr;
+            matInst.operands[MatCoreInstDefn::M1] = reg;
+            matProg.append(matInst);
         }
-        matA.push_back(row);
     }
-    
-    // 128 * 10
-    for (int i = 0; i < 128; i++) {
-        std::vector<float> row;
-        for (int j = 0; j < 10; j++) {
-           row.push_back(j + 1); 
-        }
-        matB.push_back(row);
-    }
-    
-    assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
+}
 
-    std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
-
-    int matARSize = matA.size();
-    int matACSize = matA[0].size();
-    int matBRSize = matB.size();
-    int matBCSize = matB[0].size();
-
-    int matARBlockSize = (matA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matACBlockSize = (matA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matBRBlockSize = (matB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-    int matBCBlockSize = (matB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
-
-    std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
-    
+void singleCore(
+    std::vector<std::vector<float>> &matA, 
+    std::vector<std::vector<float>> &matB,
+    std::vector<std::vector<float>> &matC,
+    std::vector<std::vector<float>> &matRef,
+    int matARBlockSize, int matACBlockSize,
+    int matBRBlockSize, int matBCBlockSize) {
     // output0.txt should be idential to ans0.txt 
     std::ofstream matAns("ans0.txt");
     matAns << std::setprecision(FLOAT_PRECISION) << std::fixed;
@@ -123,6 +116,11 @@ int main(int argc, char *argv[]) {
     // mat core tmp register
     int tmpReg = MAT_REG_SIZE - 1;
 
+    int matRegToMemAddr[MAT_REG_SIZE];
+    for (int i = 0; i < MAT_REG_SIZE; i++) {
+        matRegToMemAddr[i] = -1;
+    }
+
     // vec core registers
     int vecReg0 = 0;
     int vecReg1 = 1;
@@ -134,65 +132,14 @@ int main(int argc, char *argv[]) {
     VecCoreProgram vecProg;
     VecCoreInst vecInst;
 
-    bool isMatARegsFull = false;
-    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
-        if (isMatARegsFull) break;
-        for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
-            int matABlockOffset = rBlockIdx * matACBlockSize + kBlockIdx;
-            int matAMemOffset = matABlockOffset * BLOCK_AREA;
+    loadMatBlocks(matARBlockSize, matACBlockSize,
+        matARegStart, matAMemStart, matRegs, matRegToMemAddr, matProg);
 
-            if (matABlockOffset == matRegs) {
-                isMatARegsFull = true;
-                break;
-            }
+    loadMatBlocks(matBRBlockSize, matBCBlockSize,
+        matBRegStart, matBMemStart, matRegs, matRegToMemAddr, matProg);
 
-            // load a matA block 
-            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-            matInst.operands[MatCoreInstDefn::ADDR] = matAMemStart + matAMemOffset;
-            matInst.operands[MatCoreInstDefn::M1] = matARegStart + matABlockOffset;
-            matProg.append(matInst);
-        }
-    }
-
-    bool isMatBRegsFull = false;
-    for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
-        if (isMatBRegsFull) break;
-        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            int matBBlockOffset = kBlockIdx * matBCBlockSize + cBlockIdx;
-            int matBMemOffset = matBBlockOffset * BLOCK_AREA;
-            
-            if (matBBlockOffset == matRegs) {
-                isMatBRegsFull = true;
-                break;
-            }
-
-            // load a matB block 
-            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-            matInst.operands[MatCoreInstDefn::ADDR] = matBMemStart + matBMemOffset; 
-            matInst.operands[MatCoreInstDefn::M1] = matBRegStart + matBBlockOffset;
-            matProg.append(matInst);
-        }
-    }
-    
-    bool isMatCRegsFull = false;
-    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
-        if (isMatCRegsFull) break;
-        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx;
-            int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-            
-            if (matCBlockOffset == matRegs) {
-                isMatCRegsFull = true;
-                break;
-            }
-
-            // load a matC block 
-            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-            matInst.operands[MatCoreInstDefn::ADDR] = matCMemStart + matCMemOffset; 
-            matInst.operands[MatCoreInstDefn::M1] = matCRegStart + matCBlockOffset;
-            matProg.append(matInst);
-        }
-    }
+    loadMatBlocks(matARBlockSize, matBCBlockSize,
+        matCRegStart, matCMemStart, matRegs, matRegToMemAddr, matProg);
 
     // matCBlock_rc += matABlock_rk * matBBlock_kc
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
@@ -365,6 +312,51 @@ int main(int argc, char *argv[]) {
         std::ofstream dm(fileName);
         dm.close();
     }
+}
+
+int main(int argc, char *argv[]) {
+    std::vector<std::vector<float>> matA;
+    std::vector<std::vector<float>> matB;
+
+    /*
+    (31, 31) * (31, 17) took 22275 cycles (CPU time 49.670s)
+    (64, 128) * (128, 10) took 86115 cycles (CPU time 178.530s)
+    */
+    // 64 * 128
+    for (int i = 0; i < 64; i++) {
+        std::vector<float> row;
+        for (int j = 0; j < 128; j++) {
+           row.push_back(j + 1); 
+        }
+        matA.push_back(row);
+    }
+    
+    // 128 * 10
+    for (int i = 0; i < 128; i++) {
+        std::vector<float> row;
+        for (int j = 0; j < 10; j++) {
+           row.push_back(j + 1); 
+        }
+        matB.push_back(row);
+    }
+    
+    assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
+
+    std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
+
+    int matARSize = matA.size();
+    int matACSize = matA[0].size();
+    int matBRSize = matB.size();
+    int matBCSize = matB[0].size();
+
+    int matARBlockSize = (matA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matACBlockSize = (matA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matBRBlockSize = (matB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+    int matBCBlockSize = (matB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+
+    std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
+
+    singleCore(matA, matB, matC, matRef,matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize); 
 
     return 0;
 }
