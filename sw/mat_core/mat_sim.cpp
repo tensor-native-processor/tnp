@@ -40,6 +40,7 @@ void MatCoreSimEngine::simulateStep() {
                     m_diag_progress_counter = 0;
                     break;
                 }
+                case MatCoreInstDefn::COPY:
                 case MatCoreInstDefn::LOAD_MAT:
                 case MatCoreInstDefn::STORE_MAT: {
                     next_state = State::ACCESS_MEM;
