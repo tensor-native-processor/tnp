@@ -7,6 +7,7 @@
 
 #include <queue>
 #include <fstream>
+#include <iostream>
 
 
 // Constructor for ONNXModel
@@ -162,15 +163,22 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
     std::map<std::string, Orchestrator::MatrixHandle> stateTensorHandles;
 
     // Import initializers as handles
-    // TODO convert m_initializers into matrix
+    for (const auto& [name, init] : m_initializers) {
+        auto mc = init.toMatrixConstant(orchParam.width);
+        auto handle = orch.dataMatrixAllocate(mc.m_shape);
+        orch.dataMatrixLoadConstant(handle, mc);
+        stateTensorHandles[name] = handle;
+    }
 
-    // Import inputTensor into stateTensor
+    // Import input as handles
     if (inputTensors.size() < (size_t)m_graph.input_size()) {
         FatalError("Insufficient inputs for simulate");
     }
     for (size_t i = 0;i < (size_t)m_graph.input_size();i++) {
-        // TODO:
-        // stateTensors.emplace(m_graph.input(i).name(), inputTensors[i]);
+        auto mc = inputTensors[i].toMatrixConstant(orchParam.width);
+        auto handle = orch.dataMatrixAllocate(mc.m_shape);
+        orch.dataMatrixLoadConstant(handle, mc);
+        stateTensorHandles[m_graph.input(i).name()] = handle;
     }
 
     // Simulate each operator
