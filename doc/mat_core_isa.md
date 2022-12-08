@@ -33,6 +33,10 @@ Flip matrix `M1` on X axis (vertically).
 
 Flip matrix `M1` on Y axis (horizontally).
 
+### COPY Md M1
+
+Copy matrix `M1` into `Md`
+
 ---
 
 ## 2. Main memory operations
