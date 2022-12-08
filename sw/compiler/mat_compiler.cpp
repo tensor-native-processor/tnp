@@ -28,7 +28,7 @@ void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int
 
 void loadMatBlocks(int rBlockSize, int cBlockSize, 
 int matRegStart, int matMemStart, 
-int matRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
+int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
     MatCoreInst matInst;
     bool isMatARegsFull = false;
     for (int rBlockIdx = 0; rBlockIdx < rBlockSize; rBlockIdx++) {
@@ -37,7 +37,7 @@ int matRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
             int matABlockOffset = rBlockIdx * cBlockSize + cBlockIdx;
             int matAMemOffset = matABlockOffset * BLOCK_AREA;
 
-            if (matABlockOffset == matRegs) {
+            if (matABlockOffset == matMaxRegs) {
                 isMatARegsFull = true;
                 break;
             }
@@ -51,6 +51,24 @@ int matRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
             matInst.operands[MatCoreInstDefn::M1] = reg;
             matProg.append(matInst);
         }
+    }
+}
+
+void conditionalStoreAndLoad(
+    int matBlockReg, int matBlockMemAddr,
+    int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram &matProg) {
+    MatCoreInst matInst;
+
+    if (matBlockMemAddr != matRegToMemAddr[matBlockReg]) {
+        matInst.opcode = MatCoreInstDefn::STORE_MAT;
+        matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
+        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
+        matProg.append(matInst);
+
+        matInst.opcode = MatCoreInstDefn::LOAD_MAT;
+        matInst.operands[MatCoreInstDefn::ADDR] = matBlockMemAddr;
+        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
+        matProg.append(matInst);
     }
 }
 
@@ -109,10 +127,10 @@ void singleCore(
     int matCMemStart = matBMemStart + matBMemSize;
 
     // mat core registers
-    int matRegs = (MAT_REG_SIZE - 1) / 3;
+    int matMaxRegs = (MAT_REG_SIZE - 1) / 3;
     int matARegStart = 0;
-    int matBRegStart = matRegs;
-    int matCRegStart = 2 * matRegs;
+    int matBRegStart = matMaxRegs;
+    int matCRegStart = 2 * matMaxRegs;
     // mat core tmp register
     int tmpReg = MAT_REG_SIZE - 1;
 
@@ -133,55 +151,38 @@ void singleCore(
     VecCoreInst vecInst;
 
     loadMatBlocks(matARBlockSize, matACBlockSize,
-        matARegStart, matAMemStart, matRegs, matRegToMemAddr, matProg);
+        matARegStart, matAMemStart, matMaxRegs, matRegToMemAddr, matProg);
 
     loadMatBlocks(matBRBlockSize, matBCBlockSize,
-        matBRegStart, matBMemStart, matRegs, matRegToMemAddr, matProg);
+        matBRegStart, matBMemStart, matMaxRegs, matRegToMemAddr, matProg);
 
     loadMatBlocks(matARBlockSize, matBCBlockSize,
-        matCRegStart, matCMemStart, matRegs, matRegToMemAddr, matProg);
+        matCRegStart, matCMemStart, matMaxRegs, matRegToMemAddr, matProg);
 
     // matCBlock_rc += matABlock_rk * matBBlock_kc
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
             int matABlockOffset = rBlockIdx * matACBlockSize + kBlockIdx;
             int matAMemOffset = matABlockOffset * BLOCK_AREA;
-            int matABlockReg = matARegStart + matABlockOffset % matRegs;
-
-            // TODO capacity miss (hash map?)
-            if (matABlockOffset >= matRegs) {
-                matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-                matInst.operands[MatCoreInstDefn::ADDR] = matAMemStart + matAMemOffset;
-                matInst.operands[MatCoreInstDefn::M1] = matABlockReg;
-                matProg.append(matInst);
-            }
+            int matABlockReg = matARegStart + matABlockOffset % matMaxRegs;
+            int matAMemAddr = matAMemStart + matAMemOffset;
+            conditionalStoreAndLoad(matABlockReg, matAMemAddr, matMaxRegs, 
+            matRegToMemAddr, matProg);
 
             for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
                 int matBBlockOffset = kBlockIdx * matBCBlockSize + cBlockIdx;
                 int matBMemOffset = matBBlockOffset * BLOCK_AREA;
-                int matBBlockReg = matBRegStart + matBBlockOffset % matRegs;
-                
-                // TODO capacity miss
-                if (matBBlockOffset >= matRegs) {
-                    matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-                    matInst.operands[MatCoreInstDefn::ADDR] = matBMemStart + matBMemOffset; 
-                    matInst.operands[MatCoreInstDefn::M1] = matBBlockReg;
-                    matProg.append(matInst);
-                }
+                int matBBlockReg = matBRegStart + matBBlockOffset % matMaxRegs;
+                int matBMemAddr = matBMemStart + matBMemOffset; 
+                conditionalStoreAndLoad(matBBlockReg, matBMemAddr, matMaxRegs, 
+                matRegToMemAddr, matProg);
                 
                 int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
                 int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-                int matCBlockReg = matCRegStart + matCBlockOffset % matRegs;
-
-                // TODO capacity miss
-                if (matCBlockOffset >= matRegs) {
-                    // must write back result first
-                    // TODO not sure which ADDR it is... must keep prev?
-                    matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-                    matInst.operands[MatCoreInstDefn::ADDR] = matCMemStart + matCMemOffset; 
-                    matInst.operands[MatCoreInstDefn::M1] = matCBlockReg;
-                    matProg.append(matInst);
-                }
+                int matCBlockReg = matCRegStart + matCBlockOffset % matMaxRegs;
+                int matCMemAddr = matCMemStart + matCMemOffset; 
+                conditionalStoreAndLoad(matCBlockReg, matCMemAddr, matMaxRegs, 
+                matRegToMemAddr, matProg);
 
                 // set weight of matA into systolic array
                 matInst.opcode = MatCoreInstDefn::SET_WEIGHT;
@@ -248,17 +249,14 @@ void singleCore(
         }
     }
 
-    // store final result to memory
-    // TODO capacity miss
-    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
-        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
-            int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-            int matCBlockReg = matCRegStart + matCBlockOffset % matRegs;
-
+    // write all valid matC regs to mem  
+    for (int i = 0; i < matMaxRegs; i++) {
+        int matCReg = matCRegStart + i;
+        int addr = matRegToMemAddr[matCReg];
+        if (addr != -1) {
             matInst.opcode = MatCoreInstDefn::STORE_MAT;
-            matInst.operands[MatCoreInstDefn::ADDR] = matCMemStart + matCMemOffset;
-            matInst.operands[MatCoreInstDefn::M1] = matCRegStart + matCBlockOffset;
+            matInst.operands[MatCoreInstDefn::ADDR] = addr; 
+            matInst.operands[MatCoreInstDefn::M1] = matCReg; 
             matProg.append(matInst);
         }
     }
@@ -321,6 +319,7 @@ int main(int argc, char *argv[]) {
     /*
     (31, 31) * (31, 17) took 22275 cycles (CPU time 49.670s)
     (64, 128) * (128, 10) took 86115 cycles (CPU time 178.530s)
+    (64, 128) * (128, 10) took 88095 cycles if set MAT_REG_SIZE to 64 (CPU time 180.360s)
     */
     // 64 * 128
     for (int i = 0; i < 64; i++) {
