@@ -45,3 +45,26 @@ void OperatorRelu::simulate(const ::onnx::NodeProto& node,
 float OperatorRelu::relu(float x) const {
     return x > 0.0f ? x : 0.0f;
 }
+
+// Compile for Relu
+void OperatorRelu::compile(const ::onnx::NodeProto& node,
+        Orchestrator& orch,
+        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles) {
+
+    // Validate i/o size
+    if (node.input_size() != 1 || node.output_size() != 1) {
+        FatalError("Relu io size not 1");
+    }
+
+    // Fetch input tensor
+    if (stateTensorHandles.count(node.input(0)) == 0) {
+        FatalError("Relu cannot find input tensor");
+    }
+    auto handleIn = stateTensorHandles.at(node.input(0));
+
+    // Call orchestrator
+    auto handleOut = orch.arithmeticRelu(handleIn);
+
+    // Set output
+    stateTensorHandles[node.output(0)] = handleOut;
+}

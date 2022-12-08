@@ -169,3 +169,31 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
     delete pTensorA;
     delete pTensorB;
 }
+
+// Compile for gemm
+void OperatorGemm::compile(const ::onnx::NodeProto& node,
+        Orchestrator& orch,
+        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles) {
+    // Fetch A and B
+    if (node.input_size() != 2 && node.input_size() != 3) {
+        FatalError("Gemm input size " + std::to_string(node.input_size()));
+    }
+    if (stateTensorHandles.count(node.input(0)) == 0 ||
+        stateTensorHandles.count(node.input(1)) == 0) {
+        FatalError("Gemm cannot determine shape A/B " + node.input(0) + "/" + node.input(1));
+    }
+    auto handleA = stateTensorHandles.at(node.input(0)),
+         handleB = stateTensorHandles.at(node.input(1));
+
+    // Get attributes
+    getAttributes(node);
+
+    // Call orchestrator
+    auto handleRes = orch.arithmeticMatMult(handleA, handleB);
+
+    // Set output
+    if (node.output_size() != 1) {
+        FatalError("Gemm output size not 1");
+    }
+    stateTensorHandles[node.output(0)] = handleRes;
+}

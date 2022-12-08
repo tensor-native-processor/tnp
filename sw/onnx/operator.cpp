@@ -39,3 +39,12 @@ void Operator::simulate(const ::onnx::NodeProto& node,
     op->simulate(node, stateTensor);
     delete op;
 }
+
+// Displatch compile
+void Operator::compile(const ::onnx::NodeProto& node,
+        Orchestrator& orch,
+        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles) {
+    Operator* op = OperatorDispatch::createOperator(node.op_type());
+    op->compile(node, orch, stateTensorHandles);
+    delete op;
+}

@@ -243,9 +243,22 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     }
 
     // Allocate a new matrix
-    MatrixHandle hd = dataMatrixAllocate(MatrixShape{
+    auto hd = dataMatrixAllocate(MatrixShape{
         .x = m1State.m_shape.x,
         .y = m2State.m_shape.y
     });
     return hd;
+}
+
+// Relu
+Orchestrator::MatrixHandle Orchestrator::arithmeticRelu(MatrixHandle handle) {
+    // Find handle
+    if (m_dataMatrixStatus.count(handle) == 0) {
+        FatalError("Orchestrator relu handle not exist");
+    }
+    const auto& matrixState = m_dataMatrixStatus.at(handle);
+
+    // Allocate a new matrix
+    auto handleOut = dataMatrixAllocate(matrixState.m_shape);
+    return handleOut;
 }
