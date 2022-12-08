@@ -206,5 +206,21 @@ Orchestrator::MatrixConstant Tensor::toMatrixConstant(size_t width) const {
             std::vector<float>(width * width, 0.0f)
         )
     );
+
+    // Fill out res.m_data
+    for (size_t bx = 0;bx < res.m_shape.x;bx++) {
+        for (size_t by = 0;by < res.m_shape.y;by++) {
+            for (size_t i = 0;i < width;i++) {
+                for (size_t j = 0;j < width;j++) {
+                    size_t dx = bx * width + i;
+                    size_t dy = by * width + j;
+
+                    if (dx < m_shape[0] && dy < m_shape[1]) {
+                        res.m_data[bx][by][i * width + j] = locate({dx, dy});
+                    }
+                }
+            }
+        }
+    }
     return res;
 }
