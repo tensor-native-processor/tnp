@@ -34,14 +34,14 @@ public:
 
     // Processed matrix result
     struct MatrixResult {
-        MatrixShape matrixShape;
-        size_t coreIdx;
-        std::vector<std::vector<size_t>> dataMemAddr;
+        MatrixShape m_shape;
+        size_t m_coreIdx;
+        std::vector<std::vector<size_t>> m_dataAddr;
     };
     // Matrix constant
     struct MatrixConstant {
-        MatrixShape matrixShape;
-        std::vector<std::vector<std::vector<float>>> data;
+        MatrixShape m_shape;
+        std::vector<std::vector<std::vector<float>>> m_data;
     };
 
     // Matrix handle
@@ -66,14 +66,14 @@ private:
 
     // MatCore/VecCore state
     struct MatCoreState {
-        MatCoreProgram prog;
-        std::set<size_t> freeRegIdx;
-        std::vector<float> dataMem;
+        MatCoreProgram m_prog;
+        std::set<size_t> m_freeRegIdx;
+        std::vector<float> m_dataMem;
     };
     struct VecCoreState {
-        VecCoreProgram prog;
-        std::set<size_t> freeRegIdx;
-        std::vector<float> dataMem;
+        VecCoreProgram m_prog;
+        std::set<size_t> m_freeRegIdx;
+        std::vector<float> m_dataMem;
     };
 
     // Programs
@@ -86,9 +86,9 @@ private:
     // Matrix state
     struct MatrixState {
         MatrixState(const MatrixShape&);
-        size_t coreIdx;
-        MatrixShape matrixShape;
-        std::vector<std::vector<size_t>> activeRegIdx;
+        size_t m_coreIdx;
+        MatrixShape m_shape;
+        std::vector<std::vector<size_t>> m_regIdx;
     };
     std::map<MatrixHandle, MatrixState> m_dataMatrixStatus;
 
