@@ -181,12 +181,15 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
         stateTensorHandles[m_graph.input(i).name()] = handle;
     }
 
-    // Simulate each operator
+    // Run on each operator
     Operator op;
     for (const auto& node : m_graph.node()) {
         LogInfo("Compiling: " + node.name());
         op.compile(node, orch, stateTensorHandles);
     }
+
+    // Compile
+    orch.compile();
 
     // Output tensor
     std::vector<Tensor> outputTensors;
