@@ -40,7 +40,7 @@ public:
     static void multidirectionalBroadcast(std::initializer_list<std::reference_wrapper<Tensor>>);
 
     // Convert to Orchestrator::MatrixConstant
-    Orchestrator::MatrixConstant toMatrixConstant() const;
+    Orchestrator::MatrixConstant toMatrixConstant(size_t) const;
 
 private:
     void swap(Tensor&);

@@ -185,3 +185,26 @@ void Tensor::multidirectionalBroadcast(std::initializer_list<std::reference_wrap
         srcTensorRef.get().unidirectionalBroadcast(destShape);
     }
 }
+
+
+// Convert tensor to MatrixConstant
+Orchestrator::MatrixConstant Tensor::toMatrixConstant(size_t width) const {
+    if (m_shape.size() == 1) {
+        Tensor extTensor = *this;
+        extTensor.m_shape.insert(extTensor.m_shape.begin(), 1);
+        return extTensor.toMatrixConstant(width);
+    } else if (m_shape.size() != 2) {
+        FatalError("Tensor->MatrixConstant high dim");
+    }
+
+    // Convert 2-D matrix to MatrixConstant
+    Orchestrator::MatrixConstant res;
+    res.m_shape.x = (m_shape[0] + width - 1) / width;
+    res.m_shape.y = (m_shape[1] + width - 1) / width;
+    res.m_data.assign(res.m_shape.x,
+        std::vector<std::vector<float>>(res.m_shape.y,
+            std::vector<float>(width * width, 0.0f)
+        )
+    );
+    return res;
+}
