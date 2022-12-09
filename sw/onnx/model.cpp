@@ -198,6 +198,23 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
     for (const auto& node : m_graph.node()) {
         LogInfo("Compiling: " + node.name());
         op.compile(node, orch, stateTensorHandles);
+
+        // Remove handles if refCount reach 0
+        for (const auto& nodeIn : node.input()) {
+            refCount[nodeIn]--;
+            if (refCount[nodeIn] == 0) {
+                // Remove it from refCount
+                refCount.erase(nodeIn);
+
+                // Remove it from stateTensorHandles
+                if (stateTensorHandles.count(nodeIn) == 0) {
+                    FatalError("Compile zero refcnt no handle");
+                }
+                auto handle = stateTensorHandles.at(nodeIn);
+                orch.dataMatrixDeallocate(handle);
+                stateTensorHandles.erase(nodeIn);
+            }
+        }
     }
 
     // Compile
