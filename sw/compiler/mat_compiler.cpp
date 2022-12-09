@@ -32,11 +32,12 @@ void conditionalStoreAndLoad(
     MatCoreInst matInst;
 
     if (matBlockMemAddr != matRegToMemAddr[matBlockReg]) {
-        matInst.opcode = MatCoreInstDefn::STORE_MAT;
-        matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
-        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
-        matProg.append(matInst);
-
+        if (matRegToMemAddr[matBlockReg] != -1) {
+            matInst.opcode = MatCoreInstDefn::STORE_MAT;
+            matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
+            matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
+            matProg.append(matInst);
+        }
         matInst.opcode = MatCoreInstDefn::LOAD_MAT;
         matInst.operands[MatCoreInstDefn::ADDR] = matBlockMemAddr;
         matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
