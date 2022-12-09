@@ -52,7 +52,6 @@ int main() {
 
     // Print hint to check output
     std::ofstream hint("hint.txt");
-    std::cout << res.m_shape.x << ", " << res.m_shape.y << "\n";
     for (size_t i = 0;i < res.m_shape.x * width;i++) {
         for (size_t j = 0;j < res.m_shape.y * width;j++) {
             hint << res.m_dataAddr[i / width][j / width] + width * (i % width) + j % width << "\n";
