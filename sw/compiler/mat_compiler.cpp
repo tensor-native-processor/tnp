@@ -78,7 +78,6 @@ void singleCoreHelper(
     std::vector<std::vector<float>> &matA, 
     std::vector<std::vector<float>> &matB,
     std::vector<std::vector<float>> &matC,
-    std::vector<std::vector<float>> &matRef,
     int matARBlockSize, int matACBlockSize,
     int matBRBlockSize, int matBCBlockSize) {
 
@@ -186,25 +185,25 @@ void singleCoreHelper(
                 for (int i = 0; i < BLOCK_WIDTH; i++) {
                     // send rows of tmp to vec core
                     matInst.opcode = MatCoreInstDefn::SEND_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = 4;
+                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
                     matInst.operands[MatCoreInstDefn::M1] = tmpReg;
                     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
                     matProg.append(matInst);
 
                     vecInst.opcode = VecCoreInstDefn::RECV_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = 0;
+                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
                     vecInst.operands[VecCoreInstDefn::V1] = vecReg0;
                     vecProg.append(vecInst);                    
 
                     // send rows of matC to vec core 
                     matInst.opcode = MatCoreInstDefn::SEND_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = 4;
+                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
                     matInst.operands[MatCoreInstDefn::M1] = matCBlockReg;
                     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
                     matProg.append(matInst);
 
                     vecInst.opcode = VecCoreInstDefn::RECV_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = 0;
+                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
                     vecInst.operands[VecCoreInstDefn::V1] = vecReg1;
                     vecProg.append(vecInst);
 
@@ -217,12 +216,12 @@ void singleCoreHelper(
 
                     // recv rows from vec core
                     vecInst.opcode = VecCoreInstDefn::SEND_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = 0;
+                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
                     vecInst.operands[VecCoreInstDefn::V1] = vecReg2;
                     vecProg.append(vecInst);
 
                     matInst.opcode = MatCoreInstDefn::RECV_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = 4;
+                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
                     matInst.operands[MatCoreInstDefn::M1] = matCBlockReg;
                     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
                     matProg.append(matInst);
@@ -299,7 +298,7 @@ void singleCore(
     VecCoreInst vecInst;
     
     singleCoreHelper(MAT_CORE_START_IDX, VEC_CORE_START_IDX,
-    matProg, vecProg, matA, matB, matC, matRef,
+    matProg, vecProg, matA, matB, matC, 
     matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize);
 
     // halt mat
@@ -320,8 +319,8 @@ void singleCore(
     vecTxt << vecProg.toText();
     vecTxt.close();
 
-    // inst, data mem for mat core 1-3
-    for (int i = 1; i < 4; i++) {
+    // inst, data mem for remaining mat cores
+    for (int i = 1; i < NUM_MAT_CORES; i++) {
         MatCoreProgram prog;
         MatCoreInst inst; 
         inst.opcode = MatCoreInstDefn::HALT;
@@ -333,8 +332,8 @@ void singleCore(
         dm.close();
     }
 
-    // inst, data mem for vec core 5-7
-    for (int i = 1; i < 4; i++) {
+    // inst, data mem for remaining vec cores
+    for (int i = 1; i < NUM_VEC_CORES; i++) {
         VecCoreProgram prog;
         VecCoreInst inst; 
         inst.opcode = VecCoreInstDefn::HALT;
@@ -347,8 +346,148 @@ void singleCore(
     }
 }
 
-void multiCore() {
-    //
+std::vector<std::vector<matrix>> getSubMats(matrix &mat, int coresPerRow, int coresPerCol) {
+    std::vector<std::vector<matrix>> subMats;  
+    int subMatRows = (mat.size() + coresPerRow - 1) / coresPerRow;
+    int subMatCols = (mat[0].size() + coresPerCol - 1) / coresPerCol;
+     
+    for (int rCoreIdx = 0; rCoreIdx < coresPerRow; rCoreIdx++) {
+        std::vector<matrix> subMatsPerRow;
+        int rStart = rCoreIdx * subMatRows;
+        int rEnd = std::min((rCoreIdx + 1) * subMatRows, static_cast<int>(mat.size()));
+        
+        for (int cCoreIdx = 0; cCoreIdx < coresPerCol; cCoreIdx++) {
+            matrix subMat;
+            int cStart = cCoreIdx * subMatCols;
+            int cEnd = std::min((cCoreIdx + 1) * subMatCols, static_cast<int>(mat[0].size())); 
+            
+            for (int i = rStart; i < rEnd; i++) {
+                std::vector<float> row(mat[i].begin() + cStart, mat[i].begin() + cEnd);
+                subMat.push_back(row);
+            }
+            subMatsPerRow.push_back(subMat);
+        }
+        subMats.push_back(subMatsPerRow);
+    }
+
+    // check correctness
+    int totalSize = 0;
+    for (int rCoreIdx = 0; rCoreIdx < coresPerRow; rCoreIdx++) {
+        for (int cCoreIdx = 0; cCoreIdx < coresPerCol; cCoreIdx++) {
+            matrix subMat = subMats[rCoreIdx][cCoreIdx];
+            for (int i = 0; i < subMat.size(); i++) {
+                totalSize += subMat[i].size();
+                for (int j = 0; j < subMats[0].size(); j++) {
+                    int ii = rCoreIdx * subMatRows + i;
+                    int jj = cCoreIdx * subMatCols + j;
+                    if (subMat[i][j] != mat[ii][jj]) {
+                        printf("rCoreIdx:%d, cCoreIdx:%d, subMat[%d][%d] (%f) != mat[%d][%d] (%f)",
+                        rCoreIdx, cCoreIdx, i, j, subMat[i][j], ii, jj, mat[ii][jj]);
+                        assert(false);
+                    }
+                    j += 1;
+                    if (j == mat[0].size()) {
+                        j = 0;
+                        i += 1;
+                    }          
+                }
+            }
+        } 
+    }
+    assert(totalSize == mat.size() * mat[0].size());
+    
+    return subMats;
+} 
+
+void multiCore(
+    matrix &matA, 
+    matrix &matB,
+    matrix &matC,
+    matrix &matRef) {
+
+    // divide mats by number of cores
+    int largeFactor= 2;
+    int smallFactor = 2;
+    assert(largeFactor * smallFactor == NUM_MAT_CORES);
+    
+    // TODO optimization compare row/col of matB vs matA for better division
+
+    // short wide matA
+    int coresPerRow = smallFactor;
+    int coresPerCol = largeFactor;
+
+    if (matA.size() > matA[0].size()) {
+        // tall narrow matA
+        coresPerRow = largeFactor;
+        coresPerCol = smallFactor; 
+    }
+
+    std::vector<std::vector<matrix>> subMatsA = getSubMats(matA, coresPerRow, coresPerCol);     
+    std::vector<std::vector<matrix>> subMatsB = getSubMats(matB, coresPerRow, coresPerCol);     
+    std::vector<std::vector<matrix>> subMatsC = getSubMats(matC, coresPerRow, coresPerCol);     
+
+    MatCoreProgram matProgs[NUM_MAT_CORES];
+    VecCoreProgram vecProgs[NUM_VEC_CORES];
+
+    // MULT
+    for (int i = 0; i < coresPerRow; i++) {
+        for (int j = 0; j < coresPerCol; j++) {
+            matrix subMatA = subMatsA[i][j];
+            matrix subMatB = subMatsB[i][j];
+            matrix subMatC = subMatsC[i][j];
+
+            int subMatARBlockSize = (subMatA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+            int subMatACBlockSize = (subMatA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+            int subMatBRBlockSize = (subMatB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+            int subMatBCBlockSize = (subMatB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
+
+            int matCoreOffset = i * coresPerCol + j;
+            int vecCoreOffset = i * coresPerCol + j;
+            
+            // TODO ans.txt for easy diffing
+
+            // do sub matrix multiplication on every core 
+            singleCoreHelper(
+                MAT_CORE_START_IDX + matCoreOffset, VEC_CORE_START_IDX + vecCoreOffset, 
+                matProgs[matCoreOffset], vecProgs[matCoreOffset], 
+                subMatA, subMatB, subMatC,  
+                subMatARBlockSize, subMatACBlockSize,
+                subMatBRBlockSize, subMatBCBlockSize
+            );
+        }    
+    }
+
+    // EXCHANGE
+
+    // MULT
+
+    // SEND TO CORE 0
+
+    // inst mem for mat cores
+    for (int i = 0; i < NUM_MAT_CORES; i++) {
+        MatCoreInst inst; 
+        inst.opcode = MatCoreInstDefn::HALT;
+        matProgs[i].append(inst);
+        SaveProgram(
+            matProgs[i].toBinary(), getInstMemName(MAT_CORE_START_IDX + i) 
+        );
+        std::ofstream txt(getInstMemTextName(MAT_CORE_START_IDX + i));
+        txt << matProgs[i].toText();
+        txt.close();
+    }
+
+    // inst mem for vec cores
+    for (int i = 0; i < NUM_VEC_CORES; i++) {
+        VecCoreInst inst; 
+        inst.opcode = VecCoreInstDefn::HALT;
+        vecProgs[i].append(inst);
+        SaveProgram(
+            vecProgs[i].toBinary(), getInstMemName(VEC_CORE_START_IDX + i) 
+        );
+        std::ofstream txt(getInstMemTextName(VEC_CORE_START_IDX + i));
+        txt << vecProgs[i].toText();
+        txt.close();
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -361,18 +500,18 @@ int main(int argc, char *argv[]) {
     (64, 128) * (128, 10) took 88095 cycles if set MAT_REG_SIZE to 64 (CPU time 180.360s)
     */
     // 64 * 128
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < 16; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 128; j++) {
+        for (int j = 0; j < 16; j++) {
            row.push_back(j + 1); 
         }
         matA.push_back(row);
     }
     
     // 128 * 10
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < 16; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 10; j++) {
+        for (int j = 0; j < 16; j++) {
            row.push_back(j + 1); 
         }
         matB.push_back(row);
@@ -380,10 +519,12 @@ int main(int argc, char *argv[]) {
     
     assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
 
+    // init matC with zeroes
+    // TODO is this required? By default is it zero in memory?
     std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
     std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
 
-    singleCore(matA, matB, matC, matRef); 
-
+    // singleCore(matA, matB, matC, matRef); 
+    multiCore(matA, matB, matC, matRef);
     return 0;
 }

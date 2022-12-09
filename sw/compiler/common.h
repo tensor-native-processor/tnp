@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+typedef std::vector<std::vector<float>> matrix;
+
 struct StartupOptions {
     std::string matAFile;
     std::string matBFile;
