@@ -36,3 +36,11 @@ target_include_directories(mat_disas PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_include_directories(mat_disas PUBLIC ${PROJECT_SOURCE_DIR}/common)
 target_link_libraries(mat_disas mat_core)
 target_link_libraries(mat_disas common)
+
+
+# vec_disas
+add_executable(vec_disas vec_disas.cpp)
+target_include_directories(vec_disas PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_include_directories(vec_disas PUBLIC ${PROJECT_SOURCE_DIR}/common)
+target_link_libraries(vec_disas vec_core)
+target_link_libraries(vec_disas common)
