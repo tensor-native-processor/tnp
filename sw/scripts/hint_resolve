@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+import sys
+
+if len(sys.argv) < 2:
+    print("Insufficient arguments")
+    exit()
+
+outputFile = open(sys.argv[1])
+outputLines = outputFile.readlines()
+
+hintFile = open("hint.txt", "r")
+for hintLine in hintFile.readlines():
+    print(outputLines[int(hintLine)])
