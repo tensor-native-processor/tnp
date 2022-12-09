@@ -49,7 +49,9 @@ float OperatorRelu::relu(float x) const {
 // Compile for Relu
 void OperatorRelu::compile(const ::onnx::NodeProto& node,
         Orchestrator& orch,
-        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles) {
+        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles,
+        std::map<std::string, size_t>& refCount
+) {
 
     // Validate i/o size
     if (node.input_size() != 1 || node.output_size() != 1) {

@@ -15,7 +15,9 @@ public:
 
     void compile(const ::onnx::NodeProto&,
         Orchestrator&,
-        std::map<std::string, Orchestrator::MatrixHandle>&) override;
+        std::map<std::string, Orchestrator::MatrixHandle>&,
+        std::map<std::string, size_t>&
+    ) override;
 
 private:
     float relu(float) const;
