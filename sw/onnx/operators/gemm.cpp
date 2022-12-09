@@ -188,6 +188,14 @@ void OperatorGemm::compile(const ::onnx::NodeProto& node,
     // Get attributes
     getAttributes(node);
 
+    // Do transpose if necessary
+    if (attr_transA) {
+        handleA = orch.arithmeticTranspose(handleA);
+    }
+    if (attr_transB) {
+        handleB = orch.arithmeticTranspose(handleB);
+    }
+
     // Call orchestrator
     auto handleRes = orch.arithmeticMatMult(handleA, handleB);
 
