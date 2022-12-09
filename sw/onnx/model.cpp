@@ -161,6 +161,7 @@ std::vector<Tensor> ONNXModel::simulate(const std::vector<Tensor>& inputTensors)
 void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Tensor>& inputTensors) {
     Orchestrator orch(orchParam);
     std::map<std::string, Orchestrator::MatrixHandle> stateTensorHandles;
+    std::map<std::string, size_t> refCount;
 
     // Import initializers as handles
     for (const auto& [name, init] : m_initializers) {
@@ -179,6 +180,17 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
         auto handle = orch.dataMatrixAllocate(mc.m_shape);
         orch.dataMatrixLoadConstant(handle, mc);
         stateTensorHandles[m_graph.input(i).name()] = handle;
+    }
+
+    // Reference counting - node inputs
+    for (const auto& node : m_graph.node()) {
+        for (const auto& nodeIn : node.input()) {
+            refCount[nodeIn]++;
+        }
+    }
+    // Reference counting - graph outputs
+    for (const auto& graphOut : m_graph.output()) {
+        refCount[graphOut.name()]++;
     }
 
     // Run on each operator
