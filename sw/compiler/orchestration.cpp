@@ -264,16 +264,61 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticRelu(MatrixHandle handleIn) {
 }
 
 // Transpose
-Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handle) {
+Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handleIn) {
     // Find handle
-    if (m_dataMatrixStatus.count(handle) == 0) {
+    if (m_dataMatrixStatus.count(handleIn) == 0) {
         FatalError("Orchestrator relu handle not exist");
     }
-    const auto& matrixState = m_dataMatrixStatus.at(handle);
 
     // Allocate a new matrix
+    const auto& inState = m_dataMatrixStatus.at(handleIn);
     auto handleOut = dataMatrixAllocate({
-        matrixState.m_shape.y, matrixState.m_shape.x
+        inState.m_shape.y, inState.m_shape.x
     });
+    const auto& outState = m_dataMatrixStatus.at(handleOut);
+
+    auto& inCore = m_matCoreStatus[inState.m_coreIdx];
+    auto& outCore = m_matCoreStatus[outState.m_coreIdx];
+
+    // Copy from handleIn to handleOut
+    for (size_t bx = 0;bx < outState.m_shape.x;bx++) {
+        for (size_t by = 0;by < outState.m_shape.y;by++) {
+            MatCoreInst inst;
+            if (inState.m_coreIdx == outState.m_coreIdx) {
+                // Copy matrix (same core)
+                inst.opcode = MatCoreInstDefn::COPY;
+                inst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[by][bx];
+                inst.operands[MatCoreInstDefn::Md] = outState.m_regIdx[bx][by];
+                inCore.m_prog.append(inst);
+            } else {
+                // Send/Recv matrix
+                for (size_t r = 0;r < m_param.width;r++) {
+                    // Send
+                    inst.opcode = MatCoreInstDefn::SEND_ROW;
+                    inst.operands[MatCoreInstDefn::CORE_IDX] = outState.m_coreIdx;
+                    inst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[by][bx];
+                    inst.operands[MatCoreInstDefn::ROW_IDX] = r;
+                    inCore.m_prog.append(inst);
+                    // Recv
+                    inst.opcode = MatCoreInstDefn::RECV_ROW;
+                    inst.operands[MatCoreInstDefn::CORE_IDX] = inState.m_coreIdx;
+                    inst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
+                    inst.operands[MatCoreInstDefn::ROW_IDX] = r;
+                    outCore.m_prog.append(inst);
+                }
+            }
+        }
+    }
+
+    // Transpose
+    for (size_t bx = 0;bx < outState.m_shape.x;bx++) {
+        for (size_t by = 0;by < outState.m_shape.y;by++) {
+            MatCoreInst inst;
+            inst.opcode = MatCoreInstDefn::TRANSPOSE;
+            inst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
+            outCore.m_prog.append(inst);
+        }
+    }
+
     return handleOut;
 }

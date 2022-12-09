@@ -172,7 +172,7 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
 
     // Import input as handles
     if (inputTensors.size() < (size_t)m_graph.input_size()) {
-        FatalError("Insufficient inputs for simulate");
+        FatalError("Insufficient inputs for compilation");
     }
     for (size_t i = 0;i < (size_t)m_graph.input_size();i++) {
         auto mc = inputTensors[i].toMatrixConstant(orchParam.width);
@@ -198,6 +198,7 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
             FatalError("No output " + m_graph.output(i).name());
         }
         auto handle = stateTensorHandles.at(m_graph.output(i).name()); 
-        orch.dataMatrixStoreResult(handle);
+        auto result = orch.dataMatrixStoreResult(handle);
+        // Print result
     }
 }
