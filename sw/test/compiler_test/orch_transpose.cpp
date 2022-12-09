@@ -22,7 +22,7 @@ int main() {
     }
 
 
-    auto mc1 = d1.toMatrixConstant;
+    auto mc1 = d1.toMatrixConstant(16);
     auto handle1 = orch.dataMatrixAllocate(mc1.m_shape);
     orch.dataMatrixLoadConstant(handle1, mc1);
 
