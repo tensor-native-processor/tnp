@@ -181,7 +181,7 @@ void Orchestrator::dataMatrixLoadConstant(MatrixHandle handle, const MatrixConst
             MatCoreInst inst;
             inst.opcode = MatCoreInstDefn::LOAD_MAT;
             inst.operands[MatCoreInstDefn::ADDR] = coreState.m_dataMem.size(); // Start address
-            inst.operands[MatCoreInstDefn::M1] = matrixState.m_coreIdx;
+            inst.operands[MatCoreInstDefn::M1] = matrixState.m_regIdx[bx][by];
             coreState.m_prog.append(inst);
 
             // Add constant to dataMem
@@ -211,7 +211,7 @@ Orchestrator::MatrixResult Orchestrator::dataMatrixStoreResult(MatrixHandle hand
             MatCoreInst inst;
             inst.opcode = MatCoreInstDefn::STORE_MAT;
             inst.operands[MatCoreInstDefn::ADDR] = dataAddr[bx][by];
-            inst.operands[MatCoreInstDefn::M1] = matrixState.m_coreIdx;
+            inst.operands[MatCoreInstDefn::M1] = matrixState.m_regIdx[bx][by];
             coreState.m_prog.append(inst);
 
             // Allocate free space in dataMem
