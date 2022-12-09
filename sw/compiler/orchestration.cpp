@@ -1,5 +1,6 @@
 #include "orchestration.h"
 #include "error.h"
+#include "primitives/relu.h"
 #include "logging.h"
 
 #include <string>
