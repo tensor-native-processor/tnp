@@ -271,10 +271,19 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticRelu(MatrixHandle handleIn) {
     if (m_dataMatrixState.count(handleIn) == 0) {
         FatalError("Orchestrator relu handle not exist");
     }
-    const auto& matrixState = m_dataMatrixState.at(handleIn);
+    const auto& inState = m_dataMatrixState.at(handleIn);
 
     // Allocate a new matrix
-    auto handleOut = dataMatrixAllocate(matrixState.m_shape);
+    auto handleOut = dataMatrixAllocate(inState.m_shape);
+    const auto& outState = m_dataMatrixState.at(handleOut);
+
+    // Call primitive
+    MatPrimitiveRelu().compile(
+        m_procState,
+        outState,
+        inState
+    );
+
     return handleOut;
 }
 
