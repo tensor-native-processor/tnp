@@ -217,9 +217,6 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
         }
     }
 
-    // Compile
-    orch.compile();
-
     // Output tensor
     std::vector<Tensor> outputTensors;
     for (size_t i = 0;i < (size_t)m_graph.output_size();i++) {
@@ -230,4 +227,7 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
         auto result = orch.dataMatrixStoreResult(handle);
         // Print result
     }
+
+    // Compile
+    orch.compile();
 }
