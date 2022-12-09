@@ -28,3 +28,11 @@ target_include_directories(proc_u-16m4-16v4_sim PUBLIC ${PROJECT_SOURCE_DIR}/mat
 target_include_directories(proc_u-16m4-16v4_sim PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(proc_u-16m4-16v4_sim mat_core)
 target_link_libraries(proc_u-16m4-16v4_sim vec_core)
+
+
+# mat_disas
+add_executable(mat_disas mat_disas.cpp)
+target_include_directories(mat_disas PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_include_directories(mat_disas PUBLIC ${PROJECT_SOURCE_DIR}/common)
+target_link_libraries(mat_disas mat_core)
+target_link_libraries(mat_disas common)
