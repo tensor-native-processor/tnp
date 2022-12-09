@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(TensorNativeProcessor)
 
-option(BUILD_ONNX "Build ONNX module" OFF)
+option(HAS_PROTOBUF "Has protobuf library" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_BUILD_TYPE RELEASE)
@@ -17,7 +17,7 @@ add_subdirectory(simulation)
 add_subdirectory(test)
 add_subdirectory(compiler)
 
-if(BUILD_ONNX)
+if(HAS_PROTOBUF)
     find_package(Protobuf REQUIRED)
     add_subdirectory(onnx)
-endif(BUILD_ONNX)
+endif(HAS_PROTOBUF)
