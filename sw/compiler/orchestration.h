@@ -77,9 +77,14 @@ private:
         std::vector<float> m_dataMem;
     };
 
+    // Processor state
+    struct ProcState {
+        std::vector<MatCoreState> matCores;
+        std::vector<VecCoreState> vecCores;
+    };
+
     // Programs
-    std::vector<MatCoreState> m_matCoreStatus;
-    std::vector<VecCoreState> m_vecCoreStatus;
+    ProcState m_procState;
 
     // Total matrix handle
     size_t m_matrixHandleCount;
@@ -91,7 +96,7 @@ private:
         MatrixShape m_shape;
         std::vector<std::vector<size_t>> m_regIdx;
     };
-    std::map<MatrixHandle, MatrixState> m_dataMatrixStatus;
+    std::map<MatrixHandle, MatrixState> m_dataMatrixState;
 
     // Encode core ID to global IDs
     size_t getMatCoreID(size_t) const;
