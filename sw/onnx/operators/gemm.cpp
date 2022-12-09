@@ -204,4 +204,12 @@ void OperatorGemm::compile(const ::onnx::NodeProto& node,
         FatalError("Gemm output size not 1");
     }
     stateTensorHandles[node.output(0)] = handleRes;
+
+    // Remove transpose handle if necessary
+    if (attr_transA) {
+        orch.dataMatrixDeallocate(handleA);
+    }
+    if (attr_transB) {
+        orch.dataMatrixDeallocate(handleB);
+    }
 }

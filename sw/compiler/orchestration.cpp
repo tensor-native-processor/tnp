@@ -142,6 +142,8 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
 
     // Log allocated registers
     LogInfo("Orchestrator alloc (M-" + std::to_string(handle) + ") - core " + std::to_string(matrixState.m_coreIdx) + ": " + std::to_string(matCore.m_freeRegIdx.size()) + " remaining");
+    LogInfo("    Shape: " + std::to_string(shape.x) + ", " + std::to_string(shape.y));
+    /*
     for (size_t i = 0;i < shape.x;i++) {
         std::string line = "    ";
         for (size_t j = 0;j < shape.y;j++) {
@@ -149,6 +151,7 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
         }
         LogInfo(line);
     }
+    */
 
     // Return handle
     return handle;
