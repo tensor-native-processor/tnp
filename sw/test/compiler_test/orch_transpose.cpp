@@ -6,9 +6,9 @@
 int main() {
     Orchestrator orch(OrchestratorParam{
         .width = 16,
-        .matCacheSize = 256,
+        .matCacheSize = 4096,
         .matCoreCount = 4,
-        .vecCacheSize = 256,
+        .vecCacheSize = 4096,
         .vecCoreCount = 4
     });
 
