@@ -116,18 +116,18 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
     // Initialize matrixState
     // Attempt to find a MatCore for the matrix
     // TODO: better allocation algorithm
-    ssize_t freeCoreIdx = -1;
+    bool foundFreeCore = false;
     for (size_t i = 0;i < m_param.matCoreCount;i++) {
         if (m_procState.matCores[i].m_freeRegIdx.size() >=
                 shape.x * shape.y) {
-            freeCoreIdx = i;
+            foundFreeCore = true;
+            matrixState.m_coreIdx = i;
             break;
         }
     }
-    if (freeCoreIdx == -1) {
+    if (!foundFreeCore) {
         FatalError("Orchestrator alloc no reg");
     }
-    matrixState.m_coreIdx = freeCoreIdx;
     auto& matCore = m_procState.matCores[matrixState.m_coreIdx];
 
     // Fetch first shape.x * shape.y elements from matCore.m_freeRegIdx
