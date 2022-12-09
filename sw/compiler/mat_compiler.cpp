@@ -26,6 +26,25 @@ void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int
     }
 }
 
+void conditionalStoreAndLoad(
+    int matBlockReg, int matBlockMemAddr,
+    int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram &matProg) {
+    MatCoreInst matInst;
+
+    if (matBlockMemAddr != matRegToMemAddr[matBlockReg]) {
+        matInst.opcode = MatCoreInstDefn::STORE_MAT;
+        matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
+        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
+        matProg.append(matInst);
+
+        matInst.opcode = MatCoreInstDefn::LOAD_MAT;
+        matInst.operands[MatCoreInstDefn::ADDR] = matBlockMemAddr;
+        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
+        matProg.append(matInst);
+        matRegToMemAddr[matBlockReg] = matBlockMemAddr;
+    }
+}
+
 void loadMatBlocks(int rBlockSize, int cBlockSize, 
 int matRegStart, int matMemStart, 
 int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
@@ -42,36 +61,14 @@ int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
                 break;
             }
 
-            // load a mat block 
-            matInst.opcode = MatCoreInstDefn::LOAD_MAT;
             int reg = matRegStart + matABlockOffset;
             int addr = matMemStart + matAMemOffset;
-            matRegToMemAddr[reg] = addr;
-            matInst.operands[MatCoreInstDefn::ADDR] = addr;
-            matInst.operands[MatCoreInstDefn::M1] = reg;
-            matProg.append(matInst);
+            
+            // load a mat block 
+            conditionalStoreAndLoad(reg, addr, matMaxRegs, matRegToMemAddr, matProg);
         }
     }
 }
-
-void conditionalStoreAndLoad(
-    int matBlockReg, int matBlockMemAddr,
-    int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram &matProg) {
-    MatCoreInst matInst;
-
-    if (matBlockMemAddr != matRegToMemAddr[matBlockReg]) {
-        matInst.opcode = MatCoreInstDefn::STORE_MAT;
-        matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
-        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
-        matProg.append(matInst);
-
-        matInst.opcode = MatCoreInstDefn::LOAD_MAT;
-        matInst.operands[MatCoreInstDefn::ADDR] = matBlockMemAddr;
-        matInst.operands[MatCoreInstDefn::M1] = matBlockReg;
-        matProg.append(matInst);
-    }
-}
-
 
 void singleCoreHelper(
     int matCoreIdx, int vecCoreIdx, MatCoreProgram &matProg, VecCoreProgram &vecProg,
@@ -429,7 +426,14 @@ void multiCore(
     MatCoreProgram matProgs[NUM_MAT_CORES];
     VecCoreProgram vecProgs[NUM_VEC_CORES];
 
-    // MULT
+    /* MULT & ADD 1 (only support 4 cores for now)
+          MULT       ADD
+     core  A  B
+        0: 00 00 --> vec0 -> mat0  
+        1: 01 10 /
+        2: 10 01 \
+        3: 11 11 --> vec3 -> mat3
+    */
     for (int i = 0; i < coresPerRow; i++) {
         for (int j = 0; j < coresPerCol; j++) {
             matrix subMatA = subMatsA[i][j];
@@ -457,11 +461,23 @@ void multiCore(
         }    
     }
 
-    // EXCHANGE
+    /* EXCHANGE subMatB
+        0 <-> 2
+        1 <-> 3
+    */
 
-    // MULT
+    /* MULT & ADD 2 (only support 4 cores for now)
+          MULT       ADD
+     core  A  B
+        0: 00 01 \   
+        1: 01 11 --> vec1 -> mat1
+        2: 10 00 --> vec2 -> mat2
+        3: 11 10 / 
+    */
 
-    // SEND TO CORE 0
+    /* SEND SUBMATS TO CORE 0
+
+    */
 
     // inst mem for mat cores
     for (int i = 0; i < NUM_MAT_CORES; i++) {
@@ -503,7 +519,9 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 16; i++) {
         std::vector<float> row;
         for (int j = 0; j < 16; j++) {
-           row.push_back(j + 1); 
+            int num = j + 1;
+            if (i >= 8) num *= 2;
+            row.push_back(num); 
         }
         matA.push_back(row);
     }
@@ -512,7 +530,9 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 16; i++) {
         std::vector<float> row;
         for (int j = 0; j < 16; j++) {
-           row.push_back(j + 1); 
+            int num = j + 1;
+            if (i >= 8) num *= 2;
+            row.push_back(num); 
         }
         matB.push_back(row);
     }
