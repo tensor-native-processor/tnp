@@ -19,7 +19,7 @@ jobs:
       run: sudo apt-get install protobuf-compiler
 
     - name: Configure
-      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DBUILD_ONNX=on
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DHAS_PROTOBUF=on
 
     - name: Build
       run: cmake --build ${{github.workspace}}/sw/build --parallel
