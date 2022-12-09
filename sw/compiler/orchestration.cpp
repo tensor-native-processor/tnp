@@ -101,9 +101,6 @@ Orchestrator::MatrixState::MatrixState(const MatrixShape& shape)
 
 
 // Data operations
-// TODO: The simpler version allocates everything to matcore 0
-// In this case veccore are unused by orchestrator
-
 // Allocate a matrix
 Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& shape) {
     MatrixHandle handle = m_matrixHandleCount++;
@@ -114,27 +111,37 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
     if (!res.second) {
         FatalError("Duplicate MatrixHandle");
     }
+    auto& matrixState = res.first->second;
 
     // Initialize matrixState
-    auto& matrixState = res.first->second;
-    matrixState.m_coreIdx = 0;
+    // Attempt to find a MatCore for the matrix
+    // TODO: better allocation algorithm
+    ssize_t freeCoreIdx = -1;
+    for (size_t i = 0;i < m_param.matCoreCount;i++) {
+        if (m_procState.matCores[i].m_freeRegIdx.size() >=
+                shape.x * shape.y) {
+            freeCoreIdx = i;
+            break;
+        }
+    }
+    if (freeCoreIdx == -1) {
+        FatalError("Orchestrator alloc no reg");
+    }
+    matrixState.m_coreIdx = freeCoreIdx;
+    auto& matCore = m_procState.matCores[matrixState.m_coreIdx];
 
+    // Fetch first shape.x * shape.y elements from matCore.m_freeRegIdx
     for (size_t i = 0;i < shape.x;i++) {
         for (size_t j = 0;j < shape.y;j++) {
-            // Attempt to get a free register
-            if (m_procState.matCores[0].m_freeRegIdx.empty()) {
-                FatalError("Orchestrator alloc no reg");
-            }
-            auto freeRegIter = m_procState.matCores[0].m_freeRegIdx.begin();
-            size_t regIdx = *freeRegIter;
-            m_procState.matCores[0].m_freeRegIdx.erase(freeRegIter);
-
-            matrixState.m_regIdx[i][j] = regIdx;
+            // Attempt to get one free register
+            auto regIter = matCore.m_freeRegIdx.begin();
+            matrixState.m_regIdx[i][j] = *regIter;
+            matCore.m_freeRegIdx.erase(regIter);
         }
     }
 
     // Log allocated registers
-    LogInfo("Orchestrator alloc - core 0: " + std::to_string(m_procState.matCores[0].m_freeRegIdx.size()) + " remaining");
+    LogInfo("Orchestrator alloc - core " + std::to_string(matrixState.m_coreIdx) + ": " + std::to_string(matCore.m_freeRegIdx.size()) + " remaining");
     LogInfo("    handle: " + std::to_string(handle));
     for (size_t i = 0;i < shape.x;i++) {
         std::string line = "    ";
@@ -155,15 +162,17 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
         FatalError("Orchestrator dealloc " + std::to_string(handle) + " not exist");
     }
     auto& matrixState = m_dataMatrixState.at(handle);
+    auto& matCore = m_procState.matCores[matrixState.m_coreIdx];
+
     for (size_t i = 0;i < matrixState.m_shape.x;i++) {
         for (size_t j = 0;j < matrixState.m_shape.y;j++) {
             size_t regIdx = matrixState.m_regIdx[i][j];
-            m_procState.matCores[matrixState.m_coreIdx].m_freeRegIdx.insert(regIdx);
+            matCore.m_freeRegIdx.insert(regIdx);
         }
     }
     m_dataMatrixState.erase(handle);
 
-    LogInfo("Orchestrator dealloc - core " + std::to_string(matrixState.m_coreIdx) + ": " + std::to_string(m_procState.matCores[matrixState.m_coreIdx].m_freeRegIdx.size()) + " remaining");
+    LogInfo("Orchestrator dealloc - core " + std::to_string(matrixState.m_coreIdx) + ": " + std::to_string(matCore.m_freeRegIdx.size()) + " remaining");
 }
 
 // Load matrix from constants
