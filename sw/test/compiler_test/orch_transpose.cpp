@@ -32,6 +32,8 @@ int main() {
 
     auto handle2 = orch.arithmeticTranspose(handle1);
 
+    orch.dataMatrixDeallocate(handle1);
+
     auto res = orch.dataMatrixStoreResult(handle2);
 
 
