@@ -10,4 +10,4 @@ outputLines = outputFile.readlines()
 
 hintFile = open("hint.txt", "r")
 for hintLine in hintFile.readlines():
-    print(outputLines[int(hintLine)])
+    print(outputLines[int(hintLine)], end="")
