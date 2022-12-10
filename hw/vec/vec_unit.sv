@@ -52,7 +52,7 @@ module VecUnit
                             / ($exp(data_in1[i]) + $exp(-data_in1[i]));
                     end
                     VEC_UNIT_OP_ACT_RELU: begin
-                        data_out[i] = data_in1[i] >= 0 ? 1 : 0;
+                        data_out[i] = data_in1[i] >= 0 ? data_in1[i] : 0;
                     end
                 endcase
             end
