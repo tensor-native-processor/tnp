@@ -1,6 +1,5 @@
 #include "orchestration.h"
 #include "error.h"
-#include "primitives/relu.h"
 #include "logging.h"
 
 #include <string>
@@ -276,13 +275,6 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticRelu(MatrixHandle handleIn) {
     // Allocate a new matrix
     auto handleOut = dataMatrixAllocate(inState.m_shape);
     const auto& outState = m_dataMatrixState.at(handleOut);
-
-    // Call primitive
-    MatPrimitiveRelu().compile(
-        m_procState,
-        outState,
-        inState
-    );
 
     return handleOut;
 }
