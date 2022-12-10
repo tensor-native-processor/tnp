@@ -23,35 +23,42 @@ int main() {
 
     // Start instruction mem
     VecCoreProgram prog;
-    VecCoreInst inst;
 
     // Load memory
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 5;
-    prog.append(inst);
-
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 16;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    prog.append(inst);
+    prog.append({
+        VecCoreInstDefn::LOAD_VEC, {
+            {VecCoreInstDefn::ADDR, 0},
+            {VecCoreInstDefn::V1, 5}
+        }
+    });
+    prog.append({
+        VecCoreInstDefn::LOAD_VEC, {
+            {VecCoreInstDefn::ADDR, 16},
+            {VecCoreInstDefn::V1, 6}
+        }
+    });
 
     // Add two vectors
-    inst.opcode = VecCoreInstDefn::ADD;
-    inst.operands[VecCoreInstDefn::Vd] = 3;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    inst.operands[VecCoreInstDefn::V2] = 5;
-    prog.append(inst);
+    prog.append({
+        VecCoreInstDefn::ADD, {
+            {VecCoreInstDefn::Vd, 3},
+            {VecCoreInstDefn::V1, 6},
+            {VecCoreInstDefn::V2, 5}
+        }
+    });
 
     // store 3 to memory
-    inst.opcode = VecCoreInstDefn::STORE_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog.append(inst);
+    prog.append({
+        VecCoreInstDefn::STORE_VEC, {
+            {VecCoreInstDefn::ADDR, 0},
+            {VecCoreInstDefn::V1, 3}
+        }
+    });
 
     // halt
-    inst.opcode = VecCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({
+        VecCoreInstDefn::HALT, {}
+    });
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");
