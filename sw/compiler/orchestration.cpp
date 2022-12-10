@@ -296,13 +296,13 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handle
                 for (size_t r = 0;r < m_param.width;r++) {
                     // Send
                     inst.opcode = MatCoreInstDefn::SEND_ROW;
-                    inst.operands[MatCoreInstDefn::CORE_IDX] = outState.m_coreIdx;
+                    inst.operands[MatCoreInstDefn::CORE_IDX] = getMatCoreID(outState.m_coreIdx);
                     inst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[by][bx];
                     inst.operands[MatCoreInstDefn::ROW_IDX] = r;
                     inCore.m_prog.append(inst);
                     // Recv
                     inst.opcode = MatCoreInstDefn::RECV_ROW;
-                    inst.operands[MatCoreInstDefn::CORE_IDX] = inState.m_coreIdx;
+                    inst.operands[MatCoreInstDefn::CORE_IDX] = getMatCoreID(inState.m_coreIdx);
                     inst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
                     inst.operands[MatCoreInstDefn::ROW_IDX] = r;
                     outCore.m_prog.append(inst);

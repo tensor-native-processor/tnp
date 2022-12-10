@@ -101,6 +101,10 @@ private:
     // Encode core ID to global IDs
     size_t getMatCoreID(size_t) const;
     size_t getVecCoreID(size_t) const;
+
+
+    // Arithmetic operation primitives
+    MatrixHandle arithmeticReluSingleCore(MatrixHandle);
 };
 
 #endif
