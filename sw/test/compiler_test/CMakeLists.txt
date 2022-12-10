@@ -18,3 +18,11 @@ target_include_directories(orch_relu PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
 target_include_directories(orch_relu PUBLIC ${PROJECT_SOURCE_DIR}/onnx)
 target_link_libraries(orch_relu compiler)
 target_link_libraries(orch_relu tensor)
+
+
+# orch_relu_transpose
+add_executable(orch_relu_transpose orch_relu_transpose.cpp)
+target_include_directories(orch_relu_transpose PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
+target_include_directories(orch_relu_transpose PUBLIC ${PROJECT_SOURCE_DIR}/onnx)
+target_link_libraries(orch_relu_transpose compiler)
+target_link_libraries(orch_relu_transpose tensor)
