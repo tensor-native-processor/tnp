@@ -264,21 +264,6 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     return hd;
 }
 
-// Relu
-Orchestrator::MatrixHandle Orchestrator::arithmeticRelu(MatrixHandle handleIn) {
-    // Find handle
-    if (m_dataMatrixState.count(handleIn) == 0) {
-        FatalError("Orchestrator relu handle not exist");
-    }
-    const auto& inState = m_dataMatrixState.at(handleIn);
-
-    // Allocate a new matrix
-    auto handleOut = dataMatrixAllocate(inState.m_shape);
-    const auto& outState = m_dataMatrixState.at(handleOut);
-
-    return handleOut;
-}
-
 // Transpose
 Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handleIn) {
     // Find handle

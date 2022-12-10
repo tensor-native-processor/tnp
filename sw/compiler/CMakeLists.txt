@@ -6,7 +6,7 @@ target_link_libraries(mat_compiler vec_core)
 
 
 # Compiler library
-add_library(compiler orchestration.cpp)
+add_library(compiler orchestration.cpp relu.cpp)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/common)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
