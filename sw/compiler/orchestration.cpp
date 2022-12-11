@@ -4,6 +4,7 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 
 // MatrixShape comparison
@@ -34,6 +35,20 @@ Orchestrator::Orchestrator(const OrchestratorParam& param)
             m_procState.vecCores[coreID].m_freeRegIdx.push_back(regID);
         }
     }
+}
+
+
+// MatrixResult to hint
+std::string Orchestrator::MatrixResult::toHintLine(size_t width) const {
+    std::stringstream ss;
+    ss << m_coreIdx;
+    for (size_t i = 0;i < m_shape.x * width;i++) {
+        for (size_t j = 0;j < m_shape.y * width;j++) {
+            ss << "," << m_dataAddr[i / width][j / width] + width * (i % width) + j % width;
+        }
+    }
+    ss << "\n";
+    return ss.str();
 }
 
 

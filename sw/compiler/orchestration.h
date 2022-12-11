@@ -2,6 +2,7 @@
 #define __ORCHESTRATION_H__
 
 #include <vector>
+#include <string>
 #include "mat_program.h"
 #include "vec_program.h"
 
@@ -37,6 +38,7 @@ public:
         MatrixShape m_shape;
         size_t m_coreIdx;
         std::vector<std::vector<size_t>> m_dataAddr;
+        std::string toHintLine(size_t) const;
     };
     // Matrix constant
     struct MatrixConstant {
