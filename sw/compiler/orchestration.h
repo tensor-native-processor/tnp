@@ -105,6 +105,9 @@ private:
 
     // Arithmetic operation primitives
     MatrixHandle arithmeticReluSingleCore(MatrixHandle);
+
+    // Allocate find best core
+    size_t dataMatrixAllocateDetermineTargetCoreIdx(const MatrixShape&);
 };
 
 #endif

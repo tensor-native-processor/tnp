@@ -98,6 +98,26 @@ Orchestrator::MatrixState::MatrixState(const MatrixShape& shape)
 }
 
 
+// Finding the best core index for allocation
+size_t Orchestrator::dataMatrixAllocateDetermineTargetCoreIdx(const MatrixShape& shape) {
+    // Find maximum freeRegIdx
+    size_t targetCore = 0;
+    size_t targetCoreFreeReg = 0;
+    for (size_t i = 0;i < m_param.matCoreCount;i++) {
+        if (m_procState.matCores[i].m_freeRegIdx.size() >= targetCoreFreeReg) {
+            targetCore = i;
+            targetCoreFreeReg = m_procState.matCores[i].m_freeRegIdx.size();
+        }
+    }
+
+    // Validate if there are enough register for shape
+    if (targetCoreFreeReg < shape.x * shape.y) {
+        FatalError("Orchestrator alloc all cores insufficient reg");
+    }
+    return targetCore;
+}
+
+
 // Data operations
 // Allocate a matrix
 Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& shape) {
@@ -113,19 +133,7 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
 
     // Initialize matrixState
     // Attempt to find a MatCore for the matrix
-    // TODO: better allocation algorithm
-    bool foundFreeCore = false;
-    for (size_t i = 0;i < m_param.matCoreCount;i++) {
-        if (m_procState.matCores[i].m_freeRegIdx.size() >=
-                shape.x * shape.y) {
-            foundFreeCore = true;
-            matrixState.m_coreIdx = i;
-            break;
-        }
-    }
-    if (!foundFreeCore) {
-        FatalError("Orchestrator alloc no reg");
-    }
+    matrixState.m_coreIdx = dataMatrixAllocateDetermineTargetCoreIdx(shape);
     auto& matCore = m_procState.matCores[matrixState.m_coreIdx];
 
     // Fetch first shape.x * shape.y elements from matCore.m_freeRegIdx
