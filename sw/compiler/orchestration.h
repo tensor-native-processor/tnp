@@ -68,12 +68,12 @@ private:
     // MatCore/VecCore state
     struct MatCoreState {
         MatCoreProgram m_prog;
-        std::set<size_t> m_freeRegIdx;
+        std::vector<size_t> m_freeRegIdx;
         std::vector<float> m_dataMem;
     };
     struct VecCoreState {
         VecCoreProgram m_prog;
-        std::set<size_t> m_freeRegIdx;
+        std::vector<size_t> m_freeRegIdx;
         std::vector<float> m_dataMem;
     };
 

@@ -38,9 +38,11 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticReluSingleCore(MatrixHandle h
     auto& outCore = m_procState.matCores[outState.m_coreIdx];
 
     // 0 - Retrieve free register from vecCore
-    auto vecCoreTmpIter = vecCore.m_freeRegIdx.begin();
-    size_t vecCoreTmpReg = *vecCoreTmpIter;
-    vecCore.m_freeRegIdx.erase(vecCoreTmpIter);
+    if (vecCore.m_freeRegIdx.empty()) {
+        FatalError("Orchestrator relu freeRegIdx should not be empty");
+    }
+    size_t vecCoreTmpReg = vecCore.m_freeRegIdx.back();
+    vecCore.m_freeRegIdx.pop_back();
 
     // For each matrix register in inState
     for (size_t bx = 0;bx < inState.m_shape.x;bx++) {
@@ -79,7 +81,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticReluSingleCore(MatrixHandle h
     }
 
     // Release vecCoreTmpReg
-    vecCore.m_freeRegIdx.insert(vecCoreTmpReg);
+    vecCore.m_freeRegIdx.push_back(vecCoreTmpReg);
 
     // Done
     return handleOut;

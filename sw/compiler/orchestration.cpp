@@ -26,12 +26,12 @@ Orchestrator::Orchestrator(const OrchestratorParam& param)
     // Free registers
     for (size_t coreID = 0;coreID < m_param.matCoreCount;coreID++) {
         for (size_t regID = 0;regID < m_param.matCacheSize;regID++) {
-            m_procState.matCores[coreID].m_freeRegIdx.insert(regID);
+            m_procState.matCores[coreID].m_freeRegIdx.push_back(regID);
         }
     }
     for (size_t coreID = 0;coreID < m_param.vecCoreCount;coreID++) {
         for (size_t regID = 0;regID < m_param.vecCacheSize;regID++) {
-            m_procState.vecCores[coreID].m_freeRegIdx.insert(regID);
+            m_procState.vecCores[coreID].m_freeRegIdx.push_back(regID);
         }
     }
 }
@@ -132,9 +132,11 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
     for (size_t i = 0;i < shape.x;i++) {
         for (size_t j = 0;j < shape.y;j++) {
             // Attempt to get one free register
-            auto regIter = matCore.m_freeRegIdx.begin();
-            matrixState.m_regIdx[i][j] = *regIter;
-            matCore.m_freeRegIdx.erase(regIter);
+            if (matCore.m_freeRegIdx.empty()) {
+                FatalError("Orchestrator alloc freeRegIdx should not be empty");
+            }
+            matrixState.m_regIdx[i][j] = matCore.m_freeRegIdx.back();
+            matCore.m_freeRegIdx.pop_back();
         }
     }
 
@@ -167,7 +169,7 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
     for (size_t i = 0;i < matrixState.m_shape.x;i++) {
         for (size_t j = 0;j < matrixState.m_shape.y;j++) {
             size_t regIdx = matrixState.m_regIdx[i][j];
-            matCore.m_freeRegIdx.insert(regIdx);
+            matCore.m_freeRegIdx.push_back(regIdx);
         }
     }
     m_dataMatrixState.erase(handle);
