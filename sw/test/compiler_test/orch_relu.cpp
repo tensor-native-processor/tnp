@@ -56,8 +56,6 @@ int main() {
     // Print hint to check output
     std::ofstream hint("hint.txt");
     hint << res.toHintLine(width);
-    hint << "\n";
-
     hint.close();
 
     orch.compile();
