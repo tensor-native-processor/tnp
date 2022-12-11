@@ -84,7 +84,7 @@ module U_16M4_16U4
 
     // Timeout
     initial begin
-        #10000000 $finish;
+        #1000000 $finish;
     end
     
     integer i, data_mem_file;
