@@ -49,14 +49,12 @@ size_t Orchestrator::getVecCoreID(size_t id) const {
 void Orchestrator::compile() {
     // Add halt instruction
     for (size_t id = 0;id < m_param.matCoreCount;id++) {
-        MatCoreInst matInst;
-        matInst.opcode = MatCoreInstDefn::HALT;
-        m_procState.matCores[id].m_prog.append(matInst);
+        m_procState.matCores[id].m_prog.append({MatCoreInstDefn::HALT, {
+        }});
     }
     for (size_t id = 0;id < m_param.vecCoreCount;id++) {
-        VecCoreInst vecInst;
-        vecInst.opcode = VecCoreInstDefn::HALT;
-        m_procState.vecCores[id].m_prog.append(vecInst);
+        m_procState.vecCores[id].m_prog.append({VecCoreInstDefn::HALT, {
+        }});
     }
 
     // Save to files
@@ -192,11 +190,10 @@ void Orchestrator::dataMatrixLoadConstant(MatrixHandle handle, const MatrixConst
     for (size_t bx = 0;bx < matrixState.m_shape.x;bx++) {
         for (size_t by = 0;by < matrixState.m_shape.y;by++) {
             // Add load instruction
-            MatCoreInst inst;
-            inst.opcode = MatCoreInstDefn::LOAD_MAT;
-            inst.operands[MatCoreInstDefn::ADDR] = coreState.m_dataMem.size(); // Start address
-            inst.operands[MatCoreInstDefn::M1] = matrixState.m_regIdx[bx][by];
-            coreState.m_prog.append(inst);
+            coreState.m_prog.append({MatCoreInstDefn::LOAD_MAT, {
+                {MatCoreInstDefn::ADDR, coreState.m_dataMem.size()}, // Start address
+                {MatCoreInstDefn::M1, matrixState.m_regIdx[bx][by]}
+            }});
 
             // Add constant to dataMem
             if (inputData.m_data[bx][by].size() != m_param.width * m_param.width) {
@@ -222,11 +219,10 @@ Orchestrator::MatrixResult Orchestrator::dataMatrixStoreResult(MatrixHandle hand
             dataAddr[bx][by] = coreState.m_dataMem.size();
 
             // Add save instruction
-            MatCoreInst inst;
-            inst.opcode = MatCoreInstDefn::STORE_MAT;
-            inst.operands[MatCoreInstDefn::ADDR] = dataAddr[bx][by];
-            inst.operands[MatCoreInstDefn::M1] = matrixState.m_regIdx[bx][by];
-            coreState.m_prog.append(inst);
+            coreState.m_prog.append({MatCoreInstDefn::STORE_MAT, {
+                {MatCoreInstDefn::ADDR, dataAddr[bx][by]},
+                {MatCoreInstDefn::M1, matrixState.m_regIdx[bx][by]}
+            }});
 
             // Allocate free space in dataMem
             coreState.m_dataMem.insert(coreState.m_dataMem.end(), m_param.width * m_param.width, 0.0f);
@@ -284,28 +280,27 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handle
     // Copy from handleIn to handleOut
     for (size_t bx = 0;bx < outState.m_shape.x;bx++) {
         for (size_t by = 0;by < outState.m_shape.y;by++) {
-            MatCoreInst inst;
             if (inState.m_coreIdx == outState.m_coreIdx) {
                 // Copy matrix (same core)
-                inst.opcode = MatCoreInstDefn::COPY;
-                inst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[by][bx];
-                inst.operands[MatCoreInstDefn::Md] = outState.m_regIdx[bx][by];
-                inCore.m_prog.append(inst);
+                inCore.m_prog.append({MatCoreInstDefn::COPY, {
+                    {MatCoreInstDefn::M1, inState.m_regIdx[by][bx]},
+                    {MatCoreInstDefn::Md, outState.m_regIdx[bx][by]}
+                }});
             } else {
                 // Send/Recv matrix
                 for (size_t r = 0;r < m_param.width;r++) {
                     // Send
-                    inst.opcode = MatCoreInstDefn::SEND_ROW;
-                    inst.operands[MatCoreInstDefn::CORE_IDX] = getMatCoreID(outState.m_coreIdx);
-                    inst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[by][bx];
-                    inst.operands[MatCoreInstDefn::ROW_IDX] = r;
-                    inCore.m_prog.append(inst);
+                    inCore.m_prog.append({MatCoreInstDefn::SEND_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, getMatCoreID(outState.m_coreIdx)},
+                        {MatCoreInstDefn::M1, inState.m_regIdx[by][bx]},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
                     // Recv
-                    inst.opcode = MatCoreInstDefn::RECV_ROW;
-                    inst.operands[MatCoreInstDefn::CORE_IDX] = getMatCoreID(inState.m_coreIdx);
-                    inst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
-                    inst.operands[MatCoreInstDefn::ROW_IDX] = r;
-                    outCore.m_prog.append(inst);
+                    outCore.m_prog.append({MatCoreInstDefn::RECV_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, getMatCoreID(inState.m_coreIdx)},
+                        {MatCoreInstDefn::M1, outState.m_regIdx[bx][by]},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
                 }
             }
         }
@@ -314,10 +309,9 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handle
     // Transpose
     for (size_t bx = 0;bx < outState.m_shape.x;bx++) {
         for (size_t by = 0;by < outState.m_shape.y;by++) {
-            MatCoreInst inst;
-            inst.opcode = MatCoreInstDefn::TRANSPOSE;
-            inst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
-            outCore.m_prog.append(inst);
+            outCore.m_prog.append({MatCoreInstDefn::TRANSPOSE, {
+                {MatCoreInstDefn::M1, outState.m_regIdx[bx][by]}
+            }});
         }
     }
 
