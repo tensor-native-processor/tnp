@@ -54,11 +54,7 @@ int main() {
 
     // Print hint to check output
     std::ofstream hint("hint.txt");
-    for (size_t i = 0;i < res.m_shape.x * width;i++) {
-        for (size_t j = 0;j < res.m_shape.y * width;j++) {
-            hint << res.m_dataAddr[i / width][j / width] + width * (i % width) + j % width << "\n";
-        }
-    }
+    hint << res.toHintLine(width);
     hint.close();
 
     orch.compile();
