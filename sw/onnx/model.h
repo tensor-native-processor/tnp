@@ -1,7 +1,7 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
-#include "onnx.proto3.pb.h"
+#include "onnx.pb.h"
 
 #include "tensor.h"
 #include "orchestration.h"

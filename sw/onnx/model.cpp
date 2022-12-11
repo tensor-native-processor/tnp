@@ -218,6 +218,7 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
     }
 
     // Output tensor
+    std::ofstream hint("hint.txt");
     std::vector<Tensor> outputTensors;
     for (size_t i = 0;i < (size_t)m_graph.output_size();i++) {
         if (stateTensorHandles.count(m_graph.output(i).name()) == 0) {
@@ -225,8 +226,11 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
         }
         auto handle = stateTensorHandles.at(m_graph.output(i).name()); 
         auto result = orch.dataMatrixStoreResult(handle);
+
         // Print result
+        hint << result.toHintLine(orchParam.width);
     }
+    hint.close();
 
     // Compile
     orch.compile();

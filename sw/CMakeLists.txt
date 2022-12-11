@@ -18,6 +18,5 @@ add_subdirectory(test)
 add_subdirectory(compiler)
 
 if(HAS_PROTOBUF)
-    find_package(Protobuf REQUIRED)
     add_subdirectory(onnx)
 endif(HAS_PROTOBUF)
