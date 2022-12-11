@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Install protobuf
       run: sudo apt-get install protobuf-compiler
 
@@ -32,6 +32,21 @@ jobs:
 
     - name: Configure
       run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/sw/build --parallel
+
+  macos:
+    runs-on: macos-12
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install protobuf
+      run: brew install protobuf
+
+    - name: Configure
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DHAS_PROTOBUF=on
 
     - name: Build
       run: cmake --build ${{github.workspace}}/sw/build --parallel
