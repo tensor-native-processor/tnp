@@ -10,4 +10,7 @@ outputLines = outputFile.readlines()
 
 hintFile = open("hint.txt", "r")
 for hintLine in hintFile.readlines():
-    print(outputLines[int(hintLine)], end="")
+    elem = hintLine.strip().split(",")
+    coreIdx = int(elem[0])
+    for i in elem[1:]:
+        print(outputLines[int(i)], end="")
