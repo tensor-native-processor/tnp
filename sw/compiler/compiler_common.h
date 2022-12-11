@@ -1,5 +1,5 @@
-#ifndef COMMON_H_
-#define COMMON_H_
+#ifndef COMPILER_COMMON_H_
+#define COMPILER_COMMON_H_
 
 #include <cassert>
 #include <cmath>
@@ -30,6 +30,43 @@ const int MAT_CORE_START_IDX = 0;
 const int NUM_MAT_CORES = 4;
 const int VEC_CORE_START_IDX = 4;
 const int NUM_VEC_CORES = 4;
+
+class MatInfo {
+    public: 
+        MatInfo(const matrix &matA, const matrix &matB, const matrix &matC);
+        matrix matA;
+        matrix matB;
+        matrix matC;
+
+        int matARBlockSize;
+        int matACBlockSize;
+        int matBRBlockSize;
+        int matBCBlockSize;
+        
+        int matAMemSize;
+        int matBMemSize;
+        int matCMemSize;
+        
+        int matAMemStart;
+        int matBMemStart;
+        int matCMemStart;
+        
+        int matAMaxRegs;
+        int matBMaxRegs;
+        int matCMaxRegs;
+
+        int matARegStart;
+        int matBRegStart;
+        int matCRegStart;
+
+        int tmpReg;
+
+        int matRegToMemAddr[MAT_REG_SIZE];
+
+        int vecReg0;
+        int vecReg1;
+        int vecReg2;
+};
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {
     StartupOptions rs;
