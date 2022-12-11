@@ -72,12 +72,20 @@ int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
 }
 
 void singleCoreHelper(
-    int matCoreIdx, int vecCoreIdx, MatCoreProgram &matProg, VecCoreProgram &vecProg,
+    int matCoreIdx, int vecCoreIdx, 
+    MatCoreProgram &matProg, VecCoreProgram &vecProg,
     std::vector<std::vector<float>> &matA, 
     std::vector<std::vector<float>> &matB,
     std::vector<std::vector<float>> &matC,
     int matARBlockSize, int matACBlockSize,
-    int matBRBlockSize, int matBCBlockSize) {
+    int matBRBlockSize, int matBCBlockSize,
+    int matAMemStart, int matBMemStart, int matCMemStart,
+    int matARegStart, int matBRegStart, int matCRegStart,
+    int matAMaxRegs, int matBMaxRegs, int matCMaxRegs,
+    int (&matRegToMemAddr)[MAT_REG_SIZE],
+    int tmpReg,
+    int vecReg0, int vecReg1, int vecReg2
+    ) {
 
     std::ofstream matDM(getDataMemName(matCoreIdx));
     matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
@@ -105,67 +113,42 @@ void singleCoreHelper(
     std::ofstream vecDM(getDataMemName(vecCoreIdx));
     vecDM.close(); 
 
-    int matAMemSize = matARBlockSize * matACBlockSize * BLOCK_AREA;
-    int matBMemSize = matBRBlockSize * matBCBlockSize * BLOCK_AREA;
-    int matCMemSize = matARBlockSize * matBCBlockSize * BLOCK_AREA;
-
-    int matAMemStart = 0;
-    int matBMemStart = matAMemSize;
-    int matCMemStart = matBMemStart + matBMemSize;
-
-    // mat core registers
-    int matMaxRegs = (MAT_REG_SIZE - 1) / 3;
-    int matARegStart = 0;
-    int matBRegStart = matMaxRegs;
-    int matCRegStart = 2 * matMaxRegs;
-    // mat core tmp register
-    int tmpReg = MAT_REG_SIZE - 1;
-
-    int matRegToMemAddr[MAT_REG_SIZE];
-    for (int i = 0; i < MAT_REG_SIZE; i++) {
-        matRegToMemAddr[i] = -1;
-    }
-
-    // vec core registers
-    int vecReg0 = 0;
-    int vecReg1 = 1;
-    int vecReg2 = 2;
 
     MatCoreInst matInst;
     VecCoreInst vecInst;
 
     loadMatBlocks(matARBlockSize, matACBlockSize,
-        matARegStart, matAMemStart, matMaxRegs, matRegToMemAddr, matProg);
+        matARegStart, matAMemStart, matAMaxRegs, matRegToMemAddr, matProg);
 
     loadMatBlocks(matBRBlockSize, matBCBlockSize,
-        matBRegStart, matBMemStart, matMaxRegs, matRegToMemAddr, matProg);
+        matBRegStart, matBMemStart, matBMaxRegs, matRegToMemAddr, matProg);
 
     loadMatBlocks(matARBlockSize, matBCBlockSize,
-        matCRegStart, matCMemStart, matMaxRegs, matRegToMemAddr, matProg);
+        matCRegStart, matCMemStart, matCMaxRegs, matRegToMemAddr, matProg);
 
     // matCBlock_rc += matABlock_rk * matBBlock_kc
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
             int matABlockOffset = rBlockIdx * matACBlockSize + kBlockIdx;
             int matAMemOffset = matABlockOffset * BLOCK_AREA;
-            int matABlockReg = matARegStart + matABlockOffset % matMaxRegs;
+            int matABlockReg = matARegStart + matABlockOffset % matAMaxRegs;
             int matAMemAddr = matAMemStart + matAMemOffset;
-            conditionalStoreAndLoad(matABlockReg, matAMemAddr, matMaxRegs, 
+            conditionalStoreAndLoad(matABlockReg, matAMemAddr, matAMaxRegs, 
             matRegToMemAddr, matProg);
 
             for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
                 int matBBlockOffset = kBlockIdx * matBCBlockSize + cBlockIdx;
                 int matBMemOffset = matBBlockOffset * BLOCK_AREA;
-                int matBBlockReg = matBRegStart + matBBlockOffset % matMaxRegs;
+                int matBBlockReg = matBRegStart + matBBlockOffset % matBMaxRegs;
                 int matBMemAddr = matBMemStart + matBMemOffset; 
-                conditionalStoreAndLoad(matBBlockReg, matBMemAddr, matMaxRegs, 
+                conditionalStoreAndLoad(matBBlockReg, matBMemAddr, matBMaxRegs, 
                 matRegToMemAddr, matProg);
                 
                 int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
                 int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-                int matCBlockReg = matCRegStart + matCBlockOffset % matMaxRegs;
+                int matCBlockReg = matCRegStart + matCBlockOffset % matCMaxRegs;
                 int matCMemAddr = matCMemStart + matCMemOffset; 
-                conditionalStoreAndLoad(matCBlockReg, matCMemAddr, matMaxRegs, 
+                conditionalStoreAndLoad(matCBlockReg, matCMemAddr, matCMaxRegs, 
                 matRegToMemAddr, matProg);
 
                 // set weight of matA into systolic array
@@ -234,7 +217,7 @@ void singleCoreHelper(
     }
 
     // write all valid matC regs to mem  
-    for (int i = 0; i < matMaxRegs; i++) {
+    for (int i = 0; i < matCMaxRegs; i++) {
         int matCReg = matCRegStart + i;
         int addr = matRegToMemAddr[matCReg];
         if (addr != -1) {
@@ -290,14 +273,48 @@ void singleCore(
     }
     matAns.close();
 
+    int matAMemStart = 0;
+    int matBMemStart = matAMemSize;
+    int matCMemStart = matBMemStart + matBMemSize;
+
+    // mat core registers, reserve 1 for tmpReg
+    int matMaxRegs = (MAT_REG_SIZE - 1) / 3;
+    int matAMaxRegs, matBMaxRegs, matCMaxRegs;
+    matAMaxRegs = matBMaxRegs = matCMaxRegs = matMaxRegs;
+    
+    int matARegStart = 0;
+    int matBRegStart = matAMaxRegs;
+    int matCRegStart = matAMaxRegs + matBMaxRegs;
+
+    // mat core tmp register
+    int tmpReg = MAT_REG_SIZE - 1;
+
+    int matRegToMemAddr[MAT_REG_SIZE];
+    for (int i = 0; i < MAT_REG_SIZE; i++) {
+        matRegToMemAddr[i] = -1;
+    }
+
+    // vec core registers
+    int vecReg0 = 0;
+    int vecReg1 = 1;
+    int vecReg2 = 2;
+
     MatCoreProgram matProg;
     MatCoreInst matInst;
     VecCoreProgram vecProg;
     VecCoreInst vecInst;
     
-    singleCoreHelper(MAT_CORE_START_IDX, VEC_CORE_START_IDX,
+    singleCoreHelper(
+    MAT_CORE_START_IDX, VEC_CORE_START_IDX,
     matProg, vecProg, matA, matB, matC, 
-    matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize);
+    matARBlockSize, matACBlockSize, matBRBlockSize, matBCBlockSize,
+    matAMemStart, matBMemStart, matCMemStart,
+    matARegStart, matBRegStart, matCRegStart,
+    matAMaxRegs, matBMaxRegs, matCMaxRegs,
+    matRegToMemAddr,
+    tmpReg,
+    vecReg0, vecReg1, vecReg2
+    );
 
     // halt mat
     matInst.opcode = MatCoreInstDefn::HALT;
@@ -344,17 +361,17 @@ void singleCore(
     }
 }
 
-std::vector<std::vector<matrix>> getSubMats(matrix &mat, int coresPerRow, int coresPerCol) {
+std::vector<std::vector<matrix>> getSubMats(matrix &mat, int coresForRows, int coresForCols) {
     std::vector<std::vector<matrix>> subMats;  
-    int subMatRows = (mat.size() + coresPerRow - 1) / coresPerRow;
-    int subMatCols = (mat[0].size() + coresPerCol - 1) / coresPerCol;
+    int subMatRows = (mat.size() + coresForRows - 1) / coresForRows;
+    int subMatCols = (mat[0].size() + coresForCols - 1) / coresForCols;
      
-    for (int rCoreIdx = 0; rCoreIdx < coresPerRow; rCoreIdx++) {
+    for (int rCoreIdx = 0; rCoreIdx < coresForRows; rCoreIdx++) {
         std::vector<matrix> subMatsPerRow;
         int rStart = rCoreIdx * subMatRows;
         int rEnd = std::min((rCoreIdx + 1) * subMatRows, static_cast<int>(mat.size()));
         
-        for (int cCoreIdx = 0; cCoreIdx < coresPerCol; cCoreIdx++) {
+        for (int cCoreIdx = 0; cCoreIdx < coresForCols; cCoreIdx++) {
             matrix subMat;
             int cStart = cCoreIdx * subMatCols;
             int cEnd = std::min((cCoreIdx + 1) * subMatCols, static_cast<int>(mat[0].size())); 
@@ -370,8 +387,8 @@ std::vector<std::vector<matrix>> getSubMats(matrix &mat, int coresPerRow, int co
 
     // check correctness
     int totalSize = 0;
-    for (int rCoreIdx = 0; rCoreIdx < coresPerRow; rCoreIdx++) {
-        for (int cCoreIdx = 0; cCoreIdx < coresPerCol; cCoreIdx++) {
+    for (int rCoreIdx = 0; rCoreIdx < coresForRows; rCoreIdx++) {
+        for (int cCoreIdx = 0; cCoreIdx < coresForCols; cCoreIdx++) {
             matrix subMat = subMats[rCoreIdx][cCoreIdx];
             for (int i = 0; i < subMat.size(); i++) {
                 totalSize += subMat[i].size();
@@ -411,61 +428,128 @@ void multiCore(
     // TODO optimization compare row/col of matB vs matA for better division
 
     // short wide matA
-    int coresPerRow = smallFactor;
-    int coresPerCol = largeFactor;
+    int coresForRows = smallFactor;
+    int coresForCols = largeFactor;
 
     if (matA.size() > matA[0].size()) {
         // tall narrow matA
-        coresPerRow = largeFactor;
-        coresPerCol = smallFactor; 
+        coresForRows = largeFactor;
+        coresForCols = smallFactor; 
     }
 
-    std::vector<std::vector<matrix>> subMatsA = getSubMats(matA, coresPerRow, coresPerCol);     
-    std::vector<std::vector<matrix>> subMatsB = getSubMats(matB, coresPerRow, coresPerCol);     
-    std::vector<std::vector<matrix>> subMatsC = getSubMats(matC, coresPerRow, coresPerCol);     
+    std::vector<std::vector<matrix>> subMatsA = getSubMats(matA, coresForRows, coresForCols);     
+    std::vector<std::vector<matrix>> subMatsB = getSubMats(matB, coresForRows, coresForCols);     
+    std::vector<std::vector<matrix>> subMatsC = getSubMats(matC, coresForRows, coresForCols);     
 
     MatCoreProgram matProgs[NUM_MAT_CORES];
     VecCoreProgram vecProgs[NUM_VEC_CORES];
 
-    /* MULT & ADD 1 (only support 4 cores for now)
-          MULT       ADD
-     core  A  B
-        0: 00 00 --> vec0 -> mat0  
-        1: 01 10 /
-        2: 10 01 \
-        3: 11 11 --> vec3 -> mat3
-    */
-    for (int i = 0; i < coresPerRow; i++) {
-        for (int j = 0; j < coresPerCol; j++) {
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            /* MULT & ADD 1 (only support 4 cores for now)
+                MULT       ADD
+            core  A  B
+                0: 00 00 --> vec0 -> mat0  
+                1: 01 10 /
+                2: 10 01 \
+                3: 11 11 --> vec3 -> mat3
+            */
             matrix subMatA = subMatsA[i][j];
-            matrix subMatB = subMatsB[i][j];
-            matrix subMatC = subMatsC[i][j];
+            matrix subMatB; 
+            matrix subMatC;
+            if ((i == 0 && j == 1) || (i == 1 && j == 0)) {
+                subMatB = subMatsB[j][i];
+                subMatC = subMatsC[i][i];
+            } else {
+                subMatB = subMatsB[i][j];
+                subMatC = subMatsC[i][j];
+            } 
 
             int subMatARBlockSize = (subMatA.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
             int subMatACBlockSize = (subMatA[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
             int subMatBRBlockSize = (subMatB.size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
             int subMatBCBlockSize = (subMatB[0].size() + BLOCK_WIDTH - 1) / BLOCK_WIDTH;
 
-            int matCoreOffset = i * coresPerCol + j;
-            int vecCoreOffset = i * coresPerCol + j;
+            int matAMemSize = subMatARBlockSize * subMatACBlockSize * BLOCK_AREA;
+            int matBMemSize = subMatBRBlockSize * subMatBCBlockSize * BLOCK_AREA;
+
+            int matAMemStart = 0;
+            int matBMemStart = matAMemSize;
+            int matCMemStart = matBMemStart + matBMemSize;
+
+            // mat core registers, reserve 1 for tmpReg
+            int matMaxRegs = (MAT_REG_SIZE - 1) / 3;
+            int matAMaxRegs, matBMaxRegs, matCMaxRegs;
+            matAMaxRegs = matBMaxRegs = matCMaxRegs = matMaxRegs;
+
+            int matARegStart = 0;
+            int matBRegStart = matAMaxRegs;
+            int matCRegStart = matAMaxRegs + matBMaxRegs;
             
+            // mat core tmp register
+            int tmpReg = MAT_REG_SIZE - 1;
+
+            int matRegToMemAddr[MAT_REG_SIZE];
+            for (int i = 0; i < MAT_REG_SIZE; i++) {
+                matRegToMemAddr[i] = -1;
+            }
+
+            // vec core registers
+            int vecReg0 = 0;
+            int vecReg1 = 1;
+            int vecReg2 = 2;
+
+            MatCoreInst matInst;
+            VecCoreInst vecInst;
+
             // TODO ans.txt for easy diffing
 
-            // do sub matrix multiplication on every core 
+            int matCoreOffset = i * coresForCols + j;
+            int vecCoreOffset = i * coresForCols + j;
+            
+            // MULT do sub matrix multiplication on every core 
             singleCoreHelper(
                 MAT_CORE_START_IDX + matCoreOffset, VEC_CORE_START_IDX + vecCoreOffset, 
                 matProgs[matCoreOffset], vecProgs[matCoreOffset], 
                 subMatA, subMatB, subMatC,  
                 subMatARBlockSize, subMatACBlockSize,
-                subMatBRBlockSize, subMatBCBlockSize
+                subMatBRBlockSize, subMatBCBlockSize,
+                matAMemStart, matBMemStart, matCMemStart,
+                matARegStart, matBRegStart, matCRegStart,
+                matAMaxRegs, matBMaxRegs, matCMaxRegs,
+                matRegToMemAddr,
+                tmpReg,
+                vecReg0, vecReg1, vecReg2
             );
+
+
+            // ADD add results using the vector core
+            // matInst.opcode = MatCoreInstDefn::SEND_ROW;
+            // matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
+            // matInst.operands[MatCoreInstDefn::M1] = tmpReg;
+            // matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+            // matProg[matCoreOffset].append(matInst);
+
+
+            // STORE store result to memory
         }    
     }
 
     /* EXCHANGE subMatB
-        0 <-> 2
-        1 <-> 3
+        0 (00) <-> 2 (10)
+        1 (01) <-> 3 (11)
     */
+
+    // for (int i = 0; i < BLOCK_WIDTH; i++) {
+    //     MatCoreInst matInst;
+    //     matInst.opcode = MatCoreInstDefn::SEND_ROW;
+    //     matInst.operands[MatCoreInstDefn::CORE_IDX] = matCoreIdx1;
+    //     matInst.operands[MatCoreInstDefn::M1] = ;
+    //     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+
+    // }
+    // matProgs[i].append()
+       
 
     /* MULT & ADD 2 (only support 4 cores for now)
           MULT       ADD
