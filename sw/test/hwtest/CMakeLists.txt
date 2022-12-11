@@ -32,3 +32,10 @@ add_executable(proc_u-16m4-16v4 proc_u-16m4-16v4.cpp)
 target_include_directories(proc_u-16m4-16v4 PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_include_directories(proc_u-16m4-16v4 PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(proc_u-16m4-16v4 mat_core vec_core)
+
+
+# proc_u-64m4-64v4
+add_executable(proc_u-64m4-64v4 proc_u-64m4-64v4.cpp)
+target_include_directories(proc_u-64m4-64v4 PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_include_directories(proc_u-64m4-64v4 PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
+target_link_libraries(proc_u-64m4-64v4 mat_core vec_core)
