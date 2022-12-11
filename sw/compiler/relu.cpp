@@ -46,38 +46,34 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticReluSingleCore(MatrixHandle h
     for (size_t bx = 0;bx < inState.m_shape.x;bx++) {
         for (size_t by = 0;by < inState.m_shape.y;by++) {
             for (size_t i = 0;i < m_param.width;i++) {
-                MatCoreInst matInst;
-                VecCoreInst vecInst;
-
                 // 1 - Send inCore -> vecCore
-                matInst.opcode = MatCoreInstDefn::SEND_ROW;
-                matInst.operands[MatCoreInstDefn::CORE_IDX] = getVecCoreID(vecCoreIdx);
-                matInst.operands[MatCoreInstDefn::M1] = inState.m_regIdx[bx][by];
-                matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-                inCore.m_prog.append(matInst);
-
-                vecInst.opcode = VecCoreInstDefn::RECV_VEC;
-                vecInst.operands[VecCoreInstDefn::CORE_IDX] = getMatCoreID(inState.m_coreIdx);
-                vecInst.operands[VecCoreInstDefn::V1] = vecCoreTmpReg;
-                vecCore.m_prog.append(vecInst);
+                inCore.m_prog.append({MatCoreInstDefn::SEND_ROW, {
+                    {MatCoreInstDefn::CORE_IDX, getVecCoreID(vecCoreIdx)},
+                    {MatCoreInstDefn::M1, inState.m_regIdx[bx][by]},
+                    {MatCoreInstDefn::ROW_IDX, i}
+                }});
+                vecCore.m_prog.append({VecCoreInstDefn::RECV_VEC, {
+                    {VecCoreInstDefn::CORE_IDX, getMatCoreID(inState.m_coreIdx)},
+                    {VecCoreInstDefn::V1, vecCoreTmpReg}
+                }});
 
                 // 2 - Relu
-                vecInst.opcode = VecCoreInstDefn::ACT_RELU;
-                vecInst.operands[VecCoreInstDefn::Vd] = vecCoreTmpReg;
-                vecInst.operands[VecCoreInstDefn::V1] = vecCoreTmpReg;
-                vecCore.m_prog.append(vecInst);
+                vecCore.m_prog.append({VecCoreInstDefn::ACT_RELU, {
+                    {VecCoreInstDefn::Vd, vecCoreTmpReg},
+                    {VecCoreInstDefn::V1, vecCoreTmpReg}
+                }});
 
                 // 3 - Send vecCore -> outCore
-                vecInst.opcode = VecCoreInstDefn::SEND_VEC;
-                vecInst.operands[VecCoreInstDefn::CORE_IDX] = getMatCoreID(outState.m_coreIdx);
-                vecInst.operands[VecCoreInstDefn::V1] = vecCoreTmpReg;
-                vecCore.m_prog.append(vecInst);
+                vecCore.m_prog.append({VecCoreInstDefn::SEND_VEC, {
+                    {VecCoreInstDefn::CORE_IDX, getMatCoreID(outState.m_coreIdx)},
+                    {VecCoreInstDefn::V1, vecCoreTmpReg}
 
-                matInst.opcode = MatCoreInstDefn::RECV_ROW;
-                matInst.operands[MatCoreInstDefn::CORE_IDX] = getVecCoreID(vecCoreIdx);
-                matInst.operands[MatCoreInstDefn::M1] = outState.m_regIdx[bx][by];
-                matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-                outCore.m_prog.append(matInst);
+                }});
+                outCore.m_prog.append({MatCoreInstDefn::RECV_ROW, {
+                    {MatCoreInstDefn::CORE_IDX, getVecCoreID(vecCoreIdx)},
+                    {MatCoreInstDefn::M1, outState.m_regIdx[bx][by]},
+                    {MatCoreInstDefn::ROW_IDX, i}
+                }});
             }
         }
     }
