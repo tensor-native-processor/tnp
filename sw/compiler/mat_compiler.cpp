@@ -71,6 +71,59 @@ int matMaxRegs, int (&matRegToMemAddr)[MAT_REG_SIZE], MatCoreProgram& matProg) {
     }
 }
 
+void sumBlocks(
+    MatCoreProgram &fromMatProg1, MatCoreProgram &fromMatProg2, VecCoreProgram &vecProg, MatCoreProgram &toMatProg, 
+    int fromMatCoreIdx1, int fromMatCoreIdx2, int vecCoreIdx, int toMatCoreIdx,
+    int fromMatCoreReg1, int fromMatCoreReg2, int vecReg0, int vecReg1, int vecReg2, int toMatCoreReg) {
+    MatCoreInst matInst;
+    VecCoreInst vecInst;
+    // send rows to vec core for addition
+    for (int i = 0; i < BLOCK_WIDTH; i++) {
+        // send rows of mat1 to vec core
+        matInst.opcode = MatCoreInstDefn::SEND_ROW;
+        matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
+        matInst.operands[MatCoreInstDefn::M1] = fromMatCoreReg1;
+        matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+        fromMatProg1.append(matInst);
+
+        vecInst.opcode = VecCoreInstDefn::RECV_VEC;
+        vecInst.operands[VecCoreInstDefn::CORE_IDX] = fromMatCoreIdx1;
+        vecInst.operands[VecCoreInstDefn::V1] = vecReg0;
+        vecProg.append(vecInst);                    
+
+        // send rows of mat2 to vec core 
+        matInst.opcode = MatCoreInstDefn::SEND_ROW;
+        matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
+        matInst.operands[MatCoreInstDefn::M1] = fromMatCoreReg2;
+        matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+        fromMatProg2.append(matInst);
+
+        vecInst.opcode = VecCoreInstDefn::RECV_VEC;
+        vecInst.operands[VecCoreInstDefn::CORE_IDX] = fromMatCoreIdx2;
+        vecInst.operands[VecCoreInstDefn::V1] = vecReg1;
+        vecProg.append(vecInst);
+
+        // vec core performs addition
+        vecInst.opcode = VecCoreInstDefn::ADD;
+        vecInst.operands[VecCoreInstDefn::Vd] = vecReg2;
+        vecInst.operands[VecCoreInstDefn::V1] = vecReg0;
+        vecInst.operands[VecCoreInstDefn::V2] = vecReg1;
+        vecProg.append(vecInst);
+
+        // recv rows from vec core
+        vecInst.opcode = VecCoreInstDefn::SEND_VEC;
+        vecInst.operands[VecCoreInstDefn::CORE_IDX] = toMatCoreIdx;
+        vecInst.operands[VecCoreInstDefn::V1] = vecReg2;
+        vecProg.append(vecInst);
+
+        matInst.opcode = MatCoreInstDefn::RECV_ROW;
+        matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
+        matInst.operands[MatCoreInstDefn::M1] = toMatCoreReg;
+        matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+        toMatProg.append(matInst);
+    }
+}
+
 void singleCoreHelper(
     int matCoreIdx, int vecCoreIdx, 
     MatCoreProgram &matProg, VecCoreProgram &vecProg,
@@ -163,50 +216,11 @@ void singleCoreHelper(
                 matProg.append(matInst);
 
                 // send rows to vec core for addition
-                for (int i = 0; i < BLOCK_WIDTH; i++) {
-                    // send rows of tmp to vec core
-                    matInst.opcode = MatCoreInstDefn::SEND_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
-                    matInst.operands[MatCoreInstDefn::M1] = tmpReg;
-                    matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-                    matProg.append(matInst);
-
-                    vecInst.opcode = VecCoreInstDefn::RECV_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
-                    vecInst.operands[VecCoreInstDefn::V1] = vecReg0;
-                    vecProg.append(vecInst);                    
-
-                    // send rows of matC to vec core 
-                    matInst.opcode = MatCoreInstDefn::SEND_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
-                    matInst.operands[MatCoreInstDefn::M1] = matCBlockReg;
-                    matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-                    matProg.append(matInst);
-
-                    vecInst.opcode = VecCoreInstDefn::RECV_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
-                    vecInst.operands[VecCoreInstDefn::V1] = vecReg1;
-                    vecProg.append(vecInst);
-
-                    // vec core performs addition
-                    vecInst.opcode = VecCoreInstDefn::ADD;
-                    vecInst.operands[VecCoreInstDefn::Vd] = vecReg2;
-                    vecInst.operands[VecCoreInstDefn::V1] = vecReg0;
-                    vecInst.operands[VecCoreInstDefn::V2] = vecReg1;
-                    vecProg.append(vecInst);
-
-                    // recv rows from vec core
-                    vecInst.opcode = VecCoreInstDefn::SEND_VEC;
-                    vecInst.operands[VecCoreInstDefn::CORE_IDX] = matCoreIdx;
-                    vecInst.operands[VecCoreInstDefn::V1] = vecReg2;
-                    vecProg.append(vecInst);
-
-                    matInst.opcode = MatCoreInstDefn::RECV_ROW;
-                    matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
-                    matInst.operands[MatCoreInstDefn::M1] = matCBlockReg;
-                    matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-                    matProg.append(matInst);
-                }
+                sumBlocks(
+                    matProg, matProg, vecProg, matProg,
+                    matCoreIdx, matCoreIdx, vecCoreIdx, matCoreIdx,
+                    tmpReg, matCBlockReg, vecReg0, vecReg1, vecReg2, matCBlockReg
+                );
 
                 printf("matABlock_%d%d: %7d matBBlock_%d%d: %7d+%7d matCBlock_%d%d: %7d+%7d\n", 
                 rBlockIdx, kBlockIdx, matAMemOffset, 
@@ -446,6 +460,9 @@ void multiCore(
 
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int vecCoreOffset = i * coresForCols + j;
+            
             /* MULT & ADD 1 (only support 4 cores for now)
                 MULT       ADD
             core  A  B
@@ -457,7 +474,7 @@ void multiCore(
             matrix subMatA = subMatsA[i][j];
             matrix subMatB; 
             matrix subMatC;
-            if ((i == 0 && j == 1) || (i == 1 && j == 0)) {
+            if (matCoreOffset == 1 || matCoreOffset == 2) {
                 subMatB = subMatsB[j][i];
                 subMatC = subMatsC[i][i];
             } else {
@@ -499,13 +516,7 @@ void multiCore(
             int vecReg1 = 1;
             int vecReg2 = 2;
 
-            MatCoreInst matInst;
-            VecCoreInst vecInst;
-
             // TODO ans.txt for easy diffing
-
-            int matCoreOffset = i * coresForCols + j;
-            int vecCoreOffset = i * coresForCols + j;
             
             // MULT do sub matrix multiplication on every core 
             singleCoreHelper(
@@ -522,13 +533,19 @@ void multiCore(
                 vecReg0, vecReg1, vecReg2
             );
 
-
             // ADD add results using the vector core
-            // matInst.opcode = MatCoreInstDefn::SEND_ROW;
-            // matInst.operands[MatCoreInstDefn::CORE_IDX] = vecCoreIdx;
-            // matInst.operands[MatCoreInstDefn::M1] = tmpReg;
-            // matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-            // matProg[matCoreOffset].append(matInst);
+            // MatCoreInst matInst;
+            // VecCoreInst vecInst;
+            
+            // if (matCoreOffset == 0 || matCoreOffset == 1) {
+            //     matInst.opcode = MatCoreInstDefn::SEND_ROW;
+            //     matInst.operands[MatCoreInstDefn::CORE_IDX] = ;
+            //     matInst.operands[MatCoreInstDefn::M1] = tmpReg;
+            //     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
+            //     matProg[matCoreOffset].append(matInst);
+            // } else if (matCoreOffset == 2 || matCoreOffset == 3) {
+
+            // }
 
 
             // STORE store result to memory
@@ -601,22 +618,22 @@ int main(int argc, char *argv[]) {
     (64, 128) * (128, 10) took 88095 cycles if set MAT_REG_SIZE to 64 (CPU time 180.360s)
     */
     // 64 * 128
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 64; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 128; j++) {
             int num = j + 1;
-            if (i >= 8) num *= 2;
+            // if (i >= 8) num *= 2;
             row.push_back(num); 
         }
         matA.push_back(row);
     }
     
     // 128 * 10
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 128; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 10; j++) {
             int num = j + 1;
-            if (i >= 8) num *= 2;
+            // if (i >= 8) num *= 2;
             row.push_back(num); 
         }
         matB.push_back(row);
@@ -629,7 +646,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
     std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
 
-    // singleCore(matA, matB, matC, matRef); 
-    multiCore(matA, matB, matC, matRef);
+    singleCore(matA, matB, matC, matRef); 
+    // multiCore(matA, matB, matC, matRef);
     return 0;
 }
