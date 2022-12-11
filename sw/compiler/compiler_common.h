@@ -22,8 +22,8 @@ struct StartupOptions {
 const float EPSILON = 1e-5;
 const int BLOCK_WIDTH = 16;
 const int BLOCK_AREA = BLOCK_WIDTH * BLOCK_WIDTH;
-const int MAT_REG_SIZE = 256;
-const int VEC_REG_SIZE = 256;
+const int MAT_REG_SIZE = 256; //4;
+const int VEC_REG_SIZE = 256; //4;
 const int FLOAT_PRECISION = 6;
 const int DATA_MEM_SIZE = 65536;
 const int MAT_CORE_START_IDX = 0;
@@ -34,6 +34,8 @@ const int NUM_VEC_CORES = 4;
 class MatInfo {
     public: 
         MatInfo(const matrix &matA, const matrix &matB, const matrix &matC);
+        MatInfo(const matrix &matA, const matrix &matB, const matrix &matC, 
+        int matAMemOffset, int matBMemOffset, int matCMemOffset);
         matrix matA;
         matrix matB;
         matrix matC;
@@ -66,6 +68,9 @@ class MatInfo {
         int vecReg0;
         int vecReg1;
         int vecReg2;
+
+    private:
+        void init(const matrix &matA, const matrix &matB, const matrix &matC);
 };
 
 inline StartupOptions parseOptions(int argc, char *argv[]) {

@@ -1,6 +1,6 @@
 #include "compiler_common.h"
 
-MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
+void MatInfo::init(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
     matA = matAIn;
     matB = matBIn;
     matC = matCIn; 
@@ -40,3 +40,14 @@ MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCI
     vecReg2 = 2;
 }
 
+MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
+    MatInfo::init(matAIn, matBIn, matCIn);
+}
+
+MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn, 
+int matAMemStartIn, int matBMemStartIn, int matCMemStartIn) {
+    MatInfo::init(matAIn, matBIn, matCIn);
+    matAMemStart = matAMemStartIn;
+    matBMemStart = matBMemStartIn;
+    matCMemStart = matCMemStartIn;
+}

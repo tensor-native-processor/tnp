@@ -131,9 +131,6 @@ void sumBlock(
 void singleCoreHelper(
     int matCoreIdx, int vecCoreIdx, 
     MatCoreProgram &matProg, VecCoreProgram &vecProg,
-    std::vector<std::vector<float>> &matA, 
-    std::vector<std::vector<float>> &matB,
-    std::vector<std::vector<float>> &matC,
     int matARBlockSize, int matACBlockSize,
     int matBRBlockSize, int matBCBlockSize,
     int matAMemStart, int matBMemStart, int matCMemStart,
@@ -143,33 +140,6 @@ void singleCoreHelper(
     int tmpReg,
     int vecReg0, int vecReg1, int vecReg2
     ) {
-
-    std::ofstream matDM(getDataMemName(matCoreIdx));
-    matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
-    
-    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
-        for (int cBlockIdx = 0; cBlockIdx < matACBlockSize; cBlockIdx++) {
-            writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matDM);
-        }
-    }
-    
-    for (int rBlockIdx = 0; rBlockIdx < matBRBlockSize; rBlockIdx++) {
-        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matDM);
-        }
-    }
-
-    for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
-        for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
-            writeBlockMatToMem(matC, rBlockIdx, cBlockIdx, false, matDM);
-        }
-    }
-    
-    matDM.close(); 
-
-    std::ofstream vecDM(getDataMemName(vecCoreIdx));
-    vecDM.close(); 
-
 
     MatCoreInst matInst;
     VecCoreInst vecInst;
@@ -284,6 +254,30 @@ void singleCore(
     }
     matAns.close();
 
+    std::ofstream matDM(getDataMemName(0));
+    matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
+    
+    for (int rBlockIdx = 0; rBlockIdx < mi.matARBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < mi.matACBlockSize; cBlockIdx++) {
+            writeBlockMatToMem(matA, rBlockIdx, cBlockIdx, true, matDM);
+        }
+    }
+    
+    for (int rBlockIdx = 0; rBlockIdx < mi.matBRBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < mi.matBCBlockSize; cBlockIdx++) {
+            writeBlockMatToMem(matB, rBlockIdx, cBlockIdx, false, matDM);
+        }
+    }
+
+    for (int rBlockIdx = 0; rBlockIdx < mi.matARBlockSize; rBlockIdx++) {
+        for (int cBlockIdx = 0; cBlockIdx < mi.matBCBlockSize; cBlockIdx++) {
+            writeBlockMatToMem(matC, rBlockIdx, cBlockIdx, false, matDM);
+        }
+    }
+    matDM.close(); 
+
+    std::ofstream vecDM(getDataMemName(0));
+    vecDM.close(); 
 
     MatCoreProgram matProg;
     MatCoreInst matInst;
@@ -291,15 +285,15 @@ void singleCore(
     VecCoreInst vecInst;
     
     singleCoreHelper(
-    MAT_CORE_START_IDX, VEC_CORE_START_IDX,
-    matProg, vecProg, matA, matB, matC, 
-    mi.matARBlockSize, mi.matACBlockSize, mi.matBRBlockSize, mi.matBCBlockSize,
-    mi.matAMemStart, mi.matBMemStart, mi.matCMemStart,
-    mi.matARegStart, mi.matBRegStart, mi.matCRegStart,
-    mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
-    mi.matRegToMemAddr,
-    mi.tmpReg,
-    mi.vecReg0, mi.vecReg1, mi.vecReg2
+        MAT_CORE_START_IDX, VEC_CORE_START_IDX,
+        matProg, vecProg, 
+        mi.matARBlockSize, mi.matACBlockSize, mi.matBRBlockSize, mi.matBCBlockSize,
+        mi.matAMemStart, mi.matBMemStart, mi.matCMemStart,
+        mi.matARegStart, mi.matBRegStart, mi.matCRegStart,
+        mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
+        mi.matRegToMemAddr,
+        mi.tmpReg,
+        mi.vecReg0, mi.vecReg1, mi.vecReg2
     );
 
     // halt mat
@@ -398,7 +392,98 @@ std::vector<std::vector<matrix>> getSubMats(matrix &mat, int coresForRows, int c
     assert(totalSize == mat.size() * mat[0].size());
     
     return subMats;
-} 
+}
+
+void multiMultAndAdd(int coresForRows, int coresForCols, 
+    std::vector<MatInfo> &subMatInfos, 
+    MatCoreProgram (&matProgs)[NUM_MAT_CORES],
+    VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs) {
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int vecCoreOffset = i * coresForCols + j;
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+            int vecCoreIdx = VEC_CORE_START_IDX + vecCoreOffset;
+
+            // TODO ans.txt for easy diffing
+
+            MatInfo &mi = subMatInfos[matCoreOffset];
+
+            // MULT do sub matrix multiplication on every core 
+            singleCoreHelper(
+                matCoreIdx, vecCoreIdx, 
+                matProgs[matCoreOffset], vecProgs[matCoreOffset],
+                mi.matARBlockSize, mi.matACBlockSize, mi.matBRBlockSize, mi.matBCBlockSize,
+                mi.matAMemStart, mi.matBMemStart, mi.matCMemStart,
+                mi.matARegStart, mi.matBRegStart, mi.matCRegStart,
+                mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
+                mi.matRegToMemAddr,
+                mi.tmpReg,
+                mi.vecReg0, mi.vecReg1, mi.vecReg2
+            );
+        }    
+    }
+
+    for (int i = 0; i < addCoreIdxs.size(); i++) {
+        auto [fromCoreIdx1, fromCoreIdx2, toCoreIdx] = addCoreIdxs[i];
+        MatInfo &fromMi1 = subMatInfos[fromCoreIdx1];
+        MatInfo &fromMi2 = subMatInfos[fromCoreIdx2];
+        MatInfo &toMi = subMatInfos[toCoreIdx];
+
+        MatCoreProgram &fromMp1 = matProgs[fromCoreIdx1];
+        MatCoreProgram &fromMp2 = matProgs[fromCoreIdx2];
+        MatCoreProgram &toMp = matProgs[toCoreIdx];
+        // uses the vec core of mat core `toCoreIdx`
+        VecCoreProgram &vp = vecProgs[toCoreIdx];
+
+        for (int rBlockIdx = 0; rBlockIdx < fromMi1.matARBlockSize; rBlockIdx++) {
+            for (int cBlockIdx = 0; cBlockIdx < fromMi1.matBCBlockSize; cBlockIdx++) {
+                int matCBlockOffset = rBlockIdx * fromMi1.matBCBlockSize + cBlockIdx; 
+                int matCMemOffset = matCBlockOffset * BLOCK_AREA;
+                
+                int matCBlockReg1 = fromMi1.matCRegStart + matCBlockOffset % fromMi1.matCMaxRegs;
+                int matCMemAddr1 = fromMi1.matCMemStart + matCMemOffset; 
+                
+                int matCBlockReg2 = fromMi2.matCRegStart + matCBlockOffset % fromMi2.matCMaxRegs;
+                int matCMemAddr2 = fromMi2.matCMemStart + matCMemOffset; 
+                
+                int toMatCBlockReg = toMi.matCRegStart + matCBlockOffset % toMi.matCMaxRegs;
+                int toMatCMemAddr = toMi.matCMemStart + matCMemOffset; 
+
+                conditionalStoreAndLoad(matCBlockReg1, matCMemAddr1, 
+                fromMi1.matCMaxRegs, fromMi1.matRegToMemAddr, fromMp1);
+                
+                conditionalStoreAndLoad(matCBlockReg2, matCMemAddr2, 
+                fromMi2.matCMaxRegs, fromMi2.matRegToMemAddr, fromMp2);
+
+                conditionalStoreAndLoad(toMatCBlockReg, toMatCMemAddr, 
+                toMi.matCMaxRegs, toMi.matRegToMemAddr, toMp);                
+
+                sumBlock(
+                    fromMp1, fromMp2, vp, toMp,
+                    fromCoreIdx1, fromCoreIdx2, VEC_CORE_START_IDX + toCoreIdx, toCoreIdx,
+                    matCBlockReg1, matCBlockReg2,  
+                    toMi.vecReg0, toMi.vecReg1, toMi.vecReg2, toMatCBlockReg
+                );
+            }
+        }
+        
+        MatCoreInst matInst;
+        // STORE write all valid matC regs to mem  
+        // TODO no need to write all?
+        for (int i = 0; i < toMi.matCMaxRegs; i++) {
+            int matCReg = toMi.matCRegStart + i;
+            int addr = toMi.matRegToMemAddr[matCReg];
+            if (addr != -1) {
+                matInst.opcode = MatCoreInstDefn::STORE_MAT;
+                matInst.operands[MatCoreInstDefn::ADDR] = addr; 
+                matInst.operands[MatCoreInstDefn::M1] = matCReg; 
+                toMp.append(matInst);
+            }
+        }
+    }
+}
 
 void multiCore(
     matrix &matA, 
@@ -429,7 +514,8 @@ void multiCore(
 
     MatCoreProgram matProgs[NUM_MAT_CORES];
     VecCoreProgram vecProgs[NUM_VEC_CORES];
-    std::vector<MatInfo> subMatInfos;
+    std::vector<MatInfo> subMatInfos1;
+    std::vector<MatInfo> subMatInfos2;
 
     /* MULT & ADD 1 (only support 4 cores for now)
         MULT       ADD
@@ -438,6 +524,14 @@ void multiCore(
         1: 01 10 /
         2: 10 01 \
         3: 11 11 --> vec3 -> mat3
+    */
+    /* MULT & ADD 2 (only support 4 cores for now)
+          MULT       ADD
+     core  A  B
+        0: 00 01 \   
+        1: 01 11 --> vec1 -> mat1
+        2: 10 00 --> vec2 -> mat2
+        3: 11 10 / 
     */
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
@@ -449,6 +543,8 @@ void multiCore(
             matrix subMatA = subMatsA[i][j];
             matrix subMatB; 
             matrix subMatC;
+
+            // MULT & ADD 1 data (HARD CODED)
             if (matCoreOffset == 1 || matCoreOffset == 2) {
                 subMatB = subMatsB[j][i];
                 subMatC = subMatsC[i][i];
@@ -456,87 +552,111 @@ void multiCore(
                 subMatB = subMatsB[i][j];
                 subMatC = subMatsC[i][j];
             }
-
-            subMatInfos.push_back(
+            subMatInfos1.push_back(
                 MatInfo(subMatA, subMatB, subMatC)
             );
+
+            // MULT & ADD 2 data (HARD CODED)
+            switch (matCoreIdx) {
+                case 0: {
+                    subMatB = subMatsB[0][1];
+                    subMatC = subMatsC[0][1];
+                    break;
+                }
+                case 1: {
+                    subMatB = subMatsB[1][1];
+                    subMatC = subMatsC[0][1];
+                    break;
+                }
+                case 2: {
+                    subMatB = subMatsB[0][0];
+                    subMatC = subMatsC[1][0];
+                    break;
+                }
+                case 3: {
+                    subMatB = subMatsB[1][0];
+                    subMatC = subMatsC[0][0];
+                    break;
+                }
+            }
+
+            subMatInfos2.push_back(
+                MatInfo(subMatA, subMatB, subMatC)
+            );
+
+            subMatInfos2[matCoreIdx].matAMemStart = 0;
+            subMatInfos2[matCoreIdx].matBMemStart = subMatInfos1[matCoreIdx].matAMemSize + 
+            subMatInfos1[matCoreIdx].matBMemSize + subMatInfos1[matCoreIdx].matCMemSize;
+            subMatInfos2[matCoreIdx].matCMemStart = 
+            subMatInfos2[matCoreIdx].matBMemStart + subMatInfos2[matCoreIdx].matBMemSize;
         }
-    } 
+    }
+
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
             int vecCoreOffset = i * coresForCols + j;
             int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
             int vecCoreIdx = VEC_CORE_START_IDX + vecCoreOffset;
+ 
+            std::ofstream matDM(getDataMemName(matCoreIdx));
+            matDM << std::setprecision(FLOAT_PRECISION) << std::fixed;
 
-            // TODO ans.txt for easy diffing
+            MatInfo &mi1 = subMatInfos1[matCoreIdx];
+            MatInfo &mi2 = subMatInfos2[matCoreIdx];
 
-            MatInfo mi = subMatInfos[matCoreIdx];
+            // MULT & ADD 1 
+            for (int rBlockIdx = 0; rBlockIdx < mi1.matARBlockSize; rBlockIdx++) {
+                for (int cBlockIdx = 0; cBlockIdx < mi1.matACBlockSize; cBlockIdx++) {
+                    writeBlockMatToMem(mi1.matA, rBlockIdx, cBlockIdx, true, matDM);
+                }
+            }
+            
+            for (int rBlockIdx = 0; rBlockIdx < mi1.matBRBlockSize; rBlockIdx++) {
+                for (int cBlockIdx = 0; cBlockIdx < mi1.matBCBlockSize; cBlockIdx++) {
+                    writeBlockMatToMem(mi1.matB, rBlockIdx, cBlockIdx, false, matDM);
+                }
+            }
 
-            // MULT do sub matrix multiplication on every core 
-            singleCoreHelper(
-                matCoreIdx, vecCoreIdx, 
-                matProgs[matCoreOffset], vecProgs[matCoreOffset], 
-                mi.matA, mi.matB, mi.matC,  
-                mi.matARBlockSize, mi.matACBlockSize, mi.matBRBlockSize, mi.matBCBlockSize,
-                mi.matAMemStart, mi.matBMemStart, mi.matCMemStart,
-                mi.matARegStart, mi.matBRegStart, mi.matCRegStart,
-                mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
-                mi.matRegToMemAddr,
-                mi.tmpReg,
-                mi.vecReg0, mi.vecReg1, mi.vecReg2
-            );
+            for (int rBlockIdx = 0; rBlockIdx < mi1.matARBlockSize; rBlockIdx++) {
+                for (int cBlockIdx = 0; cBlockIdx < mi1.matBCBlockSize; cBlockIdx++) {
+                    writeBlockMatToMem(mi1.matC, rBlockIdx, cBlockIdx, false, matDM);
+                }
+            }
 
-            // ADD add results using the vector core
-            // if (matCoreOffset == 0 || matCoreOffset == 2) {
-            //     for (int rBlockIdx = 0; rBlockIdx < mi.matARBlockSize; rBlockIdx++) {
-            //         for (int cBlockIdx = 0; cBlockIdx < mi.matBCBlockSize; cBlockIdx++) {
-            //             int matCBlockOffset = rBlockIdx * mi.matBCBlockSize + cBlockIdx; 
-            //             int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-            //             int matCBlockReg = mi.matCRegStart + matCBlockOffset % mi.matCMaxRegs;
-            //             int matCMemAddr = mi.matCMemStart + matCMemOffset; 
-                        
-            //             sumBlock(
-            //                 matProgs[i], matProgs[i + 1], vecProgs[i], matProgs[i],
-            //                 matCoreIdx, matCoreIdx + 1, vecCoreIdx, matCoreIdx,
-                             
+            // MULT & ADD 2
+            for (int rBlockIdx = 0; rBlockIdx < mi2.matBRBlockSize; rBlockIdx++) {
+                for (int cBlockIdx = 0; cBlockIdx < mi2.matBCBlockSize; cBlockIdx++) {
+                    writeBlockMatToMem(mi2.matB, rBlockIdx, cBlockIdx, false, matDM);
+                }
+            }
 
-            //             )
-            //         }
-            //     }
-            // }
+            for (int rBlockIdx = 0; rBlockIdx < mi2.matARBlockSize; rBlockIdx++) {
+                for (int cBlockIdx = 0; cBlockIdx < mi2.matBCBlockSize; cBlockIdx++) {
+                    writeBlockMatToMem(mi2.matC, rBlockIdx, cBlockIdx, false, matDM);
+                }
+            }
 
-            // STORE store result to memory
-        }    
+            matDM.close();
+
+            std::ofstream vecDM(getDataMemName(vecCoreIdx));
+            vecDM.close();
+        }
     }
-
+    // fromCoreIdx1, fromCoreIdx2, toCoreIdx
+    std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1);
+    
+    // TODO exchange data, for now we let the compiler store all required data in advance
+    // to avoid exchanging
     /* EXCHANGE subMatB
         0 (00) <-> 2 (10)
         1 (01) <-> 3 (11)
     */
-
-    // for (int i = 0; i < BLOCK_WIDTH; i++) {
-    //     MatCoreInst matInst;
-    //     matInst.opcode = MatCoreInstDefn::SEND_ROW;
-    //     matInst.operands[MatCoreInstDefn::CORE_IDX] = matCoreIdx1;
-    //     matInst.operands[MatCoreInstDefn::M1] = ;
-    //     matInst.operands[MatCoreInstDefn::ROW_IDX] = i;
-
-    // }
-    // matProgs[i].append()
-       
-
-    /* MULT & ADD 2 (only support 4 cores for now)
-          MULT       ADD
-     core  A  B
-        0: 00 01 \   
-        1: 01 11 --> vec1 -> mat1
-        2: 10 00 --> vec2 -> mat2
-        3: 11 10 / 
-    */
+    std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2);
 
     /* SEND SUBMATS TO CORE 0
-
     */
 
     // inst mem for mat cores
