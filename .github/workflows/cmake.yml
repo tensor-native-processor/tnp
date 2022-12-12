@@ -30,8 +30,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install protobuf
+      run: choco install protoc
+
+    - name: Set PATH
+      run: echo "C:\ProgramData\chocolatey\lib\protoc\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
     - name: Configure
-      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build
+      run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DHAS_PROTOBUF=on
 
     - name: Build
       run: cmake --build ${{github.workspace}}/sw/build --parallel
