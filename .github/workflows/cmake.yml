@@ -31,10 +31,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install protobuf
-      run: choco install protoc
-
-    - name: Set PATH
-      run: echo "C:\ProgramData\chocolatey\lib\protoc" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      run: dotnet add package protobuf-v120 --version 2.6.1
 
     - name: Configure
       run: cmake -S ${{github.workspace}}/sw -B ${{github.workspace}}/sw/build -DHAS_PROTOBUF=on
