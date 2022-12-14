@@ -4,7 +4,7 @@
 #include <fstream>
 
 int main() {
-    ONNXModel model("618.onnx");
+    ONNXModel model("618small.onnx");
 
     // MNIST input
     Tensor mnistInputTensor({64, 400});
@@ -54,9 +54,9 @@ int main() {
     // Run compilation
     model.compile(OrchestratorParam{
         .width = 16,
-        .matCacheSize = 4096,
+        .matCacheSize = 256,
         .matCoreCount = 4,
-        .vecCacheSize = 4096,
+        .vecCacheSize = 256,
         .vecCoreCount = 4
     }, std::vector<Tensor>{
         mnistInputTensor
