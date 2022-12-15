@@ -1,6 +1,9 @@
 #include "compiler_common.h"
 #include "mat_program.h"
 #include "vec_program.h"
+#include "orchestration.h"
+#include "logging.h"
+#include "error.h"
 
 void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int cBlockIdx, bool xflipTranspose, std::ofstream &dm) {
     if (!xflipTranspose) {
@@ -685,6 +688,50 @@ void multiCore(
         txt.close();
     }
 }
+
+void matMult(const Orchestrator::ProcState &procState,
+    const Orchestrator::MatrixState &m1State,
+    const Orchestrator::MatrixState &m2State,
+    const Orchestrator::MatrixState &m3State
+) {
+    auto& m1Core = procState.matCores[m1State.m_coreIdx];
+    auto& m2Core = procState.matCores[m2State.m_coreIdx];
+    
+    // Out
+    auto& m3Core = procState.matCores[m3State.m_coreIdx];
+
+    return;
+}
+
+
+// MatMult
+Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
+    // Find h1/h2
+    if (m_dataMatrixState.count(h1) == 0 ||
+        m_dataMatrixState.count(h2) == 0) {
+        FatalError("Orchestrator matmult handle not exist");
+    }
+    const auto& m1State = m_dataMatrixState.at(h1),
+                m2State = m_dataMatrixState.at(h2);
+
+    if (m1State.m_shape.y != m2State.m_shape.x) {
+        FatalError("Orchestrator matmult dim mismatch");
+    }
+
+    // Allocate a new matrix
+    auto h3 = dataMatrixAllocate(MatrixShape{
+        .x = m1State.m_shape.x,
+        .y = m2State.m_shape.y
+    });
+    const auto& m3State = m_dataMatrixState.at(h3);
+
+
+
+    matMult(m_procState, m1State, m2State, m3State);
+
+    return h3;
+}
+
 
 int main(int argc, char *argv[]) {
     std::vector<std::vector<float>> matA;

@@ -298,28 +298,3 @@ Orchestrator::MatrixResult Orchestrator::dataMatrixStoreResult(MatrixHandle hand
         .m_dataAddr = dataAddr
     };
 }
-
-
-// Arithmetic operations
-
-// MatMult
-Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
-    // Find h1/h2
-    if (m_dataMatrixState.count(h1) == 0 ||
-        m_dataMatrixState.count(h2) == 0) {
-        FatalError("Orchestrator matmult handle not exist");
-    }
-    const auto& m1State = m_dataMatrixState.at(h1),
-                m2State = m_dataMatrixState.at(h2);
-
-    if (m1State.m_shape.y != m2State.m_shape.x) {
-        FatalError("Orchestrator matmult dim mismatch");
-    }
-
-    // Allocate a new matrix
-    auto hd = dataMatrixAllocate(MatrixShape{
-        .x = m1State.m_shape.x,
-        .y = m2State.m_shape.y
-    });
-    return hd;
-}

@@ -68,10 +68,6 @@ public:
     // Arithmetic operations (modify self)
     void arithmeticTransposeSelf(MatrixHandle);
 
-private:
-    // Orchestrator parameter
-    OrchestratorParam m_param;
-
     // MatCore/VecCore state
     struct MatCoreState {
         MatCoreProgram m_prog;
@@ -88,18 +84,13 @@ private:
         size_t m_cycleCount;
     };
 
+
     // Processor state
     struct ProcState {
         std::vector<MatCoreState> matCores;
         std::vector<VecCoreState> vecCores;
     };
-
-    // Programs
-    ProcState m_procState;
-
-    // Total matrix handle
-    size_t m_matrixHandleCount;
-
+    
     // Matrix state
     struct MatrixState {
         MatrixState(const MatrixShape&);
@@ -109,6 +100,17 @@ private:
         size_t m_coreIdx;
         std::vector<std::vector<size_t>> m_regIdx;
     };
+
+private:
+    // Orchestrator parameter
+    OrchestratorParam m_param;
+
+    // Programs
+    ProcState m_procState;
+
+    // Total matrix handle
+    size_t m_matrixHandleCount;
+
     std::map<MatrixHandle, MatrixState> m_dataMatrixState;
 
     // Encode core ID to global IDs
