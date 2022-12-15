@@ -439,7 +439,8 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                 mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
                 mi.matRegToMemAddr,
                 mi.tmpReg,
-                mi.vecReg0, mi.vecReg1, mi.vecReg2
+                mi.vecReg0, mi.vecReg1, mi.vecReg2,
+                mi.regMap
             );
         }    
     }

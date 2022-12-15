@@ -44,7 +44,7 @@ void MatInfo::init(const matrix &matAIn, const matrix &matBIn, const matrix &mat
 MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
     MatInfo::init(matAIn, matBIn, matCIn);
     regMap.clear();
-    printf("regMap size: %d\n", regMap.size());
+    printf("regMap size: %lu\n", regMap.size());
 }
 
 MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn, 
@@ -54,7 +54,7 @@ int matAMemStartIn, int matBMemStartIn, int matCMemStartIn) {
     matBMemStart = matBMemStartIn;
     matCMemStart = matCMemStartIn;
     regMap.clear();
-    printf("regMap size: %d\n", regMap.size());
+    printf("regMap size: %lu\n", regMap.size());
 }
 
 // From orchestrator
@@ -86,21 +86,32 @@ MatInfo::MatInfo(
     matAMaxRegs = matBMaxRegs = matCMaxRegs = matMaxRegs;
     
     matARegStart = 0;
-    matBRegStart = matAMaxRegs;
-    matCRegStart = matAMaxRegs + matBMaxRegs;
+    matBRegStart = matARegStart + matAMaxRegs;
+    matCRegStart = matBRegStart + matBMaxRegs;
 
     // mat core tmp register
     tmpReg = MAT_REG_SIZE - 1;
-    
+
     for (int i = 0; i < MAT_REG_SIZE; i++) {
         matRegToMemAddr[i] = -1;
     }
 
+    // must init map since registers already loaded the matrices 
+    for (int i = 0; i < matAMaxRegs; i++) {
+        matRegToMemAddr[matARegStart + i] = matAMemStart + i * BLOCK_AREA;
+    }
+    for (int i = 0; i < matBMaxRegs; i++) {
+        matRegToMemAddr[matBRegStart + i] = matBMemStart + i * BLOCK_AREA;
+    }
+    for (int i = 0; i < matCMaxRegs; i++) {
+        matRegToMemAddr[matCRegStart + i] = matCMemStart + i * BLOCK_AREA;
+    }
+    
     // vec core registers
     vecReg0 = 0;
     vecReg1 = 1;
     vecReg2 = 2;
 
     regMap = freeRegIdx;
-    printf("regMap size: %d\n", regMap.size());
+    printf("regMap size: %lu\n", regMap.size());
 }

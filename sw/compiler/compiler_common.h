@@ -36,7 +36,7 @@ class MatInfo {
         MatInfo(const matrix &matA, const matrix &matB, const matrix &matC);
         MatInfo(const matrix &matA, const matrix &matB, const matrix &matC, 
         int matAMemOffset, int matBMemOffset, int matCMemOffset);
-        MatInfo::MatInfo(
+        MatInfo(
             // These registers are just used to calculate the matrix shapes
             const std::vector<std::vector<size_t>> &m1Reg,
             const std::vector<std::vector<size_t>> &m2Reg,
