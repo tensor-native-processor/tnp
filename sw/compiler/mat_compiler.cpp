@@ -141,27 +141,33 @@ void singleCoreHelper(
     int matAMaxRegs, int matBMaxRegs, int matCMaxRegs,
     int (&matRegToMemAddr)[MAT_REG_SIZE],
     int tmpReg,
-    int vecReg0, int vecReg1, int vecReg2
+    int vecReg0, int vecReg1, int vecReg2,
+    const std::vector<size_t> &regMap
     ) {
 
     MatCoreInst matInst;
     VecCoreInst vecInst;
 
-    loadMatBlocks(matARBlockSize, matACBlockSize,
-        matARegStart, matAMemStart, matAMaxRegs, matRegToMemAddr, matProg);
+    // REGMAP no need to load if orchestrator
+    if (regMap.size() == 0) {
+        loadMatBlocks(matARBlockSize, matACBlockSize,
+            matARegStart, matAMemStart, matAMaxRegs, matRegToMemAddr, matProg);
 
-    loadMatBlocks(matBRBlockSize, matBCBlockSize,
-        matBRegStart, matBMemStart, matBMaxRegs, matRegToMemAddr, matProg);
+        loadMatBlocks(matBRBlockSize, matBCBlockSize,
+            matBRegStart, matBMemStart, matBMaxRegs, matRegToMemAddr, matProg);
 
-    loadMatBlocks(matARBlockSize, matBCBlockSize,
-        matCRegStart, matCMemStart, matCMaxRegs, matRegToMemAddr, matProg);
-
+        loadMatBlocks(matARBlockSize, matBCBlockSize,
+            matCRegStart, matCMemStart, matCMaxRegs, matRegToMemAddr, matProg);
+    }
     // matCBlock_rc += matABlock_rk * matBBlock_kc
     for (int rBlockIdx = 0; rBlockIdx < matARBlockSize; rBlockIdx++) {
         for (int kBlockIdx = 0; kBlockIdx < matACBlockSize; kBlockIdx++) {
             int matABlockOffset = rBlockIdx * matACBlockSize + kBlockIdx;
             int matAMemOffset = matABlockOffset * BLOCK_AREA;
+
             int matABlockReg = matARegStart + matABlockOffset % matAMaxRegs;
+            // REGMAP
+            matABlockReg = regMap.size() == 0 ? matABlockReg : regMap[matABlockReg];
             int matAMemAddr = matAMemStart + matAMemOffset;
             conditionalStoreAndLoad(matABlockReg, matAMemAddr, matAMaxRegs, 
             matRegToMemAddr, matProg);
@@ -169,14 +175,20 @@ void singleCoreHelper(
             for (int cBlockIdx = 0; cBlockIdx < matBCBlockSize; cBlockIdx++) {
                 int matBBlockOffset = kBlockIdx * matBCBlockSize + cBlockIdx;
                 int matBMemOffset = matBBlockOffset * BLOCK_AREA;
+
                 int matBBlockReg = matBRegStart + matBBlockOffset % matBMaxRegs;
+                // REGMAP
+                matBBlockReg = regMap.size() == 0 ? matBBlockReg : regMap[matBBlockReg];
                 int matBMemAddr = matBMemStart + matBMemOffset; 
                 conditionalStoreAndLoad(matBBlockReg, matBMemAddr, matBMaxRegs, 
                 matRegToMemAddr, matProg);
                 
                 int matCBlockOffset = rBlockIdx * matBCBlockSize + cBlockIdx; 
                 int matCMemOffset = matCBlockOffset * BLOCK_AREA;
+                
                 int matCBlockReg = matCRegStart + matCBlockOffset % matCMaxRegs;
+                // REGMAP
+                matCBlockReg = regMap.size() == 0 ? matCBlockReg : regMap[matCBlockReg];
                 int matCMemAddr = matCMemStart + matCMemOffset; 
                 conditionalStoreAndLoad(matCBlockReg, matCMemAddr, matCMaxRegs, 
                 matRegToMemAddr, matProg);
@@ -209,7 +221,10 @@ void singleCoreHelper(
 
     // write all valid matC regs to mem  
     for (int i = 0; i < matCMaxRegs; i++) {
+
         int matCReg = matCRegStart + i;
+        // REGMAP
+        matCReg = regMap.size() == 0 ? matCReg : regMap[matCReg];
         int addr = matRegToMemAddr[matCReg];
         if (addr != -1) {
             matInst.opcode = MatCoreInstDefn::STORE_MAT;
@@ -296,7 +311,8 @@ void singleCore(
         mi.matAMaxRegs, mi.matBMaxRegs, mi.matCMaxRegs,
         mi.matRegToMemAddr,
         mi.tmpReg,
-        mi.vecReg0, mi.vecReg1, mi.vecReg2
+        mi.vecReg0, mi.vecReg1, mi.vecReg2,
+        mi.regMap
     );
 
     // halt mat
@@ -446,12 +462,21 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                 int matCMemOffset = matCBlockOffset * BLOCK_AREA;
                 
                 int matCBlockReg1 = fromMi1.matCRegStart + matCBlockOffset % fromMi1.matCMaxRegs;
+                // REGMAP
+                matCBlockReg1 = 
+                fromMi1.regMap.size() == 0 ? matCBlockReg1 : fromMi1.regMap[matCBlockReg1];
                 int matCMemAddr1 = fromMi1.matCMemStart + matCMemOffset; 
                 
                 int matCBlockReg2 = fromMi2.matCRegStart + matCBlockOffset % fromMi2.matCMaxRegs;
+                // REGMAP
+                matCBlockReg2 = 
+                fromMi2.regMap.size() == 0 ? matCBlockReg2 : fromMi2.regMap[matCBlockReg2];
                 int matCMemAddr2 = fromMi2.matCMemStart + matCMemOffset; 
                 
                 int toMatCBlockReg = toMi.matCRegStart + matCBlockOffset % toMi.matCMaxRegs;
+                // REGMAP
+                toMatCBlockReg = 
+                toMi.regMap.size() == 0 ? toMatCBlockReg : toMi.regMap[toMatCBlockReg];
                 int toMatCMemAddr = toMi.matCMemStart + matCMemOffset; 
 
                 conditionalStoreAndLoad(matCBlockReg1, matCMemAddr1, 
@@ -488,12 +513,7 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
     }
 }
 
-void multiCore(
-    matrix &matA, 
-    matrix &matB,
-    matrix &matC,
-    matrix &matRef) {
-
+std::tuple<int, int> getCoreAssignment(int matASize, int matA0Size) {
     // divide mats by number of cores
     int largeFactor= 2;
     int smallFactor = 2;
@@ -505,11 +525,21 @@ void multiCore(
     int coresForRows = smallFactor;
     int coresForCols = largeFactor;
 
-    if (matA.size() > matA[0].size()) {
+    if (matASize > matA0Size) {
         // tall narrow matA
         coresForRows = largeFactor;
         coresForCols = smallFactor; 
     }
+    return {coresForRows, coresForCols};
+}
+
+void multiCore(
+    matrix &matA, 
+    matrix &matB,
+    matrix &matC,
+    matrix &matRef) {
+
+    auto [coresForRows, coresForCols] = getCoreAssignment(matA.size(), matA[0].size());
 
     std::vector<std::vector<matrix>> subMatsA = getSubMats(matA, coresForRows, coresForCols);     
     std::vector<std::vector<matrix>> subMatsB = getSubMats(matB, coresForRows, coresForCols);     
@@ -689,20 +719,35 @@ void multiCore(
     }
 }
 
-void matMult(const Orchestrator::ProcState &procState,
-    const Orchestrator::MatrixState &m1State,
-    const Orchestrator::MatrixState &m2State,
-    const Orchestrator::MatrixState &m3State
-) {
-    auto& m1Core = procState.matCores[m1State.m_coreIdx];
-    auto& m2Core = procState.matCores[m2State.m_coreIdx];
+// Copied from getSubMats() TODO: dedup
+std::vector<std::vector<std::vector<std::vector<size_t>>>> 
+    getSubRegs(const std::vector<std::vector<size_t>> &mat, int coresForRows, int coresForCols) {
     
-    // Out
-    auto& m3Core = procState.matCores[m3State.m_coreIdx];
+    std::vector<std::vector<std::vector<std::vector<size_t>>>> subMats;  
+    int subMatRows = (mat.size() + coresForRows - 1) / coresForRows;
+    int subMatCols = (mat[0].size() + coresForCols - 1) / coresForCols;
+     
+    for (int rCoreIdx = 0; rCoreIdx < coresForRows; rCoreIdx++) {
+        std::vector<std::vector<std::vector<size_t>>> subMatsPerRow;
+        int rStart = rCoreIdx * subMatRows;
+        int rEnd = std::min((rCoreIdx + 1) * subMatRows, static_cast<int>(mat.size()));
+        
+        for (int cCoreIdx = 0; cCoreIdx < coresForCols; cCoreIdx++) {
+            std::vector<std::vector<size_t>> subMat;
+            int cStart = cCoreIdx * subMatCols;
+            int cEnd = std::min((cCoreIdx + 1) * subMatCols, static_cast<int>(mat[0].size())); 
+            
+            for (int i = rStart; i < rEnd; i++) {
+                std::vector<size_t> row(mat[i].begin() + cStart, mat[i].begin() + cEnd);
+                subMat.push_back(row);
+            }
+            subMatsPerRow.push_back(subMat);
+        }
+        subMats.push_back(subMatsPerRow);
+    }
 
-    return;
+    return subMats;
 }
-
 
 // MatMult
 Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
@@ -725,9 +770,43 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     });
     const auto& m3State = m_dataMatrixState.at(h3);
 
+    // In1
+    auto& m1Core = m_procState.matCores[m1State.m_coreIdx];
+    // In2
+    auto& m2Core = m_procState.matCores[m2State.m_coreIdx];
+    // Out
+    auto& m3Core = m_procState.matCores[m3State.m_coreIdx];
 
+    // Divide registers among cores (dividing the matrix among cores)
+    auto [coresForRows, coresForCols] = getCoreAssignment(m1State.m_shape.x, m1State.m_shape.y);        
+    
+    auto m1SubRegs = getSubRegs(m1State.m_regIdx, coresForRows, coresForCols);
+    auto m2SubRegs = getSubRegs(m2State.m_regIdx, coresForRows, coresForCols);
+    auto m3SubRegs = getSubRegs(m3State.m_regIdx, coresForRows, coresForCols);
 
-    matMult(m_procState, m1State, m2State, m3State);
+    // Distribute In1 and In2 to all cores
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+            
+
+            // // Copy if same core
+            // if (m1State.m_coreIdx == matCoreIdx) {
+            //     m1Core.m_prog.append({{MatCoreInstDefn::COPY},
+            //         {MatCoreInstDefn::M1, m1State.m_regIdx},
+            //         {}
+            //     }});
+            // } else {
+            //     // Send/Recv
+            // }
+
+        }
+    }    
+
+    // Perform Matmult
+
+    // Gather result from all cores to Out
 
     return h3;
 }
