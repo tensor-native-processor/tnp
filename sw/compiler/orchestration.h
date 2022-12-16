@@ -54,6 +54,7 @@ public:
 
     // Data operations
     MatrixHandle dataMatrixAllocate(const MatrixShape&);
+    MatrixHandle dataMatrixAllocate(const MatrixShape&, size_t, const std::vector<std::vector<size_t>>&);
     void dataMatrixDeallocate(MatrixHandle);
     void dataMatrixLoadConstant(MatrixHandle, const MatrixConstant&);
     MatrixResult dataMatrixStoreResult(MatrixHandle);
@@ -98,8 +99,10 @@ private:
     // Matrix state
     struct MatrixState {
         MatrixState(const MatrixShape&);
-        size_t m_coreIdx;
+        MatrixState(const MatrixShape&, size_t, const std::vector<std::vector<size_t>>&);
+
         MatrixShape m_shape;
+        size_t m_coreIdx;
         std::vector<std::vector<size_t>> m_regIdx;
     };
     std::map<MatrixHandle, MatrixState> m_dataMatrixState;

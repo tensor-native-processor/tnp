@@ -106,11 +106,14 @@ void Orchestrator::compile() {
 
 // Initialize MatrixState
 Orchestrator::MatrixState::MatrixState(const MatrixShape& shape)
-: m_shape(shape)
+: m_shape(shape), m_coreIdx(0)
 {
     m_regIdx.assign(shape.x,
         std::vector<size_t>(shape.y, 0));
 }
+Orchestrator::MatrixState::MatrixState(const MatrixShape& shape, size_t coreIdx, const std::vector<std::vector<size_t>>& regIdx)
+: m_shape(shape), m_coreIdx(coreIdx), m_regIdx(regIdx)
+{}
 
 
 // Finding the best core index for allocation
@@ -175,6 +178,41 @@ Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(const MatrixShape& s
         LogInfo(line);
     }
     */
+
+    // Return handle
+    return handle;
+}
+// Allocate a matrix (with given registers)
+Orchestrator::MatrixHandle Orchestrator::dataMatrixAllocate(
+        const MatrixShape& shape,
+        size_t coreIdx,
+        const std::vector<std::vector<size_t>>& regIdx
+) {
+    MatrixHandle handle = m_matrixHandleCount++;
+
+    // Insert as MatrixState
+    auto res = m_dataMatrixState.emplace(handle,
+        MatrixState(shape, coreIdx, regIdx));
+    if (!res.second) {
+        FatalError("Duplicate MatrixHandle");
+    }
+    auto& matCore = m_procState.matCores[coreIdx];
+
+    // Fetch first shape.x * shape.y elements from matCore.m_freeRegIdx
+    for (size_t i = 0;i < shape.x;i++) {
+        for (size_t j = 0;j < shape.y;j++) {
+            // Remove m_regIdx[i][j] from freeRegIdx
+            auto regIter = std::find(matCore.m_freeRegIdx.begin(), matCore.m_freeRegIdx.end(), regIdx[i][j]);
+            if (regIter == matCore.m_freeRegIdx.end()) {
+                FatalError("Orchestrator alloc already alloc reg");
+            }
+            matCore.m_freeRegIdx.erase(regIter);
+        }
+    }
+
+    // Log allocated registers
+    LogInfo("Orchestrator alloc (M-" + std::to_string(handle) + ") - core " + std::to_string(coreIdx) + ": " + std::to_string(matCore.m_freeRegIdx.size()) + " remaining");
+    LogInfo("    Shape: " + std::to_string(shape.x) + ", " + std::to_string(shape.y));
 
     // Return handle
     return handle;
