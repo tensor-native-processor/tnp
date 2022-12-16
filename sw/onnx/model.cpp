@@ -197,7 +197,7 @@ void ONNXModel::compile(const OrchestratorParam& orchParam, const std::vector<Te
     Operator op;
     for (const auto& node : m_graph.node()) {
         LogInfo("Compiling: " + node.name());
-        op.compile(node, orch, stateTensorHandles);
+        op.compile(node, orch, stateTensorHandles, refCount);
 
         // Remove handles if refCount reach 0
         for (const auto& nodeIn : node.input()) {

@@ -25,7 +25,9 @@ public:
 
     virtual void compile(const ::onnx::NodeProto&,
         Orchestrator&,
-        std::map<std::string, Orchestrator::MatrixHandle>&);
+        std::map<std::string, Orchestrator::MatrixHandle>&,
+        std::map<std::string, size_t>&
+    );
 };
 
 // Dispatch operators

@@ -173,7 +173,9 @@ void OperatorGemm::simulate(const ::onnx::NodeProto& node,
 // Compile for gemm
 void OperatorGemm::compile(const ::onnx::NodeProto& node,
         Orchestrator& orch,
-        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles) {
+        std::map<std::string, Orchestrator::MatrixHandle>& stateTensorHandles,
+        std::map<std::string, size_t>& refCount
+) {
     // Fetch A and B
     if (node.input_size() != 2 && node.input_size() != 3) {
         FatalError("Gemm input size " + std::to_string(node.input_size()));
