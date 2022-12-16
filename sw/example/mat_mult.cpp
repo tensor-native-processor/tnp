@@ -26,39 +26,38 @@ int main() {
 
     // Start instruction mem
     MatCoreProgram prog;
-    MatCoreInst inst;
 
     // Load memory
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 0;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 0}
+    }});
 
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 256;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // set weight 0
-    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::SET_WEIGHT, {
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // multiply 1 to 2
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 2;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 2},
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // store 2 to memory
-    inst.opcode = MatCoreInstDefn::STORE_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 0;
-    inst.operands[MatCoreInstDefn::M1] = 2;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 2}
+    }});
 
     // halt
-    inst.opcode = MatCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::HALT, {
+    }});
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");

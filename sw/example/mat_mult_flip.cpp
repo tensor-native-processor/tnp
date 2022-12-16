@@ -26,57 +26,47 @@ int main() {
 
     // Start instruction mem
     MatCoreProgram prog;
-    MatCoreInst inst;
 
     // Load memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 0;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 1;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 0}
+    }});
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // xflip 0
-    inst.opcode = MatCoreInstDefn::XFLIP;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::XFLIP, {
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // transpose 0
-    inst.opcode = MatCoreInstDefn::TRANSPOSE;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::TRANSPOSE, {
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // set weight 0
-    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::SET_WEIGHT, {
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // multiply 1 to 2
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 2;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 2},
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // store 2 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 512 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 2;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 2}
+    }});
 
     // halt
-    inst.opcode = MatCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::HALT, {
+    }});
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");

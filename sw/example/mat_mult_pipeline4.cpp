@@ -45,102 +45,101 @@ int main() {
 
     // Start instruction mem
     MatCoreProgram prog;
-    MatCoreInst inst;
 
     // Load memory
     // A
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 0;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 1}
+    }});
     // B
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 256;
-    inst.operands[MatCoreInstDefn::M1] = 6;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 6}
+    }});
     // D
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 512;
-    inst.operands[MatCoreInstDefn::M1] = 7;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 512},
+        {MatCoreInstDefn::M1, 7}
+    }});
     // F
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 768;
-    inst.operands[MatCoreInstDefn::M1] = 2;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 768},
+        {MatCoreInstDefn::M1, 2}
+    }});
     // G
-    inst.opcode = MatCoreInstDefn::LOAD_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 1024;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 1024},
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // xflip 1
-    inst.opcode = MatCoreInstDefn::XFLIP;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::XFLIP, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // transpose 1
-    inst.opcode = MatCoreInstDefn::TRANSPOSE;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::TRANSPOSE, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // xflip 2
-    inst.opcode = MatCoreInstDefn::XFLIP;
-    inst.operands[MatCoreInstDefn::M1] = 2;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::XFLIP, {
+        {MatCoreInstDefn::M1, 2}
+    }});
 
     // transpose 2
-    inst.opcode = MatCoreInstDefn::TRANSPOSE;
-    inst.operands[MatCoreInstDefn::M1] = 2;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::TRANSPOSE, {
+        {MatCoreInstDefn::M1, 2}
+    }});
 
     // set weight 1
-    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::SET_WEIGHT, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // multiply 6 to 4
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 4;
-    inst.operands[MatCoreInstDefn::M1] = 6;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 4},
+        {MatCoreInstDefn::M1, 6}
+    }});
 
     // multiply 7 to 3
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 3;
-    inst.operands[MatCoreInstDefn::M1] = 7;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 3},
+        {MatCoreInstDefn::M1, 7}
+    }});
 
     // set weight 2
-    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
-    inst.operands[MatCoreInstDefn::M1] = 2;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::SET_WEIGHT, {
+        {MatCoreInstDefn::M1, 2}
+    }});
 
     // multiply 0 to 5
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 5;
-    inst.operands[MatCoreInstDefn::M1] = 0;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 5},
+        {MatCoreInstDefn::M1, 0}
+    }});
 
     // store 3 to memory
-    inst.opcode = MatCoreInstDefn::STORE_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 256;
-    inst.operands[MatCoreInstDefn::M1] = 3;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 3}
+    }});
     // store 4 to memory
-    inst.opcode = MatCoreInstDefn::STORE_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 0;
-    inst.operands[MatCoreInstDefn::M1] = 4;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 4}
+    }});
     // store 5 to memory
-    inst.opcode = MatCoreInstDefn::STORE_MAT;
-    inst.operands[MatCoreInstDefn::ADDR] = 512;
-    inst.operands[MatCoreInstDefn::M1] = 5;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 512},
+        {MatCoreInstDefn::M1, 5}
+    }});
 
     // halt
-    inst.opcode = MatCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::HALT, {
+    }});
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");

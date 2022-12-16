@@ -34,78 +34,63 @@ int main() {
 
     // Start instruction mem
     MatCoreProgram prog;
-    MatCoreInst inst;
 
     // Load memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 1;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 6;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::LOAD_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 512 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 7;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 1}
+    }});
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 6}
+    }});
+    prog.append({MatCoreInstDefn::LOAD_MAT, {
+        {MatCoreInstDefn::ADDR, 512},
+        {MatCoreInstDefn::M1, 7}
+    }});
 
-    // xflip 0
-    inst.opcode = MatCoreInstDefn::XFLIP;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    // xflip 1
+    prog.append({MatCoreInstDefn::XFLIP, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
-    // transpose 0
-    inst.opcode = MatCoreInstDefn::TRANSPOSE;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    // transpose 1
+    prog.append({MatCoreInstDefn::TRANSPOSE, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
-    // set weight 0
-    inst.opcode = MatCoreInstDefn::SET_WEIGHT;
-    inst.operands[MatCoreInstDefn::M1] = 1;
-    prog.append(inst);
+    // set weight 1
+    prog.append({MatCoreInstDefn::SET_WEIGHT, {
+        {MatCoreInstDefn::M1, 1}
+    }});
 
     // multiply 6 to 4
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 4;
-    inst.operands[MatCoreInstDefn::M1] = 6;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 4},
+        {MatCoreInstDefn::M1, 6}
+    }});
 
     // multiply 7 to 3
-    inst.opcode = MatCoreInstDefn::MULTIPLY;
-    inst.operands[MatCoreInstDefn::Md] = 3;
-    inst.operands[MatCoreInstDefn::M1] = 7;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::MULTIPLY, {
+        {MatCoreInstDefn::Md, 3},
+        {MatCoreInstDefn::M1, 7}
+    }});
 
     // store 3 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 256 + 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 3;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 256},
+        {MatCoreInstDefn::M1, 3}
+    }});
     // store 4 to memory
-    for (int i = 0;i < 16;i++) {
-        inst.opcode = MatCoreInstDefn::STORE_ROW;
-        inst.operands[MatCoreInstDefn::ADDR] = 16 * i;
-        inst.operands[MatCoreInstDefn::M1] = 4;
-        inst.operands[MatCoreInstDefn::ROW_IDX] = i;
-        prog.append(inst);
-    }
+    prog.append({MatCoreInstDefn::STORE_MAT, {
+        {MatCoreInstDefn::ADDR, 0},
+        {MatCoreInstDefn::M1, 4}
+    }});
 
     // halt
-    inst.opcode = MatCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({MatCoreInstDefn::HALT, {
+    }});
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");
