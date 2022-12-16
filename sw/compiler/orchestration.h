@@ -62,6 +62,10 @@ public:
     MatrixHandle arithmeticMatMult(MatrixHandle, MatrixHandle);
     MatrixHandle arithmeticRelu(MatrixHandle);
     MatrixHandle arithmeticTranspose(MatrixHandle);
+    MatrixHandle arithmeticCopy(MatrixHandle);
+
+    // Arithmetic operations (modify self)
+    void arithmeticTransposeSelf(MatrixHandle);
 
 private:
     // Orchestrator parameter

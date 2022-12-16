@@ -2,11 +2,11 @@
 #include "logging.h"
 #include "error.h"
 
-// Transpose
-Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handleIn) {
+// Copy
+Orchestrator::MatrixHandle Orchestrator::arithmeticCopy(MatrixHandle handleIn) {
     // Find handle
     if (m_dataMatrixState.count(handleIn) == 0) {
-        FatalError("Orchestrator relu handle not exist");
+        FatalError("Orchestrator copy handle not exist");
     }
 
     // Allocate a new matrix
@@ -47,15 +47,32 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handle
             }
         }
     }
+    return handleOut;
+}
+
+// Transpose
+Orchestrator::MatrixHandle Orchestrator::arithmeticTranspose(MatrixHandle handleIn) {
+    auto handleOut = arithmeticCopy(handleIn);
+    arithmeticTransposeSelf(handleOut);
+    return handleOut;
+}
+
+void Orchestrator::arithmeticTransposeSelf(MatrixHandle handleIn) {
+    // Find handle
+    if (m_dataMatrixState.count(handleIn) == 0) {
+        FatalError("Orchestrator transpose handle not exist");
+    }
+
+    // Find MatrixState for handleIn
+    const auto& inState = m_dataMatrixState.at(handleIn);
+    auto& inCore = m_procState.matCores[inState.m_coreIdx];
 
     // Transpose
-    for (size_t bx = 0;bx < outState.m_shape.x;bx++) {
-        for (size_t by = 0;by < outState.m_shape.y;by++) {
-            outCore.m_prog.append({MatCoreInstDefn::TRANSPOSE, {
-                {MatCoreInstDefn::M1, outState.m_regIdx[bx][by]}
+    for (size_t bx = 0;bx < inState.m_shape.x;bx++) {
+        for (size_t by = 0;by < inState.m_shape.y;by++) {
+            inCore.m_prog.append({MatCoreInstDefn::TRANSPOSE, {
+                {MatCoreInstDefn::M1, inState.m_regIdx[bx][by]}
             }});
         }
     }
-
-    return handleOut;
 }
