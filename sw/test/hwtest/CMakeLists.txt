@@ -14,6 +14,11 @@ add_executable(mat_copy mat_copy.cpp)
 target_include_directories(mat_copy PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_copy mat_core)
 
+# mat_clear
+add_executable(mat_clear mat_clear.cpp)
+target_include_directories(mat_clear PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
+target_link_libraries(mat_clear mat_core)
+
 
 # mat_send_scalar
 add_executable(mat_send_scalar mat_send_scalar.cpp)
