@@ -23,6 +23,7 @@ public:
         YFLIP           = 0b00100101,
 
         COPY            = 0b00110000,
+        CLEAR           = 0b00110001,
 
         // Section 2
         LOAD_MAT        = 0b01000000,

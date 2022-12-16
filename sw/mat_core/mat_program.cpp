@@ -11,6 +11,7 @@ const std::map<MatCoreInstDefn::Opcode, std::vector<MatCoreInstDefn::Operand>> M
     {YFLIP,             {M1}},
 
     {COPY,              {Md, M1}},
+    {CLEAR,             {M1}},
 
     {LOAD_MAT,          {ADDR, M1}},
     {LOAD_ROW,          {ADDR, M1, ROW_IDX}},
@@ -44,6 +45,7 @@ const std::map<MatCoreInstDefn::Opcode, std::string> MatCoreInstDefn::opcodeName
     {YFLIP,             "YFLIP"},
 
     {COPY,              "COPY"},
+    {CLEAR,             "CLEAR"},
 
     {LOAD_MAT,          "LOAD_MAT"},
     {LOAD_ROW,          "LOAD_ROW"},
