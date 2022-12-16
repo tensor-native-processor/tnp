@@ -12,6 +12,14 @@ target_link_libraries(orch_transpose compiler)
 target_link_libraries(orch_transpose tensor)
 
 
+# orch_transpose_self
+add_executable(orch_transpose_self orch_transpose_self.cpp)
+target_include_directories(orch_transpose_self PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
+target_include_directories(orch_transpose_self PUBLIC ${PROJECT_SOURCE_DIR}/onnx)
+target_link_libraries(orch_transpose_self compiler)
+target_link_libraries(orch_transpose_self tensor)
+
+
 # orch_relu
 add_executable(orch_relu orch_relu.cpp)
 target_include_directories(orch_relu PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
