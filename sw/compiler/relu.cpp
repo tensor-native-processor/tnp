@@ -23,14 +23,17 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticReluSingleCore(MatrixHandle h
     simulateCycleCount();
 
     // Find a free VecCore (at least 1 register)
-    // TODO: use a better algorithm
+    // Using the core that finish early
     bool foundFreeVecCore = false;
     size_t vecCoreIdx = 0;
     for (size_t i = 0;i < m_param.vecCoreCount;i++) {
         if (m_procState.vecCores[i].m_freeRegIdx.size() >= 1) {
-            foundFreeVecCore = true;
-            vecCoreIdx = i;
-            break;
+            if (!foundFreeVecCore ||
+                    m_procState.vecCores[i].m_cycleCount <
+                    m_procState.vecCores[vecCoreIdx].m_cycleCount) {
+                foundFreeVecCore = true;
+                vecCoreIdx = i;
+            }
         }
     }
     if (!foundFreeVecCore) {
