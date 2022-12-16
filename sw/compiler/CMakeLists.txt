@@ -1,12 +1,14 @@
-add_executable(mat_compiler mat_compiler.cpp compiler_common.cpp orchestration.cpp)
+add_library(mat_compiler mat_compiler.cpp compiler_common.cpp)
 target_include_directories(mat_compiler PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
 target_link_libraries(mat_compiler mat_core)
 target_include_directories(mat_compiler PUBLIC ${PROJECT_SOURCE_DIR}/vec_core)
 target_link_libraries(mat_compiler vec_core)
 
+add_executable(benchmark benchmark.cpp mat_compiler.cpp compiler_common.cpp)
+target_link_libraries(benchmark mat_compiler)
 
 # Compiler library
-add_library(compiler orchestration.cpp relu.cpp transpose.cpp simulation.cpp)
+add_library(compiler orchestration.cpp relu.cpp transpose.cpp matmul.cpp simulation.cpp)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/common)
 target_include_directories(compiler PUBLIC ${PROJECT_SOURCE_DIR}/mat_core)
@@ -15,3 +17,4 @@ target_link_libraries(compiler common)
 target_link_libraries(compiler mat_core)
 target_link_libraries(compiler vec_core)
 target_link_libraries(compiler switch)
+target_link_libraries(compiler mat_compiler)

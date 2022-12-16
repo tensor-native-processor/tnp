@@ -1,9 +1,7 @@
-#include "compiler_common.h"
 #include "mat_program.h"
 #include "vec_program.h"
-#include "orchestration.h"
-#include "logging.h"
-#include "error.h"
+#include "compiler_common.h"
+#include "mat_compiler.h"
 
 void writeBlockMatToMem(std::vector<std::vector<float>> &mat, int rBlockIdx, int cBlockIdx, bool xflipTranspose, std::ofstream &dm) {
     if (!xflipTranspose) {
@@ -620,9 +618,9 @@ void multiCore(
 
             subMatInfos2[matCoreIdx].matAMemStart = 0;
             subMatInfos2[matCoreIdx].matBMemStart = subMatInfos1[matCoreIdx].matAMemSize + 
-            subMatInfos1[matCoreIdx].matBMemSize + subMatInfos1[matCoreIdx].matCMemSize;
+                subMatInfos1[matCoreIdx].matBMemSize + subMatInfos1[matCoreIdx].matCMemSize;
             subMatInfos2[matCoreIdx].matCMemStart = 
-            subMatInfos2[matCoreIdx].matBMemStart + subMatInfos2[matCoreIdx].matBMemSize;
+                subMatInfos2[matCoreIdx].matBMemStart + subMatInfos2[matCoreIdx].matBMemSize;
         }
     }
 
@@ -748,110 +746,4 @@ std::vector<std::vector<std::vector<std::vector<size_t>>>>
     }
 
     return subMats;
-}
-
-// MatMult
-Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
-    // Find h1/h2
-    if (m_dataMatrixState.count(h1) == 0 ||
-        m_dataMatrixState.count(h2) == 0) {
-        FatalError("Orchestrator matmult handle not exist");
-    }
-    const auto& m1State = m_dataMatrixState.at(h1),
-                m2State = m_dataMatrixState.at(h2);
-
-    if (m1State.m_shape.y != m2State.m_shape.x) {
-        FatalError("Orchestrator matmult dim mismatch");
-    }
-
-    // Allocate a new matrix
-    auto h3 = dataMatrixAllocate(MatrixShape{
-        .x = m1State.m_shape.x,
-        .y = m2State.m_shape.y
-    });
-    const auto& m3State = m_dataMatrixState.at(h3);
-
-    // In1
-    auto& m1Core = m_procState.matCores[m1State.m_coreIdx];
-    // In2
-    auto& m2Core = m_procState.matCores[m2State.m_coreIdx];
-    // Out
-    auto& m3Core = m_procState.matCores[m3State.m_coreIdx];
-
-    // Divide registers among cores (dividing the matrix among cores)
-    auto [coresForRows, coresForCols] = getCoreAssignment(m1State.m_shape.x, m1State.m_shape.y);        
-    
-    auto m1SubRegs = getSubRegs(m1State.m_regIdx, coresForRows, coresForCols);
-    auto m2SubRegs = getSubRegs(m2State.m_regIdx, coresForRows, coresForCols);
-    auto m3SubRegs = getSubRegs(m3State.m_regIdx, coresForRows, coresForCols);
-
-    // Distribute In1 and In2 to all cores
-    for (int i = 0; i < coresForRows; i++) {
-        for (int j = 0; j < coresForCols; j++) {
-            int matCoreOffset = i * coresForCols + j;
-            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
-            
-
-            // // Copy if same core
-            // if (m1State.m_coreIdx == matCoreIdx) {
-            //     m1Core.m_prog.append({{MatCoreInstDefn::COPY},
-            //         {MatCoreInstDefn::M1, m1State.m_regIdx},
-            //         {}
-            //     }});
-            // } else {
-            //     // Send/Recv
-            // }
-
-        }
-    }    
-
-    // Perform Matmult
-
-    // Gather result from all cores to Out
-
-    return h3;
-}
-
-
-int main(int argc, char *argv[]) {
-    std::vector<std::vector<float>> matA;
-    std::vector<std::vector<float>> matB;
-
-    /*
-    (31, 31) * (31, 17) took 22275 cycles (CPU time 49.670s)
-    (64, 128) * (128, 10) took 86115 cycles (CPU time 178.530s)
-    (64, 128) * (128, 10) took 88095 cycles if set MAT_REG_SIZE to 64 (CPU time 180.360s)
-    */
-    // 64 * 128
-    for (int i = 0; i < 16; i++) {
-        std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
-            int num = j + 1;
-            if (i >= 8) num *= 2;
-            row.push_back(num); 
-        }
-        matA.push_back(row);
-    }
-    
-    // 128 * 10
-    for (int i = 0; i < 16; i++) {
-        std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
-            int num = j + 1;
-            if (i >= 8) num *= 2;
-            row.push_back(num); 
-        }
-        matB.push_back(row);
-    }
-    
-    assert(matA[0].size() == matB.size() && "matA[0].size() != matB.size()");
-
-    // init matC with zeroes
-    // TODO is this required? By default is it zero in memory?
-    std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
-    std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
-
-    // singleCore(matA, matB, matC, matRef); 
-    multiCore(matA, matB, matC, matRef);
-    return 0;
 }

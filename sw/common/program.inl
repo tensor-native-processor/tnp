@@ -83,6 +83,11 @@ void BaseCoreProgram<CoreInstDefn, CoreInstSize>::append(const CoreInst& inst) {
     m_insts.push_back(inst);
 }
 
+template<class CoreInstDefn, class CoreInstSize>
+std::vector<BaseCoreInst<CoreInstDefn>> BaseCoreProgram<CoreInstDefn, CoreInstSize>::getInsts() {
+    return m_insts;
+}
+
 // Encode and decode binary content
 template<class CoreInstDefn, class CoreInstSize>
 TNPProgramBinary BaseCoreProgram<CoreInstDefn, CoreInstSize>::encodeBinary(CoreValue_t value, size_t size) {

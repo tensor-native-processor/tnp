@@ -41,6 +41,7 @@ public:
     void append(const CoreInst&);
     size_t size() const;
     const CoreInst& operator[](size_t) const;
+    std::vector<CoreInst> getInsts();
 
 private:
     CoreInstSize m_isizes;
