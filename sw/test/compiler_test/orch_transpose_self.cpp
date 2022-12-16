@@ -10,9 +10,9 @@ int main() {
     const size_t width = 16;
     Orchestrator orch(OrchestratorParam{
         .width = width,
-        .matCacheSize = 4096,
+        .matCacheSize = 256,
         .matCoreCount = 4,
-        .vecCacheSize = 4096,
+        .vecCacheSize = 256,
         .vecCoreCount = 4
     });
 
