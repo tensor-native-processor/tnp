@@ -26,79 +26,78 @@ int main() {
 
     // Start instruction mem
     VecCoreProgram prog0, prog1;
-    VecCoreInst inst;
 
     // Core 0
 
     // Load memory
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 5;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::LOAD_VEC, {
+        {VecCoreInstDefn::ADDR, 0},
+        {VecCoreInstDefn::V1, 5}
+    }});
 
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 16;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::LOAD_VEC, {
+        {VecCoreInstDefn::ADDR, 16},
+        {VecCoreInstDefn::V1, 6}
+    }});
 
     // Add two vectors
-    inst.opcode = VecCoreInstDefn::ADD;
-    inst.operands[VecCoreInstDefn::Vd] = 3;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    inst.operands[VecCoreInstDefn::V2] = 5;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::ADD, {
+        {VecCoreInstDefn::Vd, 3},
+        {VecCoreInstDefn::V1, 6},
+        {VecCoreInstDefn::V2, 5}
+    }});
 
     // send 3 to core 1
-    inst.opcode = VecCoreInstDefn::SEND_VEC;
-    inst.operands[VecCoreInstDefn::CORE_IDX] = 1;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::SEND_VEC, {
+        {VecCoreInstDefn::CORE_IDX, 1},
+        {VecCoreInstDefn::V1, 3}
+    }});
 
     // receive 5 from core 1
-    inst.opcode = VecCoreInstDefn::RECV_VEC;
-    inst.operands[VecCoreInstDefn::CORE_IDX] = 1;
-    inst.operands[VecCoreInstDefn::V1] = 5;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::RECV_VEC, {
+        {VecCoreInstDefn::CORE_IDX, 1},
+        {VecCoreInstDefn::V1, 5}
+    }});
 
     // store 5 to memory
-    inst.opcode = VecCoreInstDefn::STORE_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 5;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::STORE_VEC, {
+        {VecCoreInstDefn::ADDR, 0},
+        {VecCoreInstDefn::V1, 5}
+    }});
 
     // halt
-    inst.opcode = VecCoreInstDefn::HALT;
-    prog0.append(inst);
+    prog0.append({VecCoreInstDefn::HALT, {
+    }});
 
     // Core 1
 
     // receive 3 from core 0
-    inst.opcode = VecCoreInstDefn::RECV_VEC;
-    inst.operands[VecCoreInstDefn::CORE_IDX] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog1.append(inst);
+    prog1.append({VecCoreInstDefn::RECV_VEC, {
+        {VecCoreInstDefn::CORE_IDX, 0},
+        {VecCoreInstDefn::V1, 3}
+    }});
 
     // store 3 to memory
-    inst.opcode = VecCoreInstDefn::STORE_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog1.append(inst);
+    prog1.append({VecCoreInstDefn::STORE_VEC, {
+        {VecCoreInstDefn::ADDR, 0},
+        {VecCoreInstDefn::V1, 3}
+    }});
 
     // copy 3 to 7
-    inst.opcode = VecCoreInstDefn::COPY;
-    inst.operands[VecCoreInstDefn::Vd] = 7;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog1.append(inst);
+    prog1.append({VecCoreInstDefn::COPY, {
+        {VecCoreInstDefn::Vd, 7},
+        {VecCoreInstDefn::V1, 3}
+    }});
 
     // send 7 to core 0
-    inst.opcode = VecCoreInstDefn::SEND_VEC;
-    inst.operands[VecCoreInstDefn::CORE_IDX] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 7;
-    prog1.append(inst);
+    prog1.append({VecCoreInstDefn::SEND_VEC, {
+        {VecCoreInstDefn::CORE_IDX, 0},
+        {VecCoreInstDefn::V1, 7}
+    }});
 
     // halt
-    inst.opcode = VecCoreInstDefn::HALT;
-    prog1.append(inst);
+    prog1.append({VecCoreInstDefn::HALT, {
+    }});
 
     SaveProgram(prog0.toBinary(), "inst_mem0.txt");
     SaveProgram(prog1.toBinary(), "inst_mem1.txt");

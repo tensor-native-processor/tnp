@@ -29,62 +29,61 @@ int main() {
 
     // Start instruction mem
     VecCoreProgram prog;
-    VecCoreInst inst;
 
     // Load memory
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 5;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::LOAD_VEC, {
+        {VecCoreInstDefn::ADDR, 0},
+        {VecCoreInstDefn::V1, 5}
+    }});
 
-    inst.opcode = VecCoreInstDefn::LOAD_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 16;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::LOAD_VEC, {
+        {VecCoreInstDefn::ADDR, 16},
+        {VecCoreInstDefn::V1, 6}
+    }});
 
-    inst.opcode = VecCoreInstDefn::LOAD_SCALAR;
-    inst.operands[VecCoreInstDefn::ADDR] = 33;
-    inst.operands[VecCoreInstDefn::V1] = 0;
-    inst.operands[VecCoreInstDefn::VEC_IDX] = 7;
-    prog.append(inst);
-    inst.opcode = VecCoreInstDefn::LOAD_SCALAR;
-    inst.operands[VecCoreInstDefn::ADDR] = 34;
-    inst.operands[VecCoreInstDefn::V1] = 1;
-    inst.operands[VecCoreInstDefn::VEC_IDX] = 2;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::LOAD_SCALAR, {
+        {VecCoreInstDefn::ADDR, 33},
+        {VecCoreInstDefn::V1, 0},
+        {VecCoreInstDefn::VEC_IDX, 7}
+    }});
+    prog.append({VecCoreInstDefn::LOAD_SCALAR, {
+        {VecCoreInstDefn::ADDR, 34},
+        {VecCoreInstDefn::V1, 1},
+        {VecCoreInstDefn::VEC_IDX, 2}
+    }});
 
     // Add two vectors
-    inst.opcode = VecCoreInstDefn::ADD;
-    inst.operands[VecCoreInstDefn::Vd] = 3;
-    inst.operands[VecCoreInstDefn::V1] = 6;
-    inst.operands[VecCoreInstDefn::V2] = 5;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::ADD, {
+        {VecCoreInstDefn::Vd, 3},
+        {VecCoreInstDefn::V1, 6},
+        {VecCoreInstDefn::V2, 5}
+    }});
 
     // Scale by D
-    inst.opcode = VecCoreInstDefn::SCALE;
-    inst.operands[VecCoreInstDefn::Vd] = 3;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    inst.operands[VecCoreInstDefn::V2] = 0;
-    inst.operands[VecCoreInstDefn::VEC_IDX] = 7;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::SCALE, {
+        {VecCoreInstDefn::Vd, 3},
+        {VecCoreInstDefn::V1, 3},
+        {VecCoreInstDefn::V2, 0},
+        {VecCoreInstDefn::VEC_IDX, 7}
+    }});
 
     // Delta by E
-    inst.opcode = VecCoreInstDefn::DELTA;
-    inst.operands[VecCoreInstDefn::Vd] = 3;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    inst.operands[VecCoreInstDefn::V2] = 1;
-    inst.operands[VecCoreInstDefn::VEC_IDX] = 2;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::DELTA, {
+        {VecCoreInstDefn::Vd, 3},
+        {VecCoreInstDefn::V1, 3},
+        {VecCoreInstDefn::V2, 1},
+        {VecCoreInstDefn::VEC_IDX, 2}
+    }});
 
     // store 3 to memory
-    inst.opcode = VecCoreInstDefn::STORE_VEC;
-    inst.operands[VecCoreInstDefn::ADDR] = 0;
-    inst.operands[VecCoreInstDefn::V1] = 3;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::STORE_VEC, {
+        {VecCoreInstDefn::ADDR, 0},
+        {VecCoreInstDefn::V1, 3}
+    }});
 
     // halt
-    inst.opcode = VecCoreInstDefn::HALT;
-    prog.append(inst);
+    prog.append({VecCoreInstDefn::HALT, {
+    }});
 
     TNPProgramBinary bin = prog.toBinary();
     SaveProgram(bin, "inst_mem.txt");
