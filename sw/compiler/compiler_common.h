@@ -79,6 +79,10 @@ class MatInfo {
         int vecReg1;
         int vecReg2;
 
+        // only used if called by orchestrator
+        std::vector<std::vector<size_t>> matAReg;
+        std::vector<std::vector<size_t>> matBReg;
+        std::vector<std::vector<size_t>> matCReg;
         std::vector<size_t> regMap;
 
     private:

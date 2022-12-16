@@ -33,6 +33,120 @@ std::vector<std::vector<std::vector<std::vector<size_t>>>>
     return subMats;
 }
 
+void distributeMatViaReg(
+    const int sendCoreIdx,
+    const int recvCoreIdx,
+    MatCoreProgram &sendProg,
+    MatCoreProgram &recvProg,
+    const std::vector<std::vector<size_t>> matReg,
+    const int matRegStart,
+    const int matMaxRegs,
+    const int matMemStart,
+    int (&matRegToMemAddr)[MAT_REG_SIZE],
+    const std::vector<size_t> &regMap
+    ) {
+    for (size_t bx = 0;bx < matReg.size();bx++) {
+        for (size_t by = 0;by < matReg[0].size();by++) {
+            int regOffset = bx * matReg.size() + by;
+            int recvReg = regMap[matRegStart + regOffset % matMaxRegs];
+            // int recvAddr = matMemStart + regOffset * BLOCK_AREA;
+
+            // TODO handle cases where recv core has 
+            // not enough registers      
+            // conditionalStoreAndLoad(recvReg, recvAddr, 
+            //     matMaxRegs, matRegToMemAddr, recvProg);
+
+            if (sendCoreIdx == recvCoreIdx) {
+                // Copy matrix (same core)
+                sendProg.append({MatCoreInstDefn::COPY, {
+                    {MatCoreInstDefn::M1, matReg[bx][by]},
+                    {MatCoreInstDefn::Md, recvReg}
+                }});
+            } else {
+                // Send/Recv matrix
+                for (size_t r = 0;r < BLOCK_WIDTH;r++) {
+                    // Send
+                    sendProg.append({MatCoreInstDefn::SEND_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, recvCoreIdx},
+                        {MatCoreInstDefn::M1, matReg[bx][by]},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                    // Recv
+                    recvProg.append({MatCoreInstDefn::RECV_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, sendCoreIdx},
+                        {MatCoreInstDefn::M1, recvReg},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                }
+            }
+        }
+    }
+}
+
+void gatherMatViaReg(
+    const int sendCoreIdx,
+    const int recvCoreIdx,
+    MatCoreProgram &sendProg,
+    MatCoreProgram &recvProg,
+    const std::vector<std::vector<size_t>> recvMatReg,
+    const int matRegStart,
+    const int matMaxRegs,
+    const int matMemStart,
+    int (&matRegToMemAddr)[MAT_REG_SIZE],
+    const std::vector<size_t> &regMap
+    ) {
+    for (size_t bx = 0;bx < recvMatReg.size();bx++) {
+        for (size_t by = 0;by < recvMatReg[0].size();by++) {
+            int sendRegOffset = bx * recvMatReg.size() + by;
+            int sendReg = regMap[matRegStart + sendRegOffset % matMaxRegs];
+            // int sendAddr = matMemStart + sendRegOffset * BLOCK_AREA;
+
+            if (sendCoreIdx == recvCoreIdx) {
+                sendProg.append({MatCoreInstDefn::COPY, {
+                    {MatCoreInstDefn::M1, sendReg},
+                    {MatCoreInstDefn::Md, recvMatReg[bx][by]}
+                }});
+            } else {
+                for (size_t r = 0;r < BLOCK_WIDTH;r++) {
+                    // Send
+                    sendProg.append({MatCoreInstDefn::SEND_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, recvCoreIdx},
+                        {MatCoreInstDefn::M1, sendReg},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                    // Recv
+                    recvProg.append({MatCoreInstDefn::RECV_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, sendCoreIdx},
+                        {MatCoreInstDefn::M1, recvMatReg[bx][by]},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                }
+            }
+        }
+    }
+}
+
+void appendProgs(const int coresForRows, const int coresForCols,
+    MatCoreProgram (&matProgs)[NUM_MAT_CORES], VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
+    Orchestrator::ProcState &procState
+) {
+    // append progs to original prog
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int vecCoreOffset = i * coresForCols + j;
+            
+            for (auto & inst: matProgs[matCoreOffset].getInsts()) {
+                procState.matCores[matCoreOffset].m_prog.append(inst);
+            }
+
+            for (auto & inst: vecProgs[vecCoreOffset].getInsts()) {
+                procState.vecCores[vecCoreOffset].m_prog.append(inst);
+            }
+        }
+    }
+}
+
 Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
     // Find h1/h2
     if (m_dataMatrixState.count(h1) == 0 ||
@@ -54,41 +168,22 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     const auto& m3State = m_dataMatrixState.at(h3);
 
     // In1
-    auto& m1Core = m_procState.matCores[m1State.m_coreIdx];
+    const int in1CoreIdx = m1State.m_coreIdx;
+    auto& in1Core = m_procState.matCores[in1CoreIdx];
     // In2
-    auto& m2Core = m_procState.matCores[m2State.m_coreIdx];
+    const int in2CoreIdx = m2State.m_coreIdx;
+    auto& in2Core = m_procState.matCores[in2CoreIdx];
     // Out
-    auto& m3Core = m_procState.matCores[m3State.m_coreIdx];
+    const int outCoreIdx = m3State.m_coreIdx;
+    auto& outCore = m_procState.matCores[outCoreIdx];
 
-    // Divide registers among cores (i.e. dividing the matrix among cores)
     auto [coresForRows, coresForCols] = getCoreAssignment(m1State.m_shape.x, m1State.m_shape.y);        
     
+    // Divide registers among cores (i.e. dividing the matrix among cores)
     auto m1SubRegs = getSubRegs(m1State.m_regIdx, coresForRows, coresForCols);
     auto m2SubRegs = getSubRegs(m2State.m_regIdx, coresForRows, coresForCols);
     auto m3SubRegs = getSubRegs(m3State.m_regIdx, coresForRows, coresForCols);
-
-    // Distribute In1 and In2 to all cores
-    // TODO what if a core does not have enough registers to receive??
-    for (int i = 0; i < coresForRows; i++) {
-        for (int j = 0; j < coresForCols; j++) {
-            int matCoreOffset = i * coresForCols + j;
-            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
-
-            // // Copy if same core
-            // if (m1State.m_coreIdx == matCoreIdx) {
-            //     m1Core.m_prog.append({MatCoreInstDefn::COPY, {
-            //         {MatCoreInstDefn::M1, m1State.m_regIdx},
-            //         {MatCoreInstDefn::Md, 
-            //     }});
-            // } else {
-            //     // Send/Recv
-            // }
-
-        }
-    }    
     
-    MatCoreProgram matProgs[NUM_MAT_CORES];
-    VecCoreProgram vecProgs[NUM_VEC_CORES]; 
     std::vector<MatInfo> subMatInfos1;
     std::vector<MatInfo> subMatInfos2;
     
@@ -108,6 +203,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
         2: 10 00 --> vec2 -> mat2
         3: 11 10 / 
     */
+   // Initialization
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
@@ -161,6 +257,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
                 m_procState.matCores[matCoreIdx].m_dataMem.size()) 
             );
 
+            // Adjust the memory address for MULT & ADD 2
             subMatInfos2[matCoreIdx].matAMemStart = 0;
             subMatInfos2[matCoreIdx].matBMemStart = subMatInfos1[matCoreIdx].matAMemSize + 
                 subMatInfos1[matCoreIdx].matBMemSize + subMatInfos1[matCoreIdx].matCMemSize;
@@ -169,31 +266,89 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
         }
     }
 
-    std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
-        matProgs, vecProgs, addCoreIdxs1);
-    
-    std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
-        matProgs, vecProgs, addCoreIdxs2);
-    
-    // append progs to original prog
+    // Distribute In1 and In2 to all cores
+    // TODO what if a core does not have enough registers to receive??
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
-            int vecCoreOffset = i * coresForCols + j;
-            
-            for (auto & inst: matProgs[matCoreOffset].getInsts()) {
-                m_procState.matCores[matCoreOffset].m_prog.append(inst);
-            }
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+            auto &mi1 = subMatInfos1[matCoreOffset];
+            auto &mi2 = subMatInfos2[matCoreOffset];
+            auto &matProg = m_procState.matCores[matCoreIdx].m_prog;
 
-            for (auto & inst: vecProgs[vecCoreOffset].getInsts()) {
-                m_procState.vecCores[vecCoreOffset].m_prog.append(inst);
-            }
+            // MULT & ADD 1 - In1 distribution
+            distributeMatViaReg(
+                in1CoreIdx, matCoreIdx, in1Core.m_prog, matProg,
+                mi1.matAReg, mi1.matARegStart, mi1.matAMaxRegs, mi1.matAMemStart,
+                mi1.matRegToMemAddr, mi1.regMap
+            );
+
+            // MULT & ADD 1 - In2 distribution
+            distributeMatViaReg(
+                in1CoreIdx, matCoreIdx, in1Core.m_prog, matProg,
+                mi1.matBReg, mi1.matBRegStart, mi1.matBMaxRegs, mi1.matBMemStart,
+                mi1.matRegToMemAddr, mi1.regMap
+            );
+        }
+    }    
+
+    // MULT & ADD 1 
+    MatCoreProgram matProgs[NUM_MAT_CORES];
+    VecCoreProgram vecProgs[NUM_VEC_CORES]; 
+    std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
+        matProgs, vecProgs, addCoreIdxs1);
+    appendProgs(coresForRows, coresForCols, matProgs, vecProgs, m_procState);
+
+    // Send result from cores 0 3 to Out
+    for (int i : {0, 3}) {
+        int matCoreIdx = MAT_CORE_START_IDX + i;
+        auto &mi = subMatInfos1[i];
+        gatherMatViaReg(
+            matCoreIdx, outCoreIdx, 
+            m_procState.matCores[matCoreIdx].m_prog, outCore.m_prog,
+            mi.matCReg, mi.matCRegStart, mi.matCMaxRegs, mi.matCMemStart,
+            mi.matRegToMemAddr, mi.regMap
+        );
+    }
+
+    // MULT & ADD 2 - In1 distribution (not needed as we can reuse the previous In1)
+    // MULT & ADD 2 - In2 distribution
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+            auto &mi2 = subMatInfos2[matCoreOffset];
+            auto &matProg = m_procState.matCores[matCoreIdx].m_prog;
+
+            // MULT & ADD 2 - In2 distribution
+            distributeMatViaReg(
+                in2CoreIdx, matCoreIdx, in2Core.m_prog, matProg,
+                mi2.matBReg, mi2.matBRegStart, mi2.matBMaxRegs, mi2.matBMemStart,
+                mi2.matRegToMemAddr, mi2.regMap
+            );  
         }
     }
 
-    // Gather result from all cores to Out
+    // MULT & ADD 2 
+    MatCoreProgram matProgs2[NUM_MAT_CORES];
+    VecCoreProgram vecProgs2[NUM_VEC_CORES]; 
+    std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
+        matProgs2, vecProgs2, addCoreIdxs2);
+    appendProgs(coresForRows, coresForCols, matProgs2, vecProgs2, m_procState);
+
+    // Send result from cores 1 2 to Out
+    for (int i : {1, 2}) {
+        int matCoreIdx = MAT_CORE_START_IDX + i;
+        auto &mi = subMatInfos1[i];
+        gatherMatViaReg(
+            matCoreIdx, outCoreIdx, 
+            m_procState.matCores[matCoreIdx].m_prog, outCore.m_prog,
+            mi.matCReg, mi.matCRegStart, mi.matCMaxRegs, mi.matCMemStart,
+            mi.matRegToMemAddr, mi.regMap
+        );
+    }
 
     return h3;
 }

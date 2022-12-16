@@ -1,3 +1,4 @@
+#include "error.h"
 #include "compiler_common.h"
 
 void MatInfo::init(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
@@ -56,16 +57,25 @@ int matAMemStartIn, int matBMemStartIn, int matCMemStartIn) {
     printf("regMap size: %lu\n", regMap.size());
 }
 
+void errorIfNotEnoughRegisters(int matMaxRegs, int matRegsRequired, std::string matType) {
+    if (matMaxRegs < matRegsRequired) {
+        FatalError("Error: max registers " + std::to_string(matMaxRegs) + 
+        "< required register " + std::to_string(matRegsRequired) + "in" + matType);
+    }
+}
+
 // From orchestrator
 MatInfo::MatInfo(
-    // These registers are just used to calculate the matrix shapes
     const std::vector<std::vector<size_t>> &m1Reg,
     const std::vector<std::vector<size_t>> &m2Reg,
     const std::vector<std::vector<size_t>> &m3Reg,
-    // These registers are the actual ones used
     const std::vector<size_t> &freeRegIdx,
     int dataMemStart
-) {
+) { 
+    matAReg = m1Reg;
+    matBReg = m2Reg;
+    matCReg = m3Reg;
+
     matARBlockSize = m1Reg.size(); 
     matACBlockSize = m1Reg[0].size();
     matBRBlockSize = m2Reg.size(); 
@@ -83,6 +93,10 @@ MatInfo::MatInfo(
     // mat core registers, reserve 1 for tmpReg
     int matMaxRegs = (freeRegIdx.size() - 1) / 3;
     matAMaxRegs = matBMaxRegs = matCMaxRegs = matMaxRegs;
+    
+    errorIfNotEnoughRegisters(matAMaxRegs, matAMemSize / BLOCK_AREA, "matA");
+    errorIfNotEnoughRegisters(matBMaxRegs, matBMemSize / BLOCK_AREA, "matB");
+    errorIfNotEnoughRegisters(matCMaxRegs, matCMemSize / BLOCK_AREA, "matC");
     
     matARegStart = 0;
     matBRegStart = matARegStart + matAMaxRegs;
