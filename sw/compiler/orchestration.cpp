@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 // MatrixShape comparison
 bool operator==(const Orchestrator::MatrixShape& l, const Orchestrator::MatrixShape& r) {
