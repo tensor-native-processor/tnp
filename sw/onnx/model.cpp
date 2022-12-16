@@ -25,8 +25,13 @@ ONNXModel::ONNXModel(const std::string& filename) {
 
     // Read into buffer
     void* buffer = malloc(filesize);
-    fread(buffer, filesize, 1, file);
+    size_t readsize = fread(buffer, 1, filesize, file);
     fclose(file);
+
+    // Validate read size
+    if (filesize != readsize) {
+        FatalError("ONNX model read size mismatch");
+    }
 
     // Construct model object
     bool ret = m_model.ParseFromArray(buffer, filesize);

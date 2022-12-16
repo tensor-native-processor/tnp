@@ -29,6 +29,8 @@ int main() {
     h3Data.m_data[1][0][2 * 16 + 2] = 12;
     orch.dataMatrixLoadConstant(h3, h3Data);
 
+    orch.dataMatrixDeallocate(h1);
+
     orch.compile();
 
     return 0;
