@@ -42,6 +42,7 @@ module MatInstDecoder
             // Section 1
             MAT_INST_SET_WEIGHT,
             MAT_INST_TRANSPOSE,
+            MAT_INST_CLEAR,
             MAT_INST_XFLIP,
             MAT_INST_YFLIP: begin
                 op_M1       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];

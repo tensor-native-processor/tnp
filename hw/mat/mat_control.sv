@@ -342,6 +342,11 @@ case (opcode)
         cache_write_op = MAT_DATA_WRITE_YFLIP;
         cache_write_addr1 = op_M1;
     end
+    MAT_INST_CLEAR: begin
+        // Zero cache matrix
+        cache_write_op = MAT_DATA_WRITE_ZERO;
+        cache_write_addr1 = op_M1;
+    end
 
     MAT_INST_COPY: begin
         // Change next state

@@ -38,6 +38,10 @@ module MatReg
                         // Flip matrix
                         mem[i][j] <= mem[i][WIDTH-1 - j];
                     end
+                    MAT_DATA_WRITE_ZERO: begin
+                        // Clear matrix
+                        mem[i][j] <= 0;
+                    end
                     MAT_DATA_WRITE_ROW: begin
                         // Write row
                         if (i == write_param1) begin
