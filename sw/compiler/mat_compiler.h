@@ -56,7 +56,4 @@ void multiCore(
     matrix &matC,
     matrix &matRef);
 
-std::vector<std::vector<std::vector<std::vector<size_t>>>> 
-    getSubRegs(const std::vector<std::vector<size_t>> &mat, int coresForRows, int coresForCols);
-
 #endif

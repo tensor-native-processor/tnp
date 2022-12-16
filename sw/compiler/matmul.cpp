@@ -3,6 +3,35 @@
 #include "compiler_common.h" 
 #include "orchestration.h"
 
+// Copied from getSubMats() TODO: dedup
+std::vector<std::vector<std::vector<std::vector<size_t>>>> 
+    getSubRegs(const std::vector<std::vector<size_t>> &mat, int coresForRows, int coresForCols) {
+    
+    std::vector<std::vector<std::vector<std::vector<size_t>>>> subMats;  
+    int subMatRows = (mat.size() + coresForRows - 1) / coresForRows;
+    int subMatCols = (mat[0].size() + coresForCols - 1) / coresForCols;
+     
+    for (int rCoreIdx = 0; rCoreIdx < coresForRows; rCoreIdx++) {
+        std::vector<std::vector<std::vector<size_t>>> subMatsPerRow;
+        int rStart = rCoreIdx * subMatRows;
+        int rEnd = std::min((rCoreIdx + 1) * subMatRows, static_cast<int>(mat.size()));
+        
+        for (int cCoreIdx = 0; cCoreIdx < coresForCols; cCoreIdx++) {
+            std::vector<std::vector<size_t>> subMat;
+            int cStart = cCoreIdx * subMatCols;
+            int cEnd = std::min((cCoreIdx + 1) * subMatCols, static_cast<int>(mat[0].size())); 
+            
+            for (int i = rStart; i < rEnd; i++) {
+                std::vector<size_t> row(mat[i].begin() + cStart, mat[i].begin() + cEnd);
+                subMat.push_back(row);
+            }
+            subMatsPerRow.push_back(subMat);
+        }
+        subMats.push_back(subMatsPerRow);
+    }
+
+    return subMats;
+}
 
 Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, MatrixHandle h2) {
     // Find h1/h2
@@ -31,7 +60,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     // Out
     auto& m3Core = m_procState.matCores[m3State.m_coreIdx];
 
-    // Divide registers among cores (dividing the matrix among cores)
+    // Divide registers among cores (i.e. dividing the matrix among cores)
     auto [coresForRows, coresForCols] = getCoreAssignment(m1State.m_shape.x, m1State.m_shape.y);        
     
     auto m1SubRegs = getSubRegs(m1State.m_regIdx, coresForRows, coresForCols);
@@ -62,7 +91,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     VecCoreProgram vecProgs[NUM_VEC_CORES]; 
     std::vector<MatInfo> subMatInfos1;
     std::vector<MatInfo> subMatInfos2;
-    // Perform Matmult
+    
     /* MULT & ADD 1 (only support 4 cores for now)
         MULT       ADD
     core  A  B
@@ -82,9 +111,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
-            int vecCoreOffset = i * coresForCols + j;
             int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
-            int vecCoreIdx = VEC_CORE_START_IDX + vecCoreOffset;
             
             std::vector<std::vector<size_t>> m1subReg = m1SubRegs[i][j];
             std::vector<std::vector<size_t>> m2subReg; 
@@ -141,18 +168,30 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
                 subMatInfos2[matCoreIdx].matBMemStart + subMatInfos2[matCoreIdx].matBMemSize;
         }
     }
-    
-    // m_procState.matCores[0].m_prog
 
-    // std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
-    // multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
-    // matProgs, vecProgs, addCoreIdxs1);
+    std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
+        matProgs, vecProgs, addCoreIdxs1);
     
-    // std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
-    // multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
-    // matProgs, vecProgs, addCoreIdxs2);
+    std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
+        matProgs, vecProgs, addCoreIdxs2);
     
     // append progs to original prog
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int vecCoreOffset = i * coresForCols + j;
+            
+            for (auto & inst: matProgs[matCoreOffset].getInsts()) {
+                m_procState.matCores[matCoreOffset].m_prog.append(inst);
+            }
+
+            for (auto & inst: vecProgs[vecCoreOffset].getInsts()) {
+                m_procState.vecCores[vecCoreOffset].m_prog.append(inst);
+            }
+        }
+    }
 
     // Gather result from all cores to Out
 

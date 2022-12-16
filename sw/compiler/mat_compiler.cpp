@@ -36,7 +36,6 @@ void conditionalStoreAndLoad(
     MatCoreInst matInst;
 
     if (matBlockMemAddr != matRegToMemAddr[matBlockReg]) {
-        // TODO if not dirty no need to store!
         if (matRegToMemAddr[matBlockReg] != -1) {
             matInst.opcode = MatCoreInstDefn::STORE_MAT;
             matInst.operands[MatCoreInstDefn::ADDR] = matRegToMemAddr[matBlockReg];
@@ -423,8 +422,6 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
             int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
             int vecCoreIdx = VEC_CORE_START_IDX + vecCoreOffset;
 
-            // TODO ans.txt for easy diffing
-
             MatInfo &mi = subMatInfos[matCoreOffset];
 
             // MULT do sub matrix multiplication on every core 
@@ -452,7 +449,7 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
         MatCoreProgram &fromMp1 = matProgs[fromCoreIdx1];
         MatCoreProgram &fromMp2 = matProgs[fromCoreIdx2];
         MatCoreProgram &toMp = matProgs[toCoreIdx];
-        // uses the vec core of mat core `toCoreIdx`
+        // ADD uses the vec core of mat core `toCoreIdx` for addition
         VecCoreProgram &vp = vecProgs[toCoreIdx];
 
         for (int rBlockIdx = 0; rBlockIdx < fromMi1.matARBlockSize; rBlockIdx++) {
@@ -498,7 +495,7 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
         
         MatCoreInst matInst;
         // STORE write all valid matC regs to mem  
-        // TODO no need to write all?
+        // TODO optimization no need to write all?
         for (int i = 0; i < toMi.matCMaxRegs; i++) {
             int matCReg = toMi.matCRegStart + i;
             int addr = toMi.matRegToMemAddr[matCReg];
@@ -568,9 +565,7 @@ void multiCore(
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
-            int vecCoreOffset = i * coresForCols + j;
             int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
-            int vecCoreIdx = VEC_CORE_START_IDX + vecCoreOffset;
             
             matrix subMatA = subMatsA[i][j];
             matrix subMatB; 
@@ -679,7 +674,8 @@ void multiCore(
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
     multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1);
     
-    // TODO exchange data, for now we let the compiler store all required data in advance
+    // TODO optimization: exchange data, 
+    // for now we let the compiler store all required data in advance
     // to avoid exchanging
     /* EXCHANGE subMatB
         0 (00) <-> 2 (10)
@@ -716,34 +712,4 @@ void multiCore(
         txt << vecProgs[i].toText();
         txt.close();
     }
-}
-
-// Copied from getSubMats() TODO: dedup
-std::vector<std::vector<std::vector<std::vector<size_t>>>> 
-    getSubRegs(const std::vector<std::vector<size_t>> &mat, int coresForRows, int coresForCols) {
-    
-    std::vector<std::vector<std::vector<std::vector<size_t>>>> subMats;  
-    int subMatRows = (mat.size() + coresForRows - 1) / coresForRows;
-    int subMatCols = (mat[0].size() + coresForCols - 1) / coresForCols;
-     
-    for (int rCoreIdx = 0; rCoreIdx < coresForRows; rCoreIdx++) {
-        std::vector<std::vector<std::vector<size_t>>> subMatsPerRow;
-        int rStart = rCoreIdx * subMatRows;
-        int rEnd = std::min((rCoreIdx + 1) * subMatRows, static_cast<int>(mat.size()));
-        
-        for (int cCoreIdx = 0; cCoreIdx < coresForCols; cCoreIdx++) {
-            std::vector<std::vector<size_t>> subMat;
-            int cStart = cCoreIdx * subMatCols;
-            int cEnd = std::min((cCoreIdx + 1) * subMatCols, static_cast<int>(mat[0].size())); 
-            
-            for (int i = rStart; i < rEnd; i++) {
-                std::vector<size_t> row(mat[i].begin() + cStart, mat[i].begin() + cEnd);
-                subMat.push_back(row);
-            }
-            subMatsPerRow.push_back(subMat);
-        }
-        subMats.push_back(subMatsPerRow);
-    }
-
-    return subMats;
 }
