@@ -18,6 +18,16 @@ bool MatCoreSimEngine::isDone() const {
 
 // Simulate one step
 void MatCoreSimEngine::simulateStep() {
+    // Check if terminate without halt is allowed
+    if (m_pc >= m_prog.size()) {
+        if (m_param.allowNoHalt) {
+            m_state = State::STOP;
+        } else {
+            FatalError("MatCore instruction memory out of bound");
+        }
+    }
+
+    // Fetch instruction
     auto const& inst = m_prog[m_pc];
 
     State next_state = m_state;
@@ -183,8 +193,5 @@ void MatCoreSimEngine::simulateStep() {
     m_state = next_state;
     if (next_inst_proceed) {
         m_pc++;
-        if (m_pc >= m_prog.size()) {
-            FatalError("MatCore instruction memory out of bound");
-        }
     }
 }

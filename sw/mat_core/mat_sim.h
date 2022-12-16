@@ -9,6 +9,7 @@
 struct MatCoreParam {
     size_t width = 16;
     size_t core_self = 0;
+    bool allowNoHalt = false;
 };
 
 

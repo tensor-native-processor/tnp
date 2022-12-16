@@ -23,7 +23,8 @@ void Orchestrator::simulateCycleCount() {
         matCoreSimEngines.emplace_back(m_procState.matCores[id].m_prog,
         MatCoreParam{
             .width = m_param.width,
-            .core_self = getMatCoreID(id)
+            .core_self = getMatCoreID(id),
+            .allowNoHalt = true
         }, &swSimEngine);
     }
 
@@ -33,7 +34,8 @@ void Orchestrator::simulateCycleCount() {
         vecCoreSimEngines.emplace_back(m_procState.vecCores[id].m_prog,
         VecCoreParam{
             .width = m_param.width,
-            .core_self = getVecCoreID(id)
+            .core_self = getVecCoreID(id),
+            .allowNoHalt = true
         }, &swSimEngine);
     }
 
@@ -65,5 +67,4 @@ void Orchestrator::simulateCycleCount() {
         }
         swSimEngine.simulateStep();
     }
-    std::cout << "Finished with " << cycle_count << " cycles." << std::endl;
 }
