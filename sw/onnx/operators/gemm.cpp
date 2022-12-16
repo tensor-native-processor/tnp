@@ -191,11 +191,24 @@ void OperatorGemm::compile(const ::onnx::NodeProto& node,
     getAttributes(node);
 
     // Do transpose if necessary
+    bool deallocHandleA = false, deallocHandleB = false;
     if (attr_transA) {
-        handleA = orch.arithmeticTranspose(handleA);
+        if (refCount[node.input(0)] == 1) {
+            // Last access to handleA
+            orch.arithmeticTransposeSelf(handleA);
+        } else {
+            handleA = orch.arithmeticTranspose(handleA);
+            deallocHandleA = true;
+        }
     }
     if (attr_transB) {
-        handleB = orch.arithmeticTranspose(handleB);
+        if (refCount[node.input(1)] == 1) {
+            // Last access to handleB
+            orch.arithmeticTransposeSelf(handleB);
+        } else {
+            handleB = orch.arithmeticTranspose(handleB);
+            deallocHandleB = true;
+        }
     }
 
     // Call orchestrator
@@ -208,10 +221,10 @@ void OperatorGemm::compile(const ::onnx::NodeProto& node,
     stateTensorHandles[node.output(0)] = handleRes;
 
     // Remove transpose handle if necessary
-    if (attr_transA) {
+    if (deallocHandleA) {
         orch.dataMatrixDeallocate(handleA);
     }
-    if (attr_transB) {
+    if (deallocHandleB) {
         orch.dataMatrixDeallocate(handleB);
     }
 }

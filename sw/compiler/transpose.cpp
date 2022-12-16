@@ -8,12 +8,10 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticCopy(MatrixHandle handleIn) {
     if (m_dataMatrixState.count(handleIn) == 0) {
         FatalError("Orchestrator copy handle not exist");
     }
+    const auto& inState = m_dataMatrixState.at(handleIn);
 
     // Allocate a new matrix
-    const auto& inState = m_dataMatrixState.at(handleIn);
-    auto handleOut = dataMatrixAllocate({
-        inState.m_shape.y, inState.m_shape.x
-    });
+    auto handleOut = dataMatrixAllocate(inState.m_shape);
     const auto& outState = m_dataMatrixState.at(handleOut);
 
     auto& inCore = m_procState.matCores[inState.m_coreIdx];
@@ -25,7 +23,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticCopy(MatrixHandle handleIn) {
             if (inState.m_coreIdx == outState.m_coreIdx) {
                 // Copy matrix (same core)
                 inCore.m_prog.append({MatCoreInstDefn::COPY, {
-                    {MatCoreInstDefn::M1, inState.m_regIdx[by][bx]},
+                    {MatCoreInstDefn::M1, inState.m_regIdx[bx][by]},
                     {MatCoreInstDefn::Md, outState.m_regIdx[bx][by]}
                 }});
             } else {
@@ -34,7 +32,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticCopy(MatrixHandle handleIn) {
                     // Send
                     inCore.m_prog.append({MatCoreInstDefn::SEND_ROW, {
                         {MatCoreInstDefn::CORE_IDX, getMatCoreID(outState.m_coreIdx)},
-                        {MatCoreInstDefn::M1, inState.m_regIdx[by][bx]},
+                        {MatCoreInstDefn::M1, inState.m_regIdx[bx][by]},
                         {MatCoreInstDefn::ROW_IDX, r}
                     }});
                     // Recv
@@ -64,7 +62,7 @@ void Orchestrator::arithmeticTransposeSelf(MatrixHandle handleIn) {
     }
 
     // Find MatrixState for handleIn
-    const auto& inState = m_dataMatrixState.at(handleIn);
+    auto& inState = m_dataMatrixState.at(handleIn);
     auto& inCore = m_procState.matCores[inState.m_coreIdx];
 
     // Transpose
@@ -75,4 +73,15 @@ void Orchestrator::arithmeticTransposeSelf(MatrixHandle handleIn) {
             }});
         }
     }
+
+    // Transpose MatrixState
+    std::vector<std::vector<size_t>> newRegIdx(inState.m_shape.y,
+        std::vector<size_t>(inState.m_shape.x, 0));
+    for (size_t bx = 0;bx < inState.m_shape.x;bx++) {
+        for (size_t by = 0;by < inState.m_shape.y;by++) {
+            newRegIdx[by][bx] = inState.m_regIdx[bx][by];
+        }
+    }
+    inState.m_regIdx = newRegIdx;
+    std::swap(inState.m_shape.x, inState.m_shape.y);
 }
