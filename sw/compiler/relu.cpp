@@ -19,6 +19,9 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticReluSingleCore(MatrixHandle h
     auto handleOut = dataMatrixAllocate(inState.m_shape);
     const auto& outState = m_dataMatrixState.at(handleOut);
 
+    // Update cycle count
+    simulateCycleCount();
+
     // Find a free VecCore (at least 1 register)
     // TODO: use a better algorithm
     bool foundFreeVecCore = false;

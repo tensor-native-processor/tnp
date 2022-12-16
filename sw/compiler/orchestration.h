@@ -77,11 +77,15 @@ private:
         MatCoreProgram m_prog;
         std::vector<size_t> m_freeRegIdx;
         std::vector<float> m_dataMem;
+
+        size_t m_cycleCount;
     };
     struct VecCoreState {
         VecCoreProgram m_prog;
         std::vector<size_t> m_freeRegIdx;
         std::vector<float> m_dataMem;
+
+        size_t m_cycleCount;
     };
 
     // Processor state
@@ -117,6 +121,9 @@ private:
 
     // Allocate find best core
     size_t dataMatrixAllocateDetermineTargetCoreIdx(const MatrixShape&);
+
+    // Simulation
+    void simulateCycleCount();
 };
 
 #endif
