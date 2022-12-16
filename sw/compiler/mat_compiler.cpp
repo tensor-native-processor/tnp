@@ -216,18 +216,19 @@ void singleCoreHelper(
         }
     }
 
-    // write all valid matC regs to mem  
-    for (int i = 0; i < matCMaxRegs; i++) {
+    // write all valid matC regs to mem
+    // not needed if called from ochestrator
+    if (regMap.size() == 0) {
+        for (int i = 0; i < matCMaxRegs; i++) {
 
-        int matCReg = matCRegStart + i;
-        // REGMAP
-        matCReg = regMap.size() == 0 ? matCReg : regMap[matCReg];
-        int addr = matRegToMemAddr[matCReg];
-        if (addr != -1) {
-            matInst.opcode = MatCoreInstDefn::STORE_MAT;
-            matInst.operands[MatCoreInstDefn::ADDR] = addr; 
-            matInst.operands[MatCoreInstDefn::M1] = matCReg; 
-            matProg.append(matInst);
+            int matCReg = matCRegStart + i;
+            int addr = matRegToMemAddr[matCReg];
+            if (addr != -1) {
+                matInst.opcode = MatCoreInstDefn::STORE_MAT;
+                matInst.operands[MatCoreInstDefn::ADDR] = addr; 
+                matInst.operands[MatCoreInstDefn::M1] = matCReg; 
+                matProg.append(matInst);
+            }
         }
     }
 }
@@ -492,18 +493,22 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                 );
             }
         }
-        
-        MatCoreInst matInst;
-        // STORE write all valid matC regs to mem  
-        // TODO optimization no need to write all?
-        for (int i = 0; i < toMi.matCMaxRegs; i++) {
-            int matCReg = toMi.matCRegStart + i;
-            int addr = toMi.matRegToMemAddr[matCReg];
-            if (addr != -1) {
-                matInst.opcode = MatCoreInstDefn::STORE_MAT;
-                matInst.operands[MatCoreInstDefn::ADDR] = addr; 
-                matInst.operands[MatCoreInstDefn::M1] = matCReg; 
-                toMp.append(matInst);
+
+
+        // write all valid matC regs to mem
+        // not needed if called from ochestrator
+        if (toMi.regMap.size() == 0) {
+            MatCoreInst matInst;
+            // TODO optimization no need to write all?
+            for (int i = 0; i < toMi.matCMaxRegs; i++) {
+                int matCReg = toMi.matCRegStart + i;
+                int addr = toMi.matRegToMemAddr[matCReg];
+                if (addr != -1) {
+                    matInst.opcode = MatCoreInstDefn::STORE_MAT;
+                    matInst.operands[MatCoreInstDefn::ADDR] = addr; 
+                    matInst.operands[MatCoreInstDefn::M1] = matCReg; 
+                    toMp.append(matInst);
+                }
             }
         }
     }

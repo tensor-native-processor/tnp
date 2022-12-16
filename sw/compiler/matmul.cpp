@@ -222,7 +222,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
                 m3subReg = m3SubRegs[i][j];
             }
             subMatInfos1.push_back(
-                MatInfo(m1subReg, m2subReg, m3subReg, 
+                MatInfo(matCoreIdx, m1subReg, m2subReg, m3subReg, 
                 m_procState.matCores[matCoreIdx].m_freeRegIdx,
                 m_procState.matCores[matCoreIdx].m_dataMem.size())
             );
@@ -252,7 +252,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
             }
 
             subMatInfos2.push_back(
-                MatInfo(m1subReg, m2subReg, m3subReg,
+                MatInfo(matCoreIdx, m1subReg, m2subReg, m3subReg,
                 m_procState.matCores[matCoreIdx].m_freeRegIdx,
                 m_procState.matCores[matCoreIdx].m_dataMem.size()) 
             );
@@ -273,7 +273,6 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
             int matCoreOffset = i * coresForCols + j;
             int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
             auto &mi1 = subMatInfos1[matCoreOffset];
-            auto &mi2 = subMatInfos2[matCoreOffset];
             auto &matProg = m_procState.matCores[matCoreIdx].m_prog;
 
             // MULT & ADD 1 - In1 distribution
@@ -283,9 +282,19 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
                 mi1.matRegToMemAddr, mi1.regMap
             );
 
+        }
+    }    
+
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+            auto &mi1 = subMatInfos1[matCoreOffset];
+            auto &matProg = m_procState.matCores[matCoreIdx].m_prog;
+
             // MULT & ADD 1 - In2 distribution
             distributeMatViaReg(
-                in1CoreIdx, matCoreIdx, in1Core.m_prog, matProg,
+                in2CoreIdx, matCoreIdx, in2Core.m_prog, matProg,
                 mi1.matBReg, mi1.matBRegStart, mi1.matBMaxRegs, mi1.matBMemStart,
                 mi1.matRegToMemAddr, mi1.regMap
             );

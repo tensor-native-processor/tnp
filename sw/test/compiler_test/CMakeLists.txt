@@ -34,3 +34,11 @@ target_include_directories(orch_relu_transpose PUBLIC ${PROJECT_SOURCE_DIR}/comp
 target_include_directories(orch_relu_transpose PUBLIC ${PROJECT_SOURCE_DIR}/onnx)
 target_link_libraries(orch_relu_transpose compiler)
 target_link_libraries(orch_relu_transpose tensor)
+
+
+# orch_matmul
+add_executable(orch_matmul orch_matmul.cpp)
+target_include_directories(orch_matmul PUBLIC ${PROJECT_SOURCE_DIR}/compiler)
+target_include_directories(orch_matmul PUBLIC ${PROJECT_SOURCE_DIR}/onnx)
+target_link_libraries(orch_matmul compiler)
+target_link_libraries(orch_matmul tensor)

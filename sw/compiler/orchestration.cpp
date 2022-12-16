@@ -77,10 +77,18 @@ void Orchestrator::compile() {
     for (size_t id = 0;id < m_param.matCoreCount;id++) {
         std::string filename = "inst_mem" + std::to_string(getMatCoreID(id)) + ".txt";
         SaveProgram(m_procState.matCores[id].m_prog.toBinary(), filename);
+
+        std::ofstream matTxt("inst_mem" + std::to_string(getMatCoreID(id)) + "_text.txt");
+        matTxt << m_procState.matCores[id].m_prog.toText();
+        matTxt.close();
     }
     for (size_t id = 0;id < m_param.vecCoreCount;id++) {
         std::string filename = "inst_mem" + std::to_string(getVecCoreID(id)) + ".txt";
         SaveProgram(m_procState.vecCores[id].m_prog.toBinary(), filename);
+
+        std::ofstream vecTxt("inst_mem" + std::to_string(getVecCoreID(id)) + "_text.txt");
+        vecTxt << m_procState.vecCores[id].m_prog.toText();
+        vecTxt.close();
     }
 
     // Save data memory
