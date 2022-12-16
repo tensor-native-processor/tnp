@@ -26,6 +26,7 @@ void Orchestrator::simulateCycleCount() {
             .core_self = getMatCoreID(id),
             .allowNoHalt = true
         }, &swSimEngine);
+        m_procState.matCores[id].m_cycleCount = 0;
     }
 
     // VecCore
@@ -37,28 +38,31 @@ void Orchestrator::simulateCycleCount() {
             .core_self = getVecCoreID(id),
             .allowNoHalt = true
         }, &swSimEngine);
+        m_procState.vecCores[id].m_cycleCount = 0;
     }
 
     // Main event loop
-    size_t cycle_count = 0;
+    size_t curCycleCount = 0;
     for (;;) {
         // Termination
         bool terminate = true;
-        for (const auto& m : matCoreSimEngines) {
-            if (!m.isDone()) {
+        for (size_t id = 0;id < m_param.matCoreCount;id++) {
+            if (!matCoreSimEngines[id].isDone()) {
                 terminate = false;
+                m_procState.matCores[id].m_cycleCount = curCycleCount;
             }
         }
-        for (const auto& v : vecCoreSimEngines) {
-            if (!v.isDone()) {
+        for (size_t id = 0;id < m_param.vecCoreCount;id++) {
+            if (!vecCoreSimEngines[id].isDone()) {
                 terminate = false;
+                m_procState.vecCores[id].m_cycleCount = curCycleCount;
             }
         }
         if (terminate) {
             break;
         }
 
-        cycle_count++;
+        curCycleCount++;
         for (auto& m : matCoreSimEngines) {
             m.simulateStep();
         }
