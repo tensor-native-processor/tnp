@@ -554,55 +554,6 @@ std::tuple<int, int> getCoreAssignment(int matASize, int matA0Size) {
     return {coresForRows, coresForCols};
 }
 
-void gatherMatViaReg2(
-    const int sendCoreIdx,
-    const int recvCoreIdx,
-    MatCoreProgram &sendProg,
-    MatCoreProgram &recvProg,
-    const std::vector<std::vector<size_t>> recvMatReg,
-    const int matRegStart,
-    const int matMaxRegs,
-    const int matMemStart,
-    int (&matRegToMemAddr)[MAT_REG_SIZE],
-    const std::vector<size_t> &regMap
-    ) {
-    for (size_t bx = 0;bx < recvMatReg.size();bx++) {
-        for (size_t by = 0;by < recvMatReg[0].size();by++) {
-            int sendRegOffset = bx * recvMatReg.size() + by;
-            int sendReg = matRegStart + sendRegOffset % matMaxRegs;
-            if (regMap.size() == 0) {
-                // benchmark
-                
-            } else {
-                // orchestrator
-                sendReg = regMap[sendReg];
-            }
-
-            if (sendCoreIdx == recvCoreIdx) {
-                sendProg.append({MatCoreInstDefn::COPY, {
-                    {MatCoreInstDefn::M1, sendReg},
-                    {MatCoreInstDefn::Md, recvMatReg[bx][by]}
-                }});
-            } else {
-                for (size_t r = 0;r < BLOCK_WIDTH;r++) {
-                    // Send
-                    sendProg.append({MatCoreInstDefn::SEND_ROW, {
-                        {MatCoreInstDefn::CORE_IDX, recvCoreIdx},
-                        {MatCoreInstDefn::M1, sendReg},
-                        {MatCoreInstDefn::ROW_IDX, r}
-                    }});
-                    // Recv
-                    recvProg.append({MatCoreInstDefn::RECV_ROW, {
-                        {MatCoreInstDefn::CORE_IDX, sendCoreIdx},
-                        {MatCoreInstDefn::M1, recvMatReg[bx][by]},
-                        {MatCoreInstDefn::ROW_IDX, r}
-                    }});
-                }
-            }
-        }
-    }
-}
-
 void multiCore(
     matrix &matA, 
     matrix &matB,
@@ -613,12 +564,16 @@ void multiCore(
 
     std::vector<std::vector<matrix>> subMatsA = getSubMats(matA, coresForRows, coresForCols);     
     std::vector<std::vector<matrix>> subMatsB = getSubMats(matB, coresForRows, coresForCols);     
-    std::vector<std::vector<matrix>> subMatsC = getSubMats(matC, coresForRows, coresForCols);     
+    std::vector<std::vector<matrix>> subMatsC = getSubMats(matC, coresForRows, coresForCols); 
+    std::vector<std::vector<matrix>> subMatsRef = getSubMats(matRef, coresForRows, coresForCols);
 
     MatCoreProgram matProgs[NUM_MAT_CORES];
     VecCoreProgram vecProgs[NUM_VEC_CORES];
     std::vector<MatInfo> subMatInfos1;
     std::vector<MatInfo> subMatInfos2;
+
+    std::ofstream ans("ans.txt");
+    ans << std::setprecision(FLOAT_PRECISION) << std::fixed;
 
     /* MULT & ADD 1 (only support 4 cores for now)
         MULT       ADD
@@ -738,12 +693,30 @@ void multiCore(
                 }
             }
 
+            // ans
+            if (matCoreIdx == 0 || matCoreIdx == 3) {
+                for (int rBlockIdx = 0; rBlockIdx < mi1.matARBlockSize; rBlockIdx++) {
+                    for (int cBlockIdx = 0; cBlockIdx < mi1.matBCBlockSize; cBlockIdx++) {
+                        writeBlockMatToMem(subMatsRef[i][j], rBlockIdx, cBlockIdx, false, ans);
+                    }
+                }
+            } else if (matCoreIdx == 1 || matCoreIdx == 2) {
+                for (int rBlockIdx = 0; rBlockIdx < mi2.matARBlockSize; rBlockIdx++) {
+                    for (int cBlockIdx = 0; cBlockIdx < mi2.matBCBlockSize; cBlockIdx++) {
+                        writeBlockMatToMem(subMatsRef[i][j], rBlockIdx, cBlockIdx, false, ans);
+                    }
+                } 
+            }
+
             matDM.close();
 
             std::ofstream vecDM(getDataMemName(vecCoreIdx));
             vecDM.close();
         }
     }
+
+    ans.close();
+
     // fromCoreIdx1, fromCoreIdx2, toCoreIdx
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
     multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1);
@@ -757,6 +730,32 @@ void multiCore(
     */
     std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
     multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2);    
+
+    // hint
+    std::ofstream hint("hint.txt");
+    for (int i = 0; i < coresForRows; i++) {
+        for (int j = 0; j < coresForCols; j++) {
+            int matCoreOffset = i * coresForCols + j;
+            int matCoreIdx = MAT_CORE_START_IDX + matCoreOffset;
+
+            MatInfo &mi1 = subMatInfos1[matCoreIdx];
+            MatInfo &mi2 = subMatInfos2[matCoreIdx];
+
+            // ans
+            hint << matCoreIdx;
+            if (matCoreIdx == 0 || matCoreIdx == 3) {
+                for (int i = 0; i < mi1.matCMemSize; i++) {
+                   hint << "," << mi1.matCMemStart + i;
+                }
+            } else if (matCoreIdx == 1 || matCoreIdx == 2) {
+                for (int i = 0; i < mi2.matCMemSize; i++) {
+                   hint << "," << mi2.matCMemStart + i;
+                } 
+            }
+            hint << std::endl;
+        }
+    }
+    hint.close();
 
     // inst mem for mat cores
     for (int i = 0; i < NUM_MAT_CORES; i++) {
