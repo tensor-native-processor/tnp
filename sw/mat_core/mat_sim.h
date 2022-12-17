@@ -10,6 +10,7 @@ struct MatCoreParam {
     size_t width = 16;
     size_t core_self = 0;
     bool allowNoHalt = false;
+    size_t memoryPenalty = 0;
 };
 
 
@@ -37,6 +38,9 @@ private:
     State m_state;
     size_t m_pc;
     size_t m_diag_progress_counter;
+
+    // Memory penalty
+    size_t m_memoryPenaltyCounter;
 
     // Pointer to switch
     SwitchSimEngine* p_switch;
