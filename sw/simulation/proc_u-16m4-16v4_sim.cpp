@@ -19,7 +19,7 @@ int main() {
         prog.fromBinary(LoadProgram("inst_mem" + std::to_string(i) + ".txt"));
         mat_sim.emplace_back(prog, MatCoreParam{
             .core_self = i,
-            .memoryPenalty = 100
+            .memoryPenalty = 120
         }, &sw_sim);
     }
 
@@ -30,7 +30,7 @@ int main() {
         prog.fromBinary(LoadProgram("inst_mem" + std::to_string(i) + ".txt"));
         vec_sim.emplace_back(prog, VecCoreParam{
             .core_self = i,
-            .memoryPenalty = 100
+            .memoryPenalty = 120
         }, &sw_sim);
     }
 
