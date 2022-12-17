@@ -110,3 +110,10 @@ MatCoreInstDefn::Opcode MatCoreInstDefn::findOpcodeByName(std::string opName) {
 MatCoreInstDefn::Type MatCoreInstDefn::getOperandType(Operand opr) {
     return operandType.at(opr);
 }
+
+// Test opcode is memory operation
+bool MatCoreInstDefn::isMemoryOperation(Opcode op) {
+    auto name = opcodeName.at(op);
+    return name.find("LOAD") != std::string::npos ||
+           name.find("STORE") != std::string::npos;
+}

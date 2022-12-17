@@ -74,6 +74,9 @@ public:
     static Opcode findOpcodeByName(std::string);
     static Type getOperandType(Operand);
 
+    // Test if an opcode is for memory operation
+    static bool isMemoryOperation(Opcode);
+
 private:
     static const std::map<Opcode, std::vector<Operand>> operandMap;
     static const std::map<Opcode, std::string> opcodeName;
