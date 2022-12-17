@@ -515,12 +515,10 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
             }
         }
 
-
         // write all valid matC regs to mem
         // not needed if called from ochestrator
         if (toMi.regMap.size() == 0) {
             MatCoreInst matInst;
-            // TODO optimization no need to write all?
             for (int i = 0; i < toMi.matCMaxRegs; i++) {
                 int matCReg = toMi.matCRegStart + i;
                 int addr = toMi.matRegToMemAddr[matCReg];

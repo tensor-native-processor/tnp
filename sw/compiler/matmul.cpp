@@ -49,12 +49,6 @@ void distributeMatViaReg(
         for (size_t by = 0;by < matReg[0].size();by++) {
             int regOffset = bx * matReg.size() + by;
             int recvReg = regMap[matRegStart + regOffset % matMaxRegs];
-            // int recvAddr = matMemStart + regOffset * BLOCK_AREA;
-
-            // TODO handle cases where recv core has 
-            // not enough registers      
-            // conditionalStoreAndLoad(recvReg, recvAddr, 
-            //     matMaxRegs, matRegToMemAddr, recvProg);
 
             if (sendCoreIdx == recvCoreIdx) {
                 // Copy matrix (same core)
@@ -267,7 +261,6 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     }
 
     // Distribute In1 and In2 to all cores
-    // TODO what if a core does not have enough registers to receive??
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
