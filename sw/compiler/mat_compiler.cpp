@@ -244,6 +244,7 @@ void singleCoreHelper(
                 matInst.operands[MatCoreInstDefn::ADDR] = addr; 
                 matInst.operands[MatCoreInstDefn::M1] = matCReg; 
                 matProg.append(matInst);
+                matRegToMemAddr[matCReg] = -1;
             }
         }
     }
@@ -528,6 +529,7 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                     matInst.operands[MatCoreInstDefn::ADDR] = addr; 
                     matInst.operands[MatCoreInstDefn::M1] = matCReg; 
                     toMp.append(matInst);
+                    toMi.matRegToMemAddr[matCReg] = -1;
                 }
             }
         }
