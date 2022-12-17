@@ -242,9 +242,9 @@ void Orchestrator::dataMatrixDeallocate(MatrixHandle handle) {
             matCore.m_freeRegIdx.push_back(regIdx);
         }
     }
-    m_dataMatrixState.erase(handle);
 
     LogInfo("Orchestrator dealloc (M-" + std::to_string(handle) + ") - core " + std::to_string(matrixState.m_coreIdx) + ": " + std::to_string(matCore.m_freeRegIdx.size()) + " remaining");
+    m_dataMatrixState.erase(handle);
 }
 
 // Load matrix from constants
