@@ -8,8 +8,17 @@
 VecCoreSimEngine::VecCoreSimEngine(const VecCoreProgram& prog, const VecCoreParam& param, SwitchSimEngine* p_switch)
 : m_prog(prog), m_param(param),
   m_state(State::INIT), m_pc(0),
+  m_memoryPenaltyCounter(0),
   p_switch(p_switch)
-{}
+{
+    // Add memory penalty
+    if (m_pc < m_prog.size()) {
+        // Test if the first instruction is load/store
+        if (VecCoreInstDefn::isMemoryOperation(m_prog[m_pc].opcode)) {
+            m_memoryPenaltyCounter = m_param.memoryPenalty;
+        }
+    }
+}
 
 // Test if completed
 bool VecCoreSimEngine::isDone() const {
@@ -25,6 +34,12 @@ void VecCoreSimEngine::simulateStep() {
         } else {
             FatalError("VecCore instruction memory out of bound");
         }
+    }
+
+    // Check if we need to wait for memory penalty
+    if (m_memoryPenaltyCounter != 0) {
+        m_memoryPenaltyCounter--;
+        return;
     }
 
     // Fetch instruction
@@ -100,5 +115,13 @@ void VecCoreSimEngine::simulateStep() {
     m_state = next_state;
     if (next_inst_proceed) {
         m_pc++;
+
+        // Add memory penalty
+        if (m_pc < m_prog.size()) {
+            // Test if the next instruction is load/store
+            if (VecCoreInstDefn::isMemoryOperation(m_prog[m_pc].opcode)) {
+                m_memoryPenaltyCounter = m_param.memoryPenalty;
+            }
+        }
     }
 }

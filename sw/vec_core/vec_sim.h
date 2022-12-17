@@ -11,6 +11,7 @@ struct VecCoreParam {
     size_t width = 16;
     size_t core_self = 0;
     bool allowNoHalt = false;
+    size_t memoryPenalty = 0;
 };
 
 
@@ -34,6 +35,9 @@ private:
     // Internal state
     State m_state;
     size_t m_pc;
+
+    // Memory penalty
+    size_t m_memoryPenaltyCounter;
 
     // Pointer to switch
     SwitchSimEngine* p_switch;

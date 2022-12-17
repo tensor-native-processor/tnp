@@ -92,3 +92,11 @@ VecCoreInstDefn::Opcode VecCoreInstDefn::findOpcodeByName(std::string opName) {
 VecCoreInstDefn::Type VecCoreInstDefn::getOperandType(Operand opr) {
     return operandType.at(opr);
 }
+
+
+// Test opcode is memory operation
+bool VecCoreInstDefn::isMemoryOperation(Opcode op) {
+    auto name = opcodeName.at(op);
+    return name.find("LOAD") != std::string::npos ||
+           name.find("STORE") != std::string::npos;
+}
