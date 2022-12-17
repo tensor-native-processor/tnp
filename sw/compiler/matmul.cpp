@@ -246,7 +246,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
                 }
                 case 3: {
                     m2subReg = m2SubRegs[1][0];
-                    m3subReg = m3SubRegs[0][0];
+                    m3subReg = m3SubRegs[1][0];
                     break;
                 }
             }
@@ -310,7 +310,8 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     appendProgs(coresForRows, coresForCols, matProgs, vecProgs, m_procState);
 
     // Send result from cores 0 3 to Out
-    for (int i : {0, 3}) {
+    std::vector<int> cores1 {0, 3};
+    for (int i : cores1) {
         int matCoreIdx = MAT_CORE_START_IDX + i;
         auto &mi = subMatInfos1[i];
         gatherMatViaReg(
@@ -348,9 +349,10 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     appendProgs(coresForRows, coresForCols, matProgs2, vecProgs2, m_procState);
 
     // Send result from cores 1 2 to Out
-    for (int i : {1, 2}) {
+    std::vector<int> cores2 {1, 2};
+    for (int i : cores2) {
         int matCoreIdx = MAT_CORE_START_IDX + i;
-        auto &mi = subMatInfos1[i];
+        auto &mi = subMatInfos2[i];
         gatherMatViaReg(
             matCoreIdx, outCoreIdx, 
             m_procState.matCores[matCoreIdx].m_prog, outCore.m_prog,

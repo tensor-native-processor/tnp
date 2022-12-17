@@ -106,9 +106,9 @@ inline StartupOptions parseOptions(int argc, char *argv[]) {
 inline void printMatrix(std::vector<std::vector<float>> &matrix) {
     for (auto &row: matrix) {
         for (auto &num : row) {
-            printf("%f ", num);
+            std::cout << num << " ";
         }
-        printf("\n");
+        std::cout << std::endl;
     }
 }
 

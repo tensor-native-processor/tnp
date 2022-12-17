@@ -1,4 +1,5 @@
 #include "error.h"
+#include "logging.h"
 #include "compiler_common.h"
 
 void MatInfo::init(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
@@ -44,7 +45,7 @@ void MatInfo::init(const matrix &matAIn, const matrix &matBIn, const matrix &mat
 MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn){
     MatInfo::init(matAIn, matBIn, matCIn);
     regMap.clear();
-    printf("regMap size: %lu\n", regMap.size());
+    LogInfo("regMap size: " + std::to_string(regMap.size()));
 }
 
 MatInfo::MatInfo(const matrix &matAIn, const matrix &matBIn, const matrix &matCIn, 
@@ -54,7 +55,7 @@ int matAMemStartIn, int matBMemStartIn, int matCMemStartIn) {
     matBMemStart = matBMemStartIn;
     matCMemStart = matCMemStartIn;
     regMap.clear();
-    printf("regMap size: %lu\n", regMap.size());
+    LogInfo("regMap size: " + std::to_string(regMap.size()));
 }
 
 void errorIfNotEnoughRegisters(int matMaxRegs, int matRegsRequired, std::string matType) {
@@ -73,7 +74,14 @@ MatInfo::MatInfo(
     const std::vector<size_t> &freeRegIdx,
     int dataMemStart
 ) {
-    printf("Creating MatInfo for coreIdx %d\n", coreIdx); 
+    LogInfo("Creating MatInfo for coreIdx " + std::to_string(coreIdx)); 
+    LogInfo("m3Reg ");
+    for (auto &r : m3Reg) {
+        for (size_t reg: r) {
+            std::cout << reg;
+        }
+    }
+    std::cout << std::endl;
     matAReg = m1Reg;
     matBReg = m2Reg;
     matCReg = m3Reg;
@@ -93,12 +101,6 @@ MatInfo::MatInfo(
     matCMemStart = matBMemStart + matBMemSize;
 
     regMap = freeRegIdx;
-    
-    // printf("freeRegIdx\n");
-    // for (int i = 0; i < freeRegIdx.size(); i++) {
-    //     printf("i %d, reg %lu\n", i, freeRegIdx[i]);
-    // }
-    // printf("\n");
 
     // mat core registers, reserve 1 for tmpReg
     const int maxRegSize = regMap.size();
@@ -112,9 +114,9 @@ MatInfo::MatInfo(
     matARegStart = 0;
     matBRegStart = matARegStart + matAMaxRegs;
     matCRegStart = matBRegStart + matBMaxRegs;
-    printf("matARegStart %d, matBRegStart %d, matCRegStart %d\n", 
-        matARegStart, matBRegStart, matCRegStart
-    );
+    LogInfo("matARegStart " + std::to_string(matARegStart) + 
+        "matBRegStart " + std::to_string(matBRegStart) +
+        "matCRegStart" + std::to_string(matCRegStart));
 
     // mat core tmp register
     tmpReg = maxRegSize - 1;
@@ -140,5 +142,5 @@ MatInfo::MatInfo(
     vecReg2 = 2;
 
 
-    printf("regMap size: %lu\n", regMap.size());
+    LogInfo("regMap size: " + std::to_string(regMap.size()));
 }

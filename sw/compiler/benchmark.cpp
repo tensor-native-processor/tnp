@@ -13,22 +13,24 @@ int main(int argc, char *argv[]) {
     (64, 128) * (128, 10) took 88095 cycles if set MAT_REG_SIZE to 64 (CPU time 180.360s)
     */
     // 64 * 128
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 64; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
-            int num = j + 1;
-            if (i >= 8) num *= 2;
+        for (int j = 0; j < 128; j++) {
+            // int num = j + 1;
+            // if (i >= 8) num *= 2;
+            float num = float(rand() % 65536 - 65536 / 2) / (65536 / 2);
             row.push_back(num); 
         }
         matA.push_back(row);
     }
     
     // 128 * 10
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 128; i++) {
         std::vector<float> row;
-        for (int j = 0; j < 16; j++) {
-            int num = j + 1;
-            if (i >= 8) num *= 2;
+        for (int j = 0; j < 10; j++) {
+            // int num = j + 1;
+            // if (i >= 8) num *= 2;
+            float num = float(rand() % 65536 - 65536 / 2) / (65536 / 2);
             row.push_back(num); 
         }
         matB.push_back(row);
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::vector<float>> matC(matA.size(), std::vector<float>(matB[0].size(), 0));
     std::vector<std::vector<float>> matRef = multBruteForce(matA, matB); 
 
-    // singleCore(matA, matB, matC, matRef); 
-    multiCore(matA, matB, matC, matRef);
+    singleCore(matA, matB, matC, matRef); 
+    // multiCore(matA, matB, matC, matRef);
     return 0;
 }
