@@ -62,7 +62,6 @@ int main() {
         }
         sw_sim.simulateStep();
     }
-    std::cout << "Finished with " << cycle_count << " cycles." << std::endl;
 
     for (size_t i = 0;i < mat_sim.size();i++) {
         std::cout << "MatCore " << i << ":" << std::endl;
@@ -74,6 +73,7 @@ int main() {
         vec_sim[i].printStat();
         std::cout << "================" << std::endl;
     }
+    std::cout << "Finished with " << cycle_count << " cycles." << std::endl;
 
     return 0;
 }
