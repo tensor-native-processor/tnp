@@ -17,40 +17,17 @@ int main() {
     });
 
     size_t n = 32, m = 32, o = 32;
-    Tensor d1Orig({m, n});
+    // size_t n = 30, m = 400, o = 20;
+    
     Tensor d1({n, m});
     Tensor d2({m, o});
     Tensor d3({n, o});
 
     std::vector<float> d1Vec;
 
-    for (size_t i = 0;i < m;i++) {
-        for (size_t j = 0;j < n;j++) {
-            d1Orig.locate({i, j}) = rand() % 536 - 536 / 2; // (i + 1) * (j + 1);
-        }
-    }
-    // block 00, 10, 01, 11 
-    for (int i = 0; i < 2; i ++) {
-        for (int j = 0; j < 2; j++) {
-            int blockI = j;
-            int blockJ = i;
-            std::vector<float> block;
-            for (int ii = i * 16; ii < (i + 1) * 16; ii++) {
-                for (int jj = (j + 1) * 16 - 1; jj >= j * 16; jj--) {
-                    std::cout << jj << " " << ii << ", ";
-                    block.push_back(d1Orig.locate({size_t(jj), size_t(ii)}));
-                }
-                std:: cout << std::endl;
-            }
-
-            // fill in d1
-            int idx = 0;
-            for (int ii = blockI * 16; ii < (blockI + 1) * 16; ii++) {
-                for (int jj = blockJ * 16; jj < (blockJ + 1) * 16; jj++) {
-                    d1.locate({size_t(ii), size_t(jj)}) = block[idx];
-                    idx += 1;
-                }
-            }
+    for (size_t i = 0;i < n;i++) {
+        for (size_t j = 0;j < m;j++) {
+            d1.locate({i, j}) = rand() % 536 - 536 / 2; // (i + 1) * (j + 1);
         }
     }
 
@@ -87,7 +64,7 @@ int main() {
         for (size_t j = 0;j < o;j++) {
             float num = 0;
             for (size_t k = 0; k < m; k++) {
-                num += d1Orig.locate({i, k}) * d2.locate({k, j});
+                num += d1.locate({i, k}) * d2.locate({k, j});
             }
             d3.locate({i, j}) = num;
         }

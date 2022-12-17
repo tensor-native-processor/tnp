@@ -299,7 +299,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     VecCoreProgram vecProgs[NUM_VEC_CORES]; 
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
     multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
-        matProgs, vecProgs, addCoreIdxs1);
+        matProgs, vecProgs, addCoreIdxs1, true);
     appendProgs(coresForRows, coresForCols, matProgs, vecProgs, m_procState);
 
     // Send result from cores 0 3 to Out
@@ -338,7 +338,7 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     VecCoreProgram vecProgs2[NUM_VEC_CORES]; 
     std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
     multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
-        matProgs2, vecProgs2, addCoreIdxs2);
+        matProgs2, vecProgs2, addCoreIdxs2, false);
     appendProgs(coresForRows, coresForCols, matProgs2, vecProgs2, m_procState);
 
     // Send result from cores 1 2 to Out

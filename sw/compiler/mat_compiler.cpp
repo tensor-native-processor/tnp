@@ -140,14 +140,16 @@ void singleCoreHelper(
     int (&matRegToMemAddr)[MAT_REG_SIZE],
     int tmpReg,
     int vecReg0, int vecReg1, int vecReg2,
-    const std::vector<size_t> &regMap
+    const std::vector<size_t> &regMap, bool flipTranspose
     ) {
 
     MatCoreInst matInst;
     VecCoreInst vecInst;
 
+    bool fromOchestrator = regMap.size() > 0;
+
     // REGMAP no need to load if orchestrator
-    if (regMap.size() == 0) {
+    if (!fromOchestrator) {
         loadMatBlocks(matARBlockSize, matACBlockSize,
             matARegStart, matAMemStart, matAMaxRegs, matRegToMemAddr, matProg);
 
@@ -165,7 +167,7 @@ void singleCoreHelper(
 
             int matABlockReg = matARegStart + matABlockOffset % matAMaxRegs;
             // REGMAP
-            if (regMap.size() > 0) {
+            if (fromOchestrator) {
                 matABlockReg = regMap[matABlockReg];
             } else {
                 int matAMemAddr = matAMemStart + matAMemOffset;
@@ -179,7 +181,7 @@ void singleCoreHelper(
 
                 int matBBlockReg = matBRegStart + matBBlockOffset % matBMaxRegs;
                 // REGMAP
-                if (regMap.size() > 0) {
+                if (fromOchestrator) {
                      matBBlockReg = regMap[matBBlockReg];
                 } else {
                     int matBMemAddr = matBMemStart + matBMemOffset; 
@@ -192,7 +194,7 @@ void singleCoreHelper(
                 
                 int matCBlockReg = matCRegStart + matCBlockOffset % matCMaxRegs;
                 // REGMAP
-                if (regMap.size() > 0) {
+                if (fromOchestrator) {
                     matCBlockReg = regMap[matCBlockReg];
                     matProg.append({MatCoreInstDefn::CLEAR, {
                         {MatCoreInstDefn::M1, matCBlockReg}
@@ -203,6 +205,16 @@ void singleCoreHelper(
                     matRegToMemAddr, matProg);
                 }
 
+                if (flipTranspose) {
+                    matProg.append({MatCoreInstDefn::XFLIP, {
+                        {MatCoreInstDefn::M1, matABlockReg}
+                    }});
+
+                    matProg.append({MatCoreInstDefn::TRANSPOSE, {
+                        {MatCoreInstDefn::M1, matABlockReg}
+                    }});
+                }
+                
                 // set weight of matA into systolic array
                 matInst.opcode = MatCoreInstDefn::SET_WEIGHT;
                 matInst.operands[MatCoreInstDefn::M1] = matABlockReg;
@@ -324,7 +336,8 @@ void singleCore(
         mi.matRegToMemAddr,
         mi.tmpReg,
         mi.vecReg0, mi.vecReg1, mi.vecReg2,
-        mi.regMap
+        mi.regMap,
+        false
     );
 
     // halt mat
@@ -432,7 +445,7 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
     std::vector<MatInfo> &subMatInfos, 
     MatCoreProgram (&matProgs)[NUM_MAT_CORES],
     VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
-    std::vector<std::tuple<int, int, int>> &addCoreIdxs) {
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs, bool flipTranspose) {
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
@@ -453,7 +466,8 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                 mi.matRegToMemAddr,
                 mi.tmpReg,
                 mi.vecReg0, mi.vecReg1, mi.vecReg2,
-                mi.regMap
+                mi.regMap,
+                flipTranspose
             );
         }    
     }
@@ -719,7 +733,7 @@ void multiCore(
 
     // fromCoreIdx1, fromCoreIdx2, toCoreIdx
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1);
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1, false);
     
     // TODO optimization: exchange data, 
     // for now we let the compiler store all required data in advance
@@ -729,7 +743,7 @@ void multiCore(
         1 (01) <-> 3 (11)
     */
     std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2);    
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2, false);    
 
     // hint
     std::ofstream hint("hint.txt");
