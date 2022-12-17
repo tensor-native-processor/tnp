@@ -223,9 +223,9 @@ void singleCoreHelper(
 
                 std::stringstream ss;
                 ss << "matABlock_" << rBlockIdx << kBlockIdx << std::setw(7) << matAMemOffset;
-                ss << "matBBlock_" << kBlockIdx << cBlockIdx << std::setw(7) << matBMemStart;
+                ss << " matBBlock_" << kBlockIdx << cBlockIdx << std::setw(7) << matBMemStart;
                 ss << "+" << std::setw(7) << matBMemOffset;
-                ss << "matCBlock_" << rBlockIdx << cBlockIdx << std::setw(7) << matCMemStart;
+                ss << " matCBlock_" << rBlockIdx << cBlockIdx << std::setw(7) << matCMemStart;
                 ss << "+" << std::setw(7) << matCMemOffset;
                 LogInfo(ss.str());
             }

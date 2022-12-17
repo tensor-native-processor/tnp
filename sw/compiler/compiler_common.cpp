@@ -75,7 +75,7 @@ MatInfo::MatInfo(
     int dataMemStart
 ) {
     LogInfo("Creating MatInfo for coreIdx " + std::to_string(coreIdx)); 
-    LogInfo("m3Reg ");
+    std::cout << "m3Reg ";
     for (auto &r : m3Reg) {
         for (size_t reg: r) {
             std::cout << reg;
@@ -115,8 +115,8 @@ MatInfo::MatInfo(
     matBRegStart = matARegStart + matAMaxRegs;
     matCRegStart = matBRegStart + matBMaxRegs;
     LogInfo("matARegStart " + std::to_string(matARegStart) + 
-        "matBRegStart " + std::to_string(matBRegStart) +
-        "matCRegStart" + std::to_string(matCRegStart));
+        " matBRegStart " + std::to_string(matBRegStart) +
+        " matCRegStart " + std::to_string(matCRegStart));
 
     // mat core tmp register
     tmpReg = maxRegSize - 1;
