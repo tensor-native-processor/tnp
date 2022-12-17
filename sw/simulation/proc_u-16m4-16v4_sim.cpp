@@ -18,7 +18,8 @@ int main() {
         MatCoreProgram prog;
         prog.fromBinary(LoadProgram("inst_mem" + std::to_string(i) + ".txt"));
         mat_sim.emplace_back(prog, MatCoreParam{
-            .core_self = i
+            .core_self = i,
+            .memoryPenalty = 100
         }, &sw_sim);
     }
 
@@ -28,7 +29,8 @@ int main() {
         VecCoreProgram prog;
         prog.fromBinary(LoadProgram("inst_mem" + std::to_string(i) + ".txt"));
         vec_sim.emplace_back(prog, VecCoreParam{
-            .core_self = i
+            .core_self = i,
+            .memoryPenalty = 100
         }, &sw_sim);
     }
 
@@ -61,6 +63,17 @@ int main() {
         sw_sim.simulateStep();
     }
     std::cout << "Finished with " << cycle_count << " cycles." << std::endl;
+
+    for (size_t i = 0;i < mat_sim.size();i++) {
+        std::cout << "MatCore " << i << ":" << std::endl;
+        mat_sim[i].printStat();
+        std::cout << "================" << std::endl;
+    }
+    for (size_t i = 0;i < vec_sim.size();i++) {
+        std::cout << "VecCore " << i << ":" << std::endl;
+        vec_sim[i].printStat();
+        std::cout << "================" << std::endl;
+    }
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include "switch.h"
 #include "error.h"
 #include <sstream>
+#include <iostream>
 
 // Init simulation engine
 VecCoreSimEngine::VecCoreSimEngine(const VecCoreProgram& prog, const VecCoreParam& param, SwitchSimEngine* p_switch)
@@ -36,15 +37,19 @@ void VecCoreSimEngine::simulateStep() {
         }
     }
 
+    // Fetch instruction
+    auto const& inst = m_prog[m_pc];
+
+    // Update stat
+    m_instCycleStat[inst.opcode]++;
+
     // Check if we need to wait for memory penalty
     if (m_memoryPenaltyCounter != 0) {
         m_memoryPenaltyCounter--;
         return;
     }
 
-    // Fetch instruction
-    auto const& inst = m_prog[m_pc];
-
+    // State machine
     State next_state = m_state;
     bool next_inst_proceed = false;
 
@@ -123,5 +128,11 @@ void VecCoreSimEngine::simulateStep() {
                 m_memoryPenaltyCounter = m_param.memoryPenalty;
             }
         }
+    }
+}
+
+void VecCoreSimEngine::printStat() const {
+    for (const auto& [opcode, count] : m_instCycleStat) {
+        std::cout << VecCoreInstDefn::getOpcodeName(opcode) << ": " << count << std::endl;
     }
 }

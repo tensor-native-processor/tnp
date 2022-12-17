@@ -2,6 +2,7 @@
 #include "mat_sim.h"
 #include "error.h"
 #include <sstream>
+#include <iostream>
 
 
 // Init simulation engine
@@ -36,15 +37,19 @@ void MatCoreSimEngine::simulateStep() {
         }
     }
 
+    // Fetch instruction
+    auto const& inst = m_prog[m_pc];
+
+    // Update stat
+    m_instCycleStat[inst.opcode]++;
+
     // Check if we need to wait for memory penalty
     if (m_memoryPenaltyCounter != 0) {
         m_memoryPenaltyCounter--;
         return;
     }
 
-    // Fetch instruction
-    auto const& inst = m_prog[m_pc];
-
+    // State machine
     State next_state = m_state;
     bool next_inst_proceed = false;
     bool next_opcode_is_unit = m_pc + 1 < m_prog.size() &&
@@ -216,5 +221,11 @@ void MatCoreSimEngine::simulateStep() {
                 m_memoryPenaltyCounter = m_param.memoryPenalty;
             }
         }
+    }
+}
+
+void MatCoreSimEngine::printStat() const {
+    for (const auto& [opcode, count] : m_instCycleStat) {
+        std::cout << MatCoreInstDefn::getOpcodeName(opcode) << ": " << count << std::endl;
     }
 }

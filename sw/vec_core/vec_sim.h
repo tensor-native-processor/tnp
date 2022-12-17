@@ -23,6 +23,8 @@ public:
     void simulateStep();
     bool isDone() const;
 
+    void printStat() const;
+
 private:
     enum class State {
         INIT, READY, NEXT, STOP,
@@ -41,6 +43,9 @@ private:
 
     // Pointer to switch
     SwitchSimEngine* p_switch;
+
+    // Statistics
+    std::map<VecCoreInstDefn::Opcode, size_t> m_instCycleStat;
 };
 
 
