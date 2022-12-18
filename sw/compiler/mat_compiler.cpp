@@ -196,9 +196,11 @@ void singleCoreHelper(
                 // REGMAP
                 if (fromOchestrator) {
                     matCBlockReg = regMap[matCBlockReg];
-                    matProg.append({MatCoreInstDefn::CLEAR, {
-                        {MatCoreInstDefn::M1, matCBlockReg}
-                    }}); 
+                    if ( rBlockIdx == 0 && kBlockIdx == 0) {
+                        matProg.append({MatCoreInstDefn::CLEAR, {
+                            {MatCoreInstDefn::M1, matCBlockReg}
+                        }}); 
+                    }
                 } else {
                     int matCMemAddr = matCMemStart + matCMemOffset; 
                     conditionalStoreAndLoad(matCBlockReg, matCMemAddr, matCMaxRegs, 
