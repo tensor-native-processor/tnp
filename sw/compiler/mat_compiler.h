@@ -33,7 +33,11 @@ void singleCoreHelper(
     int (&matRegToMemAddr)[MAT_REG_SIZE],
     int tmpReg,
     int vecReg0, int vecReg1, int vecReg2,
-    const std::vector<size_t> &regMap, bool flipTranspose
+    const std::vector<size_t> &regMap, bool flipTranspose, bool test,
+    std::vector<MatInfo> &subMatInfos, 
+    MatCoreProgram (&matProgs)[NUM_MAT_CORES],
+    VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs, std::vector<int>&sendCoreIdxs, int recvCoreIdx
     );
 
 void singleCore(
@@ -46,7 +50,8 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
     std::vector<MatInfo> &subMatInfos, 
     MatCoreProgram (&matProgs)[NUM_MAT_CORES],
     VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
-    std::vector<std::tuple<int, int, int>> &addCoreIdxs, bool flipTranspose);
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs, bool flipTranspose, 
+    std::vector<int> &sendCoreIdxs, int recvCoreIdx);
 
 std::tuple<int, int> getCoreAssignment(int matASize, int matA0Size);
 

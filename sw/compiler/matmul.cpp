@@ -77,48 +77,6 @@ void distributeMatViaReg(
     }
 }
 
-void gatherMatViaReg(
-    const int sendCoreIdx,
-    const int recvCoreIdx,
-    MatCoreProgram &sendProg,
-    MatCoreProgram &recvProg,
-    const std::vector<std::vector<size_t>> recvMatReg,
-    const int matRegStart,
-    const int matMaxRegs,
-    const int matMemStart,
-    int (&matRegToMemAddr)[MAT_REG_SIZE],
-    const std::vector<size_t> &regMap
-    ) {
-    for (size_t bx = 0;bx < recvMatReg.size();bx++) {
-        for (size_t by = 0;by < recvMatReg[0].size();by++) {
-            int sendRegOffset = bx * recvMatReg.size() + by;
-            int sendReg = regMap[matRegStart + sendRegOffset % matMaxRegs];
-            // int sendAddr = matMemStart + sendRegOffset * BLOCK_AREA;
-
-            if (sendCoreIdx == recvCoreIdx) {
-                sendProg.append({MatCoreInstDefn::COPY, {
-                    {MatCoreInstDefn::M1, sendReg},
-                    {MatCoreInstDefn::Md, recvMatReg[bx][by]}
-                }});
-            } else {
-                for (size_t r = 0;r < BLOCK_WIDTH;r++) {
-                    // Send
-                    sendProg.append({MatCoreInstDefn::SEND_ROW, {
-                        {MatCoreInstDefn::CORE_IDX, recvCoreIdx},
-                        {MatCoreInstDefn::M1, sendReg},
-                        {MatCoreInstDefn::ROW_IDX, r}
-                    }});
-                    // Recv
-                    recvProg.append({MatCoreInstDefn::RECV_ROW, {
-                        {MatCoreInstDefn::CORE_IDX, sendCoreIdx},
-                        {MatCoreInstDefn::M1, recvMatReg[bx][by]},
-                        {MatCoreInstDefn::ROW_IDX, r}
-                    }});
-                }
-            }
-        }
-    }
-}
 
 void appendProgs(const int coresForRows, const int coresForCols,
     MatCoreProgram (&matProgs)[NUM_MAT_CORES], VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
@@ -298,22 +256,12 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     MatCoreProgram matProgs[NUM_MAT_CORES];
     VecCoreProgram vecProgs[NUM_VEC_CORES]; 
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
-        matProgs, vecProgs, addCoreIdxs1, true);
-    appendProgs(coresForRows, coresForCols, matProgs, vecProgs, m_procState);
-
     // Send result from cores 0 3 to Out
     std::vector<int> cores1 {0, 3};
-    for (int i : cores1) {
-        int matCoreIdx = MAT_CORE_START_IDX + i;
-        auto &mi = subMatInfos1[i];
-        gatherMatViaReg(
-            matCoreIdx, outCoreIdx, 
-            m_procState.matCores[matCoreIdx].m_prog, outCore.m_prog,
-            mi.matCReg, mi.matCRegStart, mi.matCMaxRegs, mi.matCMemStart,
-            mi.matRegToMemAddr, mi.regMap
-        );
-    }
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, 
+        matProgs, vecProgs, addCoreIdxs1, true, cores1, outCoreIdx);
+    appendProgs(coresForRows, coresForCols, matProgs, vecProgs, m_procState);
+
 
     // MULT & ADD 2 - In1 distribution (not needed as we can reuse the previous In1)
     // MULT & ADD 2 - In2 distribution
@@ -337,22 +285,11 @@ Orchestrator::MatrixHandle Orchestrator::arithmeticMatMult(MatrixHandle h1, Matr
     MatCoreProgram matProgs2[NUM_MAT_CORES];
     VecCoreProgram vecProgs2[NUM_VEC_CORES]; 
     std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
-        matProgs2, vecProgs2, addCoreIdxs2, false);
-    appendProgs(coresForRows, coresForCols, matProgs2, vecProgs2, m_procState);
-
     // Send result from cores 1 2 to Out
     std::vector<int> cores2 {1, 2};
-    for (int i : cores2) {
-        int matCoreIdx = MAT_CORE_START_IDX + i;
-        auto &mi = subMatInfos2[i];
-        gatherMatViaReg(
-            matCoreIdx, outCoreIdx, 
-            m_procState.matCores[matCoreIdx].m_prog, outCore.m_prog,
-            mi.matCReg, mi.matCRegStart, mi.matCMaxRegs, mi.matCMemStart,
-            mi.matRegToMemAddr, mi.regMap
-        );
-    }
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, 
+        matProgs2, vecProgs2, addCoreIdxs2, false, cores2, outCoreIdx);
+    appendProgs(coresForRows, coresForCols, matProgs2, vecProgs2, m_procState);
 
     return h3;
 }

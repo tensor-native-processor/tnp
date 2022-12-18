@@ -129,6 +129,49 @@ void sumBlock(
     }
 }
 
+void gatherMatViaReg(
+    const int sendCoreIdx,
+    const int recvCoreIdx,
+    MatCoreProgram &sendProg,
+    MatCoreProgram &recvProg,
+    const std::vector<std::vector<size_t>> recvMatReg,
+    const int matRegStart,
+    const int matMaxRegs,
+    const int matMemStart,
+    int (&matRegToMemAddr)[MAT_REG_SIZE],
+    const std::vector<size_t> &regMap
+    ) {
+    for (size_t bx = 0;bx < recvMatReg.size();bx++) {
+        for (size_t by = 0;by < recvMatReg[0].size();by++) {
+            int sendRegOffset = bx * recvMatReg.size() + by;
+            int sendReg = regMap[matRegStart + sendRegOffset % matMaxRegs];
+            // int sendAddr = matMemStart + sendRegOffset * BLOCK_AREA;
+
+            if (sendCoreIdx == recvCoreIdx) {
+                sendProg.append({MatCoreInstDefn::COPY, {
+                    {MatCoreInstDefn::M1, sendReg},
+                    {MatCoreInstDefn::Md, recvMatReg[bx][by]}
+                }});
+            } else {
+                for (size_t r = 0;r < BLOCK_WIDTH;r++) {
+                    // Send
+                    sendProg.append({MatCoreInstDefn::SEND_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, recvCoreIdx},
+                        {MatCoreInstDefn::M1, sendReg},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                    // Recv
+                    recvProg.append({MatCoreInstDefn::RECV_ROW, {
+                        {MatCoreInstDefn::CORE_IDX, sendCoreIdx},
+                        {MatCoreInstDefn::M1, recvMatReg[bx][by]},
+                        {MatCoreInstDefn::ROW_IDX, r}
+                    }});
+                }
+            }
+        }
+    }
+}
+
 void singleCoreHelper(
     int matCoreIdx, int vecCoreIdx, 
     MatCoreProgram &matProg, VecCoreProgram &vecProg,
@@ -140,7 +183,12 @@ void singleCoreHelper(
     int (&matRegToMemAddr)[MAT_REG_SIZE],
     int tmpReg,
     int vecReg0, int vecReg1, int vecReg2,
-    const std::vector<size_t> &regMap, bool flipTranspose
+    const std::vector<size_t> &regMap, bool flipTranspose, bool test,
+    std::vector<MatInfo> &subMatInfos, 
+    MatCoreProgram (&matProgs)[NUM_MAT_CORES],
+    VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs,
+    std::vector<int>&sendCoreIdxs, int recvCoreIdx
     ) {
 
     MatCoreInst matInst;
@@ -240,6 +288,80 @@ void singleCoreHelper(
                 ss << " matCBlock_" << rBlockIdx << cBlockIdx << std::setw(7) << matCMemStart;
                 ss << "+" << std::setw(7) << matCMemOffset;
                 LogInfo(ss.str());
+
+                if (test) {
+                for (int i = 0; i < addCoreIdxs.size(); i++) {
+                    auto [fromCoreIdx1, fromCoreIdx2, toCoreIdx] = addCoreIdxs[i];
+                    MatInfo &fromMi1 = subMatInfos[fromCoreIdx1];
+                    MatInfo &fromMi2 = subMatInfos[fromCoreIdx2];
+                    MatInfo &toMi = subMatInfos[toCoreIdx];
+
+                    MatCoreProgram &fromMp1 = matProgs[fromCoreIdx1];
+                    MatCoreProgram &fromMp2 = matProgs[fromCoreIdx2];
+                    MatCoreProgram &toMp = matProgs[toCoreIdx];
+                    // ADD uses the vec core of mat core `toCoreIdx` for addition
+                    VecCoreProgram &vp = vecProgs[toCoreIdx];
+
+                    for (int rBlockIdx = 0; rBlockIdx < fromMi1.matARBlockSize; rBlockIdx++) {
+                        for (int cBlockIdx = 0; cBlockIdx < fromMi1.matBCBlockSize; cBlockIdx++) {
+                            int matCBlockOffset = rBlockIdx * fromMi1.matBCBlockSize + cBlockIdx; 
+                            int matCMemOffset = matCBlockOffset * BLOCK_AREA;
+                            
+                            int matCBlockReg1 = fromMi1.matCRegStart + matCBlockOffset % fromMi1.matCMaxRegs;                
+                            int matCBlockReg2 = fromMi2.matCRegStart + matCBlockOffset % fromMi2.matCMaxRegs;                
+                            int toMatCBlockReg = toMi.matCRegStart + matCBlockOffset % toMi.matCMaxRegs;               
+                            
+                            // REGMAP
+                            if (fromMi1.regMap.size() == 0) {
+                                int matCMemAddr1 = fromMi1.matCMemStart + matCMemOffset; 
+                                conditionalStoreAndLoad(matCBlockReg1, matCMemAddr1, 
+                                fromMi1.matCMaxRegs, fromMi1.matRegToMemAddr, fromMp1);
+                            } else {
+                                matCBlockReg1 = fromMi1.regMap[matCBlockReg1];
+                            }
+                            
+                            // REGMAP
+                            if (fromMi1.regMap.size() == 0) { 
+                                int matCMemAddr2 = fromMi2.matCMemStart + matCMemOffset; 
+                                conditionalStoreAndLoad(matCBlockReg2, matCMemAddr2, 
+                                fromMi2.matCMaxRegs, fromMi2.matRegToMemAddr, fromMp2);
+                            } else {
+                                matCBlockReg2 = fromMi2.regMap[matCBlockReg2];
+                            }
+
+                            // REGMAP
+                            if (toMi.regMap.size() == 0) {
+                                int toMatCMemAddr = toMi.matCMemStart + matCMemOffset; 
+                                conditionalStoreAndLoad(toMatCBlockReg, toMatCMemAddr, 
+                                toMi.matCMaxRegs, toMi.matRegToMemAddr, toMp);
+                            } else {
+                                toMatCBlockReg = toMi.regMap[toMatCBlockReg];
+                            }      
+
+                            sumBlock(
+                                fromMp1, fromMp2, vp, toMp,
+                                fromCoreIdx1, fromCoreIdx2, VEC_CORE_START_IDX + toCoreIdx, toCoreIdx,
+                                matCBlockReg1, matCBlockReg2,  
+                                toMi.vecReg0, toMi.vecReg1, toMi.vecReg2, toMatCBlockReg
+                            );
+                            
+                            if (toMi.regMap.size() > 0) {
+                                for (int i : sendCoreIdxs) {
+                                    int matCoreIdx = MAT_CORE_START_IDX + i;
+                                    auto &mi = subMatInfos[i];
+                                    gatherMatViaReg(
+                                        matCoreIdx, recvCoreIdx, 
+                                        matProgs[matCoreIdx], matProgs[recvCoreIdx],
+                                        mi.matCReg, mi.matCRegStart, mi.matCMaxRegs, mi.matCMemStart,
+                                        mi.matRegToMemAddr, mi.regMap
+                                    );
+                                }
+                            }
+                        }
+                    
+                    }
+                    }
+                }
             }
         }
     }
@@ -325,6 +447,13 @@ void singleCore(
     MatCoreInst matInst;
     VecCoreProgram vecProg;
     VecCoreInst vecInst;
+
+    std::vector<MatInfo> subMatInfos;
+    MatCoreProgram matProgs[NUM_MAT_CORES];
+    VecCoreProgram vecProgs[NUM_VEC_CORES];
+    std::vector<std::tuple<int, int, int>> addCoreIdxs;
+    std::vector<int> sendCoreIdxs; 
+    int recvCoreIdx = -1;
     
     singleCoreHelper(
         MAT_CORE_START_IDX, VEC_CORE_START_IDX,
@@ -337,7 +466,13 @@ void singleCore(
         mi.tmpReg,
         mi.vecReg0, mi.vecReg1, mi.vecReg2,
         mi.regMap,
-        false
+        false, false,
+        subMatInfos,
+        matProgs,
+        vecProgs,
+        addCoreIdxs,
+        sendCoreIdxs,
+        recvCoreIdx
     );
 
     // halt mat
@@ -445,7 +580,8 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
     std::vector<MatInfo> &subMatInfos, 
     MatCoreProgram (&matProgs)[NUM_MAT_CORES],
     VecCoreProgram (&vecProgs)[NUM_VEC_CORES],
-    std::vector<std::tuple<int, int, int>> &addCoreIdxs, bool flipTranspose) {
+    std::vector<std::tuple<int, int, int>> &addCoreIdxs, bool flipTranspose, 
+    std::vector<int> &sendCoreIdxs, int recvCoreIdx) {
     for (int i = 0; i < coresForRows; i++) {
         for (int j = 0; j < coresForCols; j++) {
             int matCoreOffset = i * coresForCols + j;
@@ -467,85 +603,30 @@ void multiMultAndAdd(int coresForRows, int coresForCols,
                 mi.tmpReg,
                 mi.vecReg0, mi.vecReg1, mi.vecReg2,
                 mi.regMap,
-                flipTranspose
+                flipTranspose, true,
+                subMatInfos,
+                matProgs, vecProgs, addCoreIdxs, sendCoreIdxs, recvCoreIdx
             );
         }    
     }
 
-    for (int i = 0; i < addCoreIdxs.size(); i++) {
-        auto [fromCoreIdx1, fromCoreIdx2, toCoreIdx] = addCoreIdxs[i];
-        MatInfo &fromMi1 = subMatInfos[fromCoreIdx1];
-        MatInfo &fromMi2 = subMatInfos[fromCoreIdx2];
-        MatInfo &toMi = subMatInfos[toCoreIdx];
-
-        MatCoreProgram &fromMp1 = matProgs[fromCoreIdx1];
-        MatCoreProgram &fromMp2 = matProgs[fromCoreIdx2];
-        MatCoreProgram &toMp = matProgs[toCoreIdx];
-        // ADD uses the vec core of mat core `toCoreIdx` for addition
-        VecCoreProgram &vp = vecProgs[toCoreIdx];
-
-        for (int rBlockIdx = 0; rBlockIdx < fromMi1.matARBlockSize; rBlockIdx++) {
-            for (int cBlockIdx = 0; cBlockIdx < fromMi1.matBCBlockSize; cBlockIdx++) {
-                int matCBlockOffset = rBlockIdx * fromMi1.matBCBlockSize + cBlockIdx; 
-                int matCMemOffset = matCBlockOffset * BLOCK_AREA;
-                
-                int matCBlockReg1 = fromMi1.matCRegStart + matCBlockOffset % fromMi1.matCMaxRegs;                
-                int matCBlockReg2 = fromMi2.matCRegStart + matCBlockOffset % fromMi2.matCMaxRegs;                
-                int toMatCBlockReg = toMi.matCRegStart + matCBlockOffset % toMi.matCMaxRegs;               
-                
-                // REGMAP
-                if (fromMi1.regMap.size() == 0) {
-                    int matCMemAddr1 = fromMi1.matCMemStart + matCMemOffset; 
-                    conditionalStoreAndLoad(matCBlockReg1, matCMemAddr1, 
-                    fromMi1.matCMaxRegs, fromMi1.matRegToMemAddr, fromMp1);
-                } else {
-                    matCBlockReg1 = fromMi1.regMap[matCBlockReg1];
-                }
-                
-                // REGMAP
-                if (fromMi1.regMap.size() == 0) { 
-                    int matCMemAddr2 = fromMi2.matCMemStart + matCMemOffset; 
-                    conditionalStoreAndLoad(matCBlockReg2, matCMemAddr2, 
-                    fromMi2.matCMaxRegs, fromMi2.matRegToMemAddr, fromMp2);
-                } else {
-                    matCBlockReg2 = fromMi2.regMap[matCBlockReg2];
-                }
-
-                // REGMAP
-                if (toMi.regMap.size() == 0) {
-                    int toMatCMemAddr = toMi.matCMemStart + matCMemOffset; 
-                    conditionalStoreAndLoad(toMatCBlockReg, toMatCMemAddr, 
-                    toMi.matCMaxRegs, toMi.matRegToMemAddr, toMp);
-                } else {
-                    toMatCBlockReg = toMi.regMap[toMatCBlockReg];
-                }      
-
-                sumBlock(
-                    fromMp1, fromMp2, vp, toMp,
-                    fromCoreIdx1, fromCoreIdx2, VEC_CORE_START_IDX + toCoreIdx, toCoreIdx,
-                    matCBlockReg1, matCBlockReg2,  
-                    toMi.vecReg0, toMi.vecReg1, toMi.vecReg2, toMatCBlockReg
-                );
-            }
-        }
-
         // write all valid matC regs to mem
         // not needed if called from ochestrator
-        if (toMi.regMap.size() == 0) {
-            MatCoreInst matInst;
-            for (int i = 0; i < toMi.matCMaxRegs; i++) {
-                int matCReg = toMi.matCRegStart + i;
-                int addr = toMi.matRegToMemAddr[matCReg];
-                if (addr != -1) {
-                    matInst.opcode = MatCoreInstDefn::STORE_MAT;
-                    matInst.operands[MatCoreInstDefn::ADDR] = addr; 
-                    matInst.operands[MatCoreInstDefn::M1] = matCReg; 
-                    toMp.append(matInst);
-                    toMi.matRegToMemAddr[matCReg] = -1;
-                }
-            }
-        }
-    }
+    //     if (toMi.regMap.size() == 0) {
+    //         MatCoreInst matInst;
+    //         for (int i = 0; i < toMi.matCMaxRegs; i++) {
+    //             int matCReg = toMi.matCRegStart + i;
+    //             int addr = toMi.matRegToMemAddr[matCReg];
+    //             if (addr != -1) {
+    //                 matInst.opcode = MatCoreInstDefn::STORE_MAT;
+    //                 matInst.operands[MatCoreInstDefn::ADDR] = addr; 
+    //                 matInst.operands[MatCoreInstDefn::M1] = matCReg; 
+    //                 toMp.append(matInst);
+    //                 toMi.matRegToMemAddr[matCReg] = -1;
+    //             }
+    //         }
+    //     } 
+    // }
 }
 
 std::tuple<int, int> getCoreAssignment(int matASize, int matA0Size) {
@@ -733,7 +814,10 @@ void multiCore(
 
     // fromCoreIdx1, fromCoreIdx2, toCoreIdx
     std::vector<std::tuple<int, int, int>> addCoreIdxs1{{0, 1, 0}, {2, 3, 3}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1, false);
+    // empty since no need to send
+    std::vector<int> cores;
+    int recvCoreIdx = -1;
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos1, matProgs, vecProgs, addCoreIdxs1, false, cores, recvCoreIdx);
     
     // TODO optimization: exchange data, 
     // for now we let the compiler store all required data in advance
@@ -743,7 +827,7 @@ void multiCore(
         1 (01) <-> 3 (11)
     */
     std::vector<std::tuple<int, int, int>> addCoreIdxs2{{0, 1, 1}, {2, 3, 2}};
-    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2, false);    
+    multiMultAndAdd(coresForRows, coresForCols, subMatInfos2, matProgs, vecProgs, addCoreIdxs2, false, cores, recvCoreIdx);    
 
     // hint
     std::ofstream hint("hint.txt");
