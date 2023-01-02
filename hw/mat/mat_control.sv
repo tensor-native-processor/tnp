@@ -1,4 +1,6 @@
-`default_nettype none
+`include "mat_inst_type.sv"
+`include "mat_data_type.sv"
+`include "mat_mem_type.sv"
 
 // Main control unit for MatCore
 module MatControl

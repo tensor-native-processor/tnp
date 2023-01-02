@@ -1,5 +1,3 @@
-`default_nettype none
-
 module MatUnit
     #(parameter WIDTH = 128,
 

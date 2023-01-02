@@ -1,4 +1,5 @@
-`default_nettype none
+`include "mat_mem_type.sv"
+`include "mat_data_type.sv"
 
 // Top-level module for MatCore
 module MatCore

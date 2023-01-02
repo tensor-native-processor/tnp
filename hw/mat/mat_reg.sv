@@ -1,4 +1,4 @@
-`default_nettype none
+`include "mat_data_type.sv"
 
 // Matrix register
 module MatReg

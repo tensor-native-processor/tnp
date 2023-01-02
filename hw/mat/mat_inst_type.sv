@@ -1,4 +1,5 @@
-`default_nettype none
+`ifndef __MAT_INST_TYPE__
+`define __MAT_INST_TYPE__
 
 typedef enum logic [7:0] {
     // Section 1:
@@ -37,3 +38,5 @@ typedef enum logic [7:0] {
     // Section 4
     MAT_INST_HALT               = 8'b10000000
 } MatCoreOpcode;
+
+`endif

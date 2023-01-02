@@ -1,4 +1,4 @@
-`default_nettype none
+`include "mat_inst_type.sv"
 
 // Instruction decoder
 module MatInstDecoder

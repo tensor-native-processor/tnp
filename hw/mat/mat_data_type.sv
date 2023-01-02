@@ -1,4 +1,5 @@
-`default_nettype none
+`ifndef __MAT_DATA_TYPE__
+`define __MAT_DATA_TYPE__
 
 typedef enum {
     MAT_DATA_WRITE_DISABLE,
@@ -21,3 +22,5 @@ typedef enum {
     MAT_DATA_READ_SCALAR,
     MAT_DATA_READ_DIAG
 } MatDataReadOp_t;
+
+`endif

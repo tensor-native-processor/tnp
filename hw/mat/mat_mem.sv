@@ -1,4 +1,4 @@
-`default_nettype none
+`include "mat_mem_type.sv"
 
 // MatCore Instruction Memory
 module MatInstMem
@@ -29,11 +29,6 @@ module MatInstMem
 
 endmodule: MatInstMem
 
-typedef enum {
-    MAT_DATA_MEM_WRITE_DISABLE,
-    MAT_DATA_MEM_WRITE_SINGLE,
-    MAT_DATA_MEM_WRITE_ALL
-} MatDataMemWriteOp_t;
 
 // MatCore Data Memory
 module MatDataMem
