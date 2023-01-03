@@ -57,6 +57,7 @@ module VecCoreSim
         end
         $fclose(data_mem_file);
 
+        $display("Finished at time %0t", $time);
         $finish;
     end
 

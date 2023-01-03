@@ -91,6 +91,8 @@ module VecControl
     logic [REG_ADDR_TYPE_SIZE-1:0] op_Vd, op_V1, op_V2;
     logic [WIDTH_IDX_TYPE_SIZE-1:0] op_vec_idx;
 
+    genvar i;
+
     // Instruction decoder
     VecInstDecoder #(.OPCODE_TYPE_BYTES(OPCODE_TYPE_BYTES),
         .MEM_ADDR_TYPE_BYTES(MEM_ADDR_TYPE_BYTES),
@@ -107,7 +109,14 @@ module VecControl
 
     // Input to VecUnit
     // Input 1
-    assign unit_data_in1 = cache_data_out;
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                unit_data_in1[i] = cache_data_out[i];
+            end
+        end
+    endgenerate
+
     // Control points
     VecDataReadOp_t reg_unit2_read_op, reg_unitK_read_op;
     VecDataWriteOp_t reg_unit2_write_op, reg_unitK_write_op;
@@ -150,7 +159,6 @@ module VecControl
         CACHE_DATA_FROM_SWITCH_RECV_DATA
     } cache_data_in_sel;
 
-    genvar i;
     generate
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin
@@ -197,7 +205,13 @@ module VecControl
     endgenerate
 
     // Connect switch send data from cache data out
-    assign switch_send_data = cache_data_out;
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                switch_send_data[i] = cache_data_out[i];
+            end
+        end
+    endgenerate
 
     // Assign next state and output
     always_comb begin
