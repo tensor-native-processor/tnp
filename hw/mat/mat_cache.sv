@@ -15,11 +15,11 @@ module MatCache
      input MatDataWriteOp_t write_op,
      input logic [CACHE_ADDR_SIZE-1:0] write_addr1, write_addr2,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param1, write_param2,
-     input shortreal data_in[WIDTH-1:0],
-     output shortreal data_out[WIDTH-1:0]);
+     input real data_in[WIDTH-1:0],
+     output real data_out[WIDTH-1:0]);
 
     MatDataWriteOp_t reg_write_op[CACHE_SIZE-1:0];
-    shortreal reg_data_out[CACHE_SIZE-1:0][WIDTH-1:0];
+    real reg_data_out[CACHE_SIZE-1:0][WIDTH-1:0];
 
     MatReg #(.WIDTH(WIDTH)) mat_reg[CACHE_SIZE-1:0](
         .clock, .read_op, .read_param1, .read_param2,

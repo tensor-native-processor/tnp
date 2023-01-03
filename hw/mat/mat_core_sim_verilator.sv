@@ -1,15 +1,17 @@
 `default_nettype none
 
-module MatCoreSim
+module MatCoreSimVerilator
     #(parameter SWITCH_CORE_SIZE = 4,
                 SWITCH_WIDTH = 16,
+
+                INST_MEM_SIZE = 65536,
+                DATA_MEM_SIZE = 65536,
 
                 // Auto-gen
                 SWITCH_CORE_ADDR_SIZE = $clog2(SWITCH_CORE_SIZE)
     )
-    ();
-
-    logic clock, reset, done;
+    (input logic clock, reset,
+     output logic done);
 
     // Switch
     logic switch_send_ready;
@@ -24,16 +26,19 @@ module MatCoreSim
     MatCore #(
         .SWITCH_CORE_SIZE(SWITCH_CORE_SIZE),
         .SWITCH_WIDTH(SWITCH_WIDTH),
-        .INST_MEM_SIZE(65536),
-        .DATA_MEM_SIZE(65536)
+        .INST_MEM_SIZE(INST_MEM_SIZE),
+        .DATA_MEM_SIZE(DATA_MEM_SIZE)
 	) DUT(.*);
 
-    // Clock signal
-    initial begin
-        clock = 0;
-        forever #5 clock = ~clock;
-    end
-    
+    // Write memory
+    export "DPI-C" function mat_core_write_output;
+    function void mat_core_write_output();
+        data_mem_file = $fopen("output.txt", "w");
+        for (i = 0;i < DUT.DATA_MEM_SIZE;i++) begin
+            $fwrite(data_mem_file, "%f\n", DUT.data_mem.data_mem[i]);
+        end
+    endfunction
+
     integer i, data_mem_file;
     initial begin
         // Load instruction/data memory
@@ -44,20 +49,6 @@ module MatCoreSim
             i++;
         end
         $fclose(data_mem_file);
-
-        // Reset control
-        reset = 1;
-        #10 reset = 0;
-
-        while (done == 0) #10;
-        #10;
-        data_mem_file = $fopen("output.txt", "w");
-        for (i = 0;i < DUT.DATA_MEM_SIZE;i++) begin
-            $fwrite(data_mem_file, "%f\n", DUT.data_mem.data_mem[i]);
-        end
-        $fclose(data_mem_file);
-
-        $finish;
     end
 
-endmodule: MatCoreSim
+endmodule: MatCoreSimVerilator

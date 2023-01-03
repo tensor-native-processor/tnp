@@ -6,14 +6,14 @@ module MatUnit
     (input logic clock,
      input logic set_weight,
      input logic [WIDTH_ADDR_SIZE-1:0] set_weight_row,
-     input shortreal data_in[WIDTH-1:0],
-     output shortreal data_out[WIDTH-1:0]);
+     input real data_in[WIDTH-1:0],
+     output real data_out[WIDTH-1:0]);
 
 
     // Sum, weight and pass register for each element
-    shortreal sum[WIDTH:0][WIDTH:0];
-    shortreal weight[WIDTH:0][WIDTH:0];
-    shortreal pass[WIDTH:0][WIDTH:0];
+    real sum[WIDTH:0][WIDTH:0];
+    real weight[WIDTH:0][WIDTH:0];
+    real pass[WIDTH:0][WIDTH:0];
 
     genvar i, j;
 

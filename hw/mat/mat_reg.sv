@@ -9,11 +9,11 @@ module MatReg
      input logic [WIDTH_ADDR_SIZE-1:0] read_param1, read_param2,
      input MatDataWriteOp_t write_op,
      input logic [WIDTH_ADDR_SIZE-1:0] write_param1, write_param2,
-     input shortreal data_in[WIDTH-1:0],
-     output shortreal data_out[WIDTH-1:0]);
+     input real data_in[WIDTH-1:0],
+     output real data_out[WIDTH-1:0]);
 
     // Matrix register
-    shortreal mem[WIDTH-1:0][WIDTH-1:0];
+    real mem[WIDTH-1:0][WIDTH-1:0];
 
     genvar i, j;
     

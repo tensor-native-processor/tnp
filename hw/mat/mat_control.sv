@@ -38,8 +38,8 @@ module MatControl
      // Interface with MatUnit
      output logic unit_set_weight,
      output logic [WIDTH_ADDR_SIZE-1:0] unit_set_weight_row,
-     output shortreal unit_data_in[WIDTH-1:0],
-     input shortreal unit_data_out[WIDTH-1:0],
+     output real unit_data_in[WIDTH-1:0],
+     input real unit_data_out[WIDTH-1:0],
 
      // Interface with MatCache
      output MatDataReadOp_t cache_read_op,
@@ -48,29 +48,29 @@ module MatControl
      output MatDataWriteOp_t cache_write_op,
      output logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2,
      output logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2,
-     output shortreal cache_data_in[WIDTH-1:0],
-     input shortreal cache_data_out[WIDTH-1:0],
+     output real cache_data_in[WIDTH-1:0],
+     input real cache_data_out[WIDTH-1:0],
 
      // Interface with memory
      output logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr, inst_mem_read_addr2,
      input logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out, inst_mem_data_out2,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr,
-     input shortreal data_mem_data_out[WIDTH-1:0],
+     input real data_mem_data_out[WIDTH-1:0],
      output MatDataMemWriteOp_t data_mem_write_op,
      output logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr,
-     output shortreal data_mem_data_in[WIDTH-1:0],
+     output real data_mem_data_in[WIDTH-1:0],
 
      // Interface with switch
      output logic switch_send_ready,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
-     output shortreal switch_send_data[SWITCH_WIDTH-1:0],
+     output real switch_send_data[SWITCH_WIDTH-1:0],
      input logic switch_send_ok,
 
      // Switch recv
      output logic switch_recv_request,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx,
      input logic switch_recv_ready,
-     input shortreal switch_recv_data[SWITCH_WIDTH-1:0]
+     input real switch_recv_data[SWITCH_WIDTH-1:0]
     );
 
     // State machine
@@ -233,7 +233,13 @@ module MatControl
     endgenerate
 
     // Connect switch send data to from cache data out
-    assign switch_send_data = cache_data_out;
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                switch_send_data[i] = cache_data_out[i];
+            end
+        end
+    endgenerate
 
     // Unit diagonal progress counter
     always_ff @(posedge clock) begin

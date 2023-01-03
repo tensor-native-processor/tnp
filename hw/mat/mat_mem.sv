@@ -41,16 +41,16 @@ module MatDataMem
     )
     (input logic clock,
      input logic [DATA_MEM_ADDR_SIZE-1:0] read_addr,
-     output shortreal data_out[DATA_MEM_WIDTH_SIZE-1:0],
+     output real data_out[DATA_MEM_WIDTH_SIZE-1:0],
 
      // Write
      input MatDataMemWriteOp_t write_op,
      input logic [DATA_MEM_ADDR_SIZE-1:0] write_addr,
-     input shortreal data_in[DATA_MEM_WIDTH_SIZE-1:0]
+     input real data_in[DATA_MEM_WIDTH_SIZE-1:0]
     );
 
     // Data memory (initialized by testbench)
-    shortreal data_mem[DATA_MEM_SIZE-1:0];
+    real data_mem[DATA_MEM_SIZE-1:0];
 
     // Read memory
     genvar i;

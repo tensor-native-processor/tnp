@@ -30,21 +30,21 @@ module MatCore
      // Switch send
      output logic switch_send_ready,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_send_core_idx,
-     output shortreal switch_send_data[SWITCH_WIDTH-1:0],
+     output real switch_send_data[SWITCH_WIDTH-1:0],
      input logic switch_send_ok,
 
      // Switch recv
      output logic switch_recv_request,
      output logic [SWITCH_CORE_ADDR_SIZE-1:0] switch_recv_core_idx,
      input logic switch_recv_ready,
-     input shortreal switch_recv_data[SWITCH_WIDTH-1:0]
+     input real switch_recv_data[SWITCH_WIDTH-1:0]
     );
 
     // Lots of wires
     logic unit_set_weight;
     logic [WIDTH_ADDR_SIZE-1:0] unit_set_weight_row;
-    shortreal unit_data_in[WIDTH-1:0];
-    shortreal unit_data_out[WIDTH-1:0];
+    real unit_data_in[WIDTH-1:0];
+    real unit_data_out[WIDTH-1:0];
 
     MatDataReadOp_t cache_read_op;
     logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2;
@@ -52,16 +52,16 @@ module MatCore
     MatDataWriteOp_t cache_write_op;
     logic [CACHE_ADDR_SIZE-1:0] cache_write_addr1, cache_write_addr2;
     logic [WIDTH_ADDR_SIZE-1:0] cache_write_param1, cache_write_param2;
-    shortreal cache_data_in[WIDTH-1:0];
-    shortreal cache_data_out[WIDTH-1:0];
+    real cache_data_in[WIDTH-1:0];
+    real cache_data_out[WIDTH-1:0];
 
     logic [INST_MEM_ADDR_SIZE-1:0] inst_mem_read_addr, inst_mem_read_addr2;
     logic [INST_MEM_WIDTH_SIZE-1:0] inst_mem_data_out, inst_mem_data_out2;
     logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_read_addr;
-    shortreal data_mem_data_out[WIDTH-1:0];
+    real data_mem_data_out[WIDTH-1:0];
     MatDataMemWriteOp_t data_mem_write_op;
     logic [DATA_MEM_ADDR_SIZE-1:0] data_mem_write_addr;
-    shortreal data_mem_data_in[WIDTH-1:0];
+    real data_mem_data_in[WIDTH-1:0];
 
 
     // Module instantiations
