@@ -231,7 +231,13 @@ module MatControl
     endgenerate
 
     // Connect switch send data to from cache data out
-    assign switch_send_data = cache_data_out;
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                switch_send_data[i] = cache_data_out[i];
+            end
+        end
+    endgenerate
 
     // Unit diagonal progress counter
     always_ff @(posedge clock) begin
