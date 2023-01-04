@@ -26,13 +26,23 @@ module SwitchSender
     shortreal reg_data[WIDTH-1:0];
     logic reg_load;
 
+    genvar i;
+
     // Load at reg_load
     always_ff @(posedge clock) begin
         if (reg_load) begin
             reg_core_idx <= send_core_idx;
-            reg_data <= send_data;
         end
     end
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_ff @(posedge clock) begin
+                if (reg_load) begin
+                    reg_data[i] <= send_data[i];
+                end
+            end
+        end
+    endgenerate
 
     // State machine
     enum {
@@ -52,7 +62,6 @@ module SwitchSender
         TRANSIT_DATA_FROM_SEND_DATA,
         TRANSIT_DATA_FROM_REG_DATA
     } transit_data_sel;
-    genvar i;
     generate
         for (i = 0;i < WIDTH;i++) begin
             always_comb begin

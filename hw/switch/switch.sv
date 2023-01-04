@@ -53,7 +53,7 @@ module Switch
     logic reg_transit_empty[CORE_SIZE-1:0][CORE_SIZE-1:0];
 
     // Assign empty
-    genvar core, sender, receiver;
+    genvar core, sender, receiver, i;
     generate
         for (core = 0;core < CORE_SIZE;core++) begin
             always_comb begin
@@ -77,7 +77,6 @@ module Switch
                     if (reg_transit_empty[sender][receiver] &&
                             send_transit_addr[sender] == receiver &&
                             send_transit_push[sender]) begin
-                        reg_transit_data[sender][receiver] <= send_transit_data[sender];
                         reg_transit_empty[sender][receiver] <= 0;
                     end
                     // Pop operation
@@ -89,14 +88,27 @@ module Switch
                 end
             end
         end
+        for (sender = 0;sender < CORE_SIZE;sender++)
+        for (receiver = 0;receiver < CORE_SIZE;receiver++)
+        for (i = 0;i < WIDTH;i++) begin
+            always_ff @(posedge clock) begin
+                if (reg_transit_empty[sender][receiver] &&
+                        send_transit_addr[sender] == receiver &&
+                        send_transit_push[sender]) begin
+                    reg_transit_data[sender][receiver][i] <=
+                        send_transit_data[sender][i];
+                end
+            end
+        end
     endgenerate
 
     // Output pop data
     generate
-        for (receiver = 0;receiver < CORE_SIZE;receiver++) begin
+        for (receiver = 0;receiver < CORE_SIZE;receiver++)
+        for (i = 0;i < WIDTH;i++) begin
             always_comb begin
-                recv_transit_data[receiver] = 
-                    reg_transit_data[recv_transit_addr[receiver]][receiver];
+                recv_transit_data[receiver][i] = 
+                    reg_transit_data[recv_transit_addr[receiver]][receiver][i];
             end
         end
     endgenerate
