@@ -1,0 +1,3 @@
+#!/bin/bash
+SRC='vec_defn.sv vec_inst_decoder.sv vec_mem.sv vec_data.sv vec_reg.sv vec_unit.sv vec_cache.sv vec_control.sv vec_core.sv vec_core_sim.sv'
+verilator --binary -j `nproc` --top-module VecCoreSim -Wno-lint -Wno-shortreal --unroll-count 1000000 $SRC
