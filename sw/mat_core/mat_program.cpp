@@ -13,6 +13,8 @@ const std::map<MatCoreInstDefn::Opcode, std::vector<MatCoreInstDefn::Operand>> M
     {COPY,              {Md, M1}},
     {CLEAR,             {M1}},
 
+    {ADD_ROW,           {Md, M1, M2, ROW_IDX, ROW_IDX_1, ROW_IDX_2}},
+
     {LOAD_MAT,          {ADDR, M1}},
     {LOAD_ROW,          {ADDR, M1, ROW_IDX}},
     {LOAD_COL,          {ADDR, M1, COL_IDX}},
@@ -46,6 +48,8 @@ const std::map<MatCoreInstDefn::Opcode, std::string> MatCoreInstDefn::opcodeName
 
     {COPY,              "COPY"},
     {CLEAR,             "CLEAR"},
+
+    {ADD_ROW,           "ADD_ROW"},
 
     {LOAD_MAT,          "LOAD_MAT"},
     {LOAD_ROW,          "LOAD_ROW"},
@@ -81,6 +85,8 @@ const std::map<MatCoreInstDefn::Operand, MatCoreInstDefn::Type> MatCoreInstDefn:
     {ROW_IDX,           WIDTH_IDX_TYPE},
     {COL_IDX,           WIDTH_IDX_TYPE},
     {DIAG_IDX,          WIDTH_IDX_TYPE},
+    {ROW_IDX_1,         WIDTH_IDX_TYPE},
+    {ROW_IDX_2,         WIDTH_IDX_TYPE},
 };
 
 // MatInstructionSize []

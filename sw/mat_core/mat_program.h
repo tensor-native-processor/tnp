@@ -25,6 +25,8 @@ public:
         COPY            = 0b00110000,
         CLEAR           = 0b00110001,
 
+        ADD_ROW         = 0b00111000,
+
         // Section 2
         LOAD_MAT        = 0b01000000,
         LOAD_ROW        = 0b01000001,
@@ -58,6 +60,7 @@ public:
         CORE_IDX,
         Md, M1, M2,
         ROW_IDX, COL_IDX, DIAG_IDX,
+        ROW_IDX_1, ROW_IDX_2,
     };
 
     // Types
