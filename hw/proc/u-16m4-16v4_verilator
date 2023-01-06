@@ -3,4 +3,4 @@ MAT_SRC='../mat/mat_defn.sv ../mat/mat_inst_decoder.sv ../mat/mat_mem.sv ../mat/
 VEC_SRC='../vec/vec_defn.sv ../vec/vec_inst_decoder.sv ../vec/vec_mem.sv ../vec/vec_data.sv ../vec/vec_reg.sv ../vec/vec_unit.sv ../vec/vec_cache.sv ../vec/vec_control.sv ../vec/vec_core.sv'
 SWITCH_SRC='../switch/switch_sender.sv ../switch/switch_receiver.sv ../switch/switch.sv'
 SRC="$MAT_SRC $VEC_SRC $SWITCH_SRC u-16m4-16v4.sv"
-verilator --binary -j `nproc` --top-module U_16M4_16U4 -Wno-lint -Wno-shortreal --unroll-count 1000000 $SRC
+verilator --binary -j `nproc` --threads 4 --top-module U_16M4_16U4 -Wno-lint -Wno-shortreal --unroll-count 1000000 $SRC
