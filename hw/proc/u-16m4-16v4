@@ -1,6 +1,6 @@
 #!/bin/bash
 source ~/.bashrc
-MAT_SRC='../mat/mat_defn.sv ../mat/mat_inst_decoder.sv ../mat/mat_mem.sv ../mat/mat_data.sv ../mat/mat_reg.sv ../mat/mat_unit.sv ../mat/mat_cache.sv ../mat/mat_control.sv  ../mat/mat_core.sv'
+MAT_SRC='../mat/mat_defn.sv ../mat/mat_inst_decoder.sv ../mat/mat_mem.sv ../mat/mat_data.sv ../mat/mat_reg.sv ../mat/mat_unit.sv ../mat/mat_vec_unit.sv ../mat/mat_cache.sv ../mat/mat_control.sv  ../mat/mat_core.sv'
 VEC_SRC='../vec/vec_defn.sv ../vec/vec_inst_decoder.sv ../vec/vec_mem.sv ../vec/vec_data.sv ../vec/vec_reg.sv ../vec/vec_unit.sv ../vec/vec_cache.sv ../vec/vec_control.sv ../vec/vec_core.sv'
 SWITCH_SRC='../switch/switch_sender.sv ../switch/switch_receiver.sv ../switch/switch.sv'
 vcss $MAT_SRC $VEC_SRC $SWITCH_SRC u-16m4-16v4.sv
