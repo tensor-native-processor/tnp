@@ -45,6 +45,10 @@ module MatCore
     shortreal unit_data_in[WIDTH-1:0];
     shortreal unit_data_out[WIDTH-1:0];
 
+    shortreal vec_unit_data_in[WIDTH-1:0];
+    shortreal vec_unit_data_out[WIDTH-1:0];
+    MatVecUnitOp_t vec_unit_op;
+
     MatDataReadOp_t cache_read_op;
     logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2;
     logic [WIDTH_ADDR_SIZE-1:0] cache_read_param1, cache_read_param2;
@@ -74,6 +78,10 @@ module MatCore
     MatUnit #(.WIDTH(WIDTH)) unit(.clock, .set_weight(unit_set_weight),
         .set_weight_row(unit_set_weight_row), .data_in(unit_data_in),
         .data_out(unit_data_out)
+    );
+    MatVecUnit #(.WIDTH(WIDTH)) vec_unit(.clock,
+        .data_in(vec_unit_data_in), .data_out(vec_unit_data_out),
+        .op(vec_unit_op)
     );
     MatCache #(.WIDTH(WIDTH), .CACHE_SIZE(CACHE_SIZE)) cache(.clock,
         .read_op(cache_read_op),

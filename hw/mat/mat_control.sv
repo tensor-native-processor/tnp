@@ -39,6 +39,11 @@ module MatControl
      output shortreal unit_data_in[WIDTH-1:0],
      input shortreal unit_data_out[WIDTH-1:0],
 
+     // Interface with MatVecUnit
+     output shortreal vec_unit_data_in[WIDTH-1:0],
+     input shortreal vec_unit_data_out[WIDTH-1:0],
+     output MatVecUnitOp_t vec_unit_op,
+
      // Interface with MatCache
      output MatDataReadOp_t cache_read_op,
      output logic [CACHE_ADDR_SIZE-1:0] cache_read_addr1, cache_read_addr2,
@@ -78,7 +83,8 @@ module MatControl
         PX0X, PX01,
         PXX0,
         ACCESS_MEM,
-        WAIT_SWITCH
+        WAIT_SWITCH,
+        READREG
     } state, next_state;
 
     // Proceed to next_inst
@@ -161,6 +167,7 @@ module MatControl
         CACHE_DATA_FROM_ZERO,
         CACHE_DATA_FROM_DATA_MEM_DATA_OUT,
         CACHE_DATA_FROM_UNIT_DATA_OUT,
+        CACHE_DATA_FROM_VEC_UNIT_DATA_OUT,
         CACHE_DATA_FROM_SWITCH_RECV_DATA,
         CACHE_DATA_FROM_CACHE_DATA_OUT
     } cache_data_in_sel;
@@ -178,6 +185,9 @@ module MatControl
                     end
                     CACHE_DATA_FROM_UNIT_DATA_OUT: begin
                         cache_data_in[i] = unit_data_out[i];
+                    end
+                    CACHE_DATA_FROM_VEC_UNIT_DATA_OUT: begin
+                        cache_data_in[i] = vec_unit_data_out[i];
                     end
                     CACHE_DATA_FROM_SWITCH_RECV_DATA: begin
                         cache_data_in[i] = switch_recv_data[i];
@@ -228,6 +238,15 @@ module MatControl
                         unit_data_in[i] = cache_data_out[i];
                     end
                 endcase
+            end
+        end
+    endgenerate
+
+    // Connect vec_unit_data_in from cache data out
+    generate
+        for (i = 0;i < WIDTH;i++) begin
+            always_comb begin
+                vec_unit_data_in[i] = cache_data_out[i];
             end
         end
     endgenerate
@@ -301,6 +320,8 @@ module MatControl
         unit_set_weight = 0;
         unit_set_weight_row = 0;
         unit_data_in_sel = UNIT_DATA_FROM_ZERO;
+        // VecUnit
+        vec_unit_op = MAT_VEC_UNIT_OP_ZERO;
         // Switch
         switch_send_ready = 0;
         switch_send_core_idx = 0;
@@ -362,6 +383,19 @@ case (opcode)
 
         // Init counter ("row progress counter")
         diag_progress_counter_clr = 1;
+    end
+
+    MAT_INST_ADD_ROW: begin
+        // Change next state
+        next_state = READREG;
+
+        // Read from cache
+        cache_read_op = MAT_DATA_READ_ROW;
+        cache_read_addr1 = op_M1;
+        cache_read_param1 = op_row_idx_1;
+
+        // Write into MatVecUnit
+        vec_unit_op = MAT_VEC_UNIT_OP_LOAD;
     end
 
     // Section 2
@@ -618,6 +652,28 @@ endcase
                         next_state = WAIT_SWITCH;
                     end
                 end
+                endcase
+            end
+            READREG: begin
+                unique case (opcode)
+                    MAT_INST_ADD_ROW: begin
+                        // Change next state
+                        next_state = NEXT;
+
+                        // Read from cache
+                        cache_read_op = MAT_DATA_READ_ROW;
+                        cache_read_addr1 = op_M2;
+                        cache_read_param1 = op_row_idx_2;
+
+                        // Vector addition
+                        vec_unit_op = MAT_VEC_UNIT_OP_ADD;
+
+                        // Write into cache
+                        cache_write_op = MAT_DATA_WRITE_ROW;
+                        cache_write_addr1 = op_Md;
+                        cache_write_param1 = op_row_idx;
+                        cache_data_in_sel = CACHE_DATA_FROM_VEC_UNIT_DATA_OUT;
+                    end
                 endcase
             end
             ACCESS_MEM: begin
