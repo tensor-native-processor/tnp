@@ -91,7 +91,7 @@ module MatControl
     logic [MEM_ADDR_TYPE_SIZE-1:0] op_addr;
     logic [CORE_IDX_TYPE_SIZE-1:0] op_core_idx;
     logic [REG_ADDR_TYPE_SIZE-1:0] op_Md, op_M1, op_M2;
-    logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx;
+    logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx, op_row_idx_1, op_row_idx_2;
 
     // View next instruction (to pipeline)
     logic [OPCODE_TYPE_SIZE-1:0] next_opcode;
@@ -113,7 +113,8 @@ module MatControl
     ) decoder(.inst_value(inst_mem_data_out), .inst_size(next_inst_offset),
         .opcode, .op_addr, .op_core_idx,
         .op_Md, .op_M1, .op_M2,
-        .op_row_idx, .op_col_idx, .op_diag_idx
+        .op_row_idx, .op_col_idx, .op_diag_idx,
+        .op_row_idx_1, .op_row_idx_2
     );
     // Decode next instruction
     MatInstDecoder #(.OPCODE_TYPE_BYTES(OPCODE_TYPE_BYTES),
@@ -128,7 +129,8 @@ module MatControl
         .opcode(next_opcode),
         .op_addr(), .op_core_idx(),
         .op_Md(next_op_Md), .op_M1(next_op_M1), .op_M2(next_op_M2),
-        .op_row_idx(), .op_col_idx(), .op_diag_idx()
+        .op_row_idx(), .op_col_idx(), .op_diag_idx(),
+        .op_row_idx_1(), .op_row_idx_2()
     );
 
     // Next opcode is MatUnit op

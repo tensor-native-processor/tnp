@@ -11,6 +11,8 @@ typedef enum logic [7:0] {
     MAT_INST_COPY               = 8'b00110000,
     MAT_INST_CLEAR              = 8'b00110001,
 
+    MAT_INST_ADD_ROW            = 8'b00111000,
+
     // Section 2
     MAT_INST_LOAD_MAT           = 8'b01000000,
     MAT_INST_LOAD_ROW           = 8'b01000001,

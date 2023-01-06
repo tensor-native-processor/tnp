@@ -24,7 +24,7 @@ module MatInstDecoder
      output logic [MEM_ADDR_TYPE_SIZE-1:0] op_addr,
      output logic [CORE_IDX_TYPE_SIZE-1:0] op_core_idx,
      output logic [REG_ADDR_TYPE_SIZE-1:0] op_Md, op_M1, op_M2,
-     output logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx
+     output logic [WIDTH_IDX_TYPE_SIZE-1:0] op_row_idx, op_col_idx, op_diag_idx, op_row_idx_1, op_row_idx_2
     );
 
     // Assign instruction to opcode/operands
@@ -34,6 +34,7 @@ module MatInstDecoder
         op_core_idx = 0;
         {op_Md, op_M1, op_M2} = 0;
         {op_row_idx, op_col_idx, op_diag_idx} = 0;
+        {op_row_idx_1, op_row_idx_2} = 0;
 
         opcode = inst_value[OPCODE_TYPE_SIZE-1:0];
         inst_size = OPCODE_TYPE_BYTES;
@@ -53,6 +54,15 @@ module MatInstDecoder
                 op_Md       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 op_M1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
                 inst_size = OPCODE_TYPE_BYTES+2*REG_ADDR_TYPE_BYTES;
+            end
+            MAT_INST_ADD_ROW: begin
+                op_Md       = inst_value[OPCODE_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M1       = inst_value[OPCODE_TYPE_SIZE+REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_M2       = inst_value[OPCODE_TYPE_SIZE+2*REG_ADDR_TYPE_SIZE +: REG_ADDR_TYPE_SIZE];
+                op_row_idx  = inst_value[OPCODE_TYPE_SIZE+3*REG_ADDR_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_row_idx_1= inst_value[OPCODE_TYPE_SIZE+3*REG_ADDR_TYPE_SIZE+WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                op_row_idx_2= inst_value[OPCODE_TYPE_SIZE+3*REG_ADDR_TYPE_SIZE+2*WIDTH_IDX_TYPE_SIZE +: WIDTH_IDX_TYPE_SIZE];
+                inst_size = OPCODE_TYPE_BYTES+3*REG_ADDR_TYPE_BYTES+3*WIDTH_IDX_TYPE_BYTES;
             end
 
             // Section 2
