@@ -31,7 +31,8 @@ private:
         PX0X, PX01,
         PXX0,
         ACCESS_MEM,
-        WAIT_SWITCH
+        WAIT_SWITCH,
+        READREG
     };
     MatCoreProgram m_prog;
     MatCoreParam m_param;

@@ -70,6 +70,10 @@ void MatCoreSimEngine::simulateStep() {
                     m_diag_progress_counter = 0;
                     break;
                 }
+                case MatCoreInstDefn::ADD_ROW: {
+                    next_state = State::READREG;
+                    break;
+                }
                 case MatCoreInstDefn::COPY:
                 case MatCoreInstDefn::LOAD_MAT:
                 case MatCoreInstDefn::STORE_MAT: {
@@ -118,6 +122,10 @@ void MatCoreSimEngine::simulateStep() {
         case State::NEXT: {
             next_inst_proceed = true;
             next_state = State::READY;
+            break;
+        }
+        case State::READREG: {
+            next_state = State::NEXT;
             break;
         }
         case State::STOP: {
