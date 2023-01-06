@@ -21,6 +21,10 @@ Multiply matrix `M1` by loaded weights, and store output matrix to `Md`
 
 __Warning__: `MULTIPLY` equivalents to $Md_{i, j} = \sum W_{k, WIDTH-i} \cdot M1_{k, j}$. To use normal matrix multiplication, `XFLIP` and `TRANSPOSE` the weight matrix before `SET_WEIGHT`.
 
+#### ADD_ROW Md M1 M2 row_idx row_idx_1 row_idx_2
+
+Add row `row_idx_1` from `M1` and row `row_idx_2` from `M2` and store into row `row_idx` from `Md`.
+
 #### TRANSPOSE M1
 
 Transpose matrix `M1`
