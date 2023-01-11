@@ -157,7 +157,7 @@ std::vector<Tensor> ONNXModel::simulate(const std::vector<Tensor>& inputTensors)
         if (stateTensors.count(m_graph.output(i).name()) == 0) {
             FatalError("No output " + m_graph.output(i).name());
         }
-        outputTensors.emplace_back(stateTensors.at(m_graph.output(i).name()));
+        outputTensors.push_back(stateTensors.at(m_graph.output(i).name()));
     }
     return outputTensors;
 }
